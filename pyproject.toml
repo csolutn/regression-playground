@@ -1,0 +1,12 @@
+[project]
+name = "regression-playground"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "flask>=3.1.3",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "python-dotenv>=1.2.3",
+    "scikit-learn>=1.9.1",
+    "torch>=2.14.0",
+]
