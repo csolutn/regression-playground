@@ -1,0 +1,65 @@
+{# ④ Optimization #}
+<section class="step-panel" data-panel="optim" role="tabpanel" hidden>
+  <header class="panel-head">
+    <h2><span class="step-no">4</span>{{ _('Optimization') }}</h2>
+    <p class="muted">{{ _('How the graph is corrected to make the loss smaller.') }}</p>
+  </header>
+
+  <div data-show-if="model:linear,neural_net">
+    <div class="field">
+      <span class="label">{{ _('Optimizer') }}</span>
+      <div class="choices choices-2">
+        <label class="choice"><input type="radio" name="optimizer" value="sgd">
+          <b>SGD</b><small>{{ _('Steps straight down the slope') }}</small></label>
+        <label class="choice"><input type="radio" name="optimizer" value="momentum">
+          <b>Momentum</b><small>{{ _('Keeps rolling in the direction it was going') }}</small></label>
+        <label class="choice"><input type="radio" name="optimizer" value="rmsprop">
+          <b>RMSprop</b><small>{{ _('Adjusts the step size for each weight') }}</small></label>
+        <label class="choice"><input type="radio" name="optimizer" value="adam">
+          <b>Adam</b><small>{{ _('Momentum + RMSprop: a safe default') }}</small></label>
+      </div>
+    </div>
+    <div class="field-row">
+      <label class="field">
+        <span class="label">{{ _('Learning rate') }}</span>
+        <select name="learning_rate">
+          {% for lr in [0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1] %}<option value="{{ lr }}">{{ lr }}</option>{% endfor %}
+        </select>
+        <small class="hint">{{ _('How big each correction step is.') }}</small>
+      </label>
+      <label class="field">
+        <span class="label">{{ _('Epochs') }} <output data-for="epochs"></output></span>
+        <input type="range" name="epochs" min="10" max="3000" step="10">
+        <small class="hint">{{ _('How many times the model sees all the training data.') }}</small>
+      </label>
+    </div>
+
+    <details class="advanced">
+      <summary>{{ _('Advanced') }}</summary>
+      <div class="field">
+        <span class="label">{{ _('Batch method') }}</span>
+        <div class="segmented">
+          <label><input type="radio" name="batch_method" value="sgd"><span>{{ _('1 point at a time') }}</span></label>
+          <label><input type="radio" name="batch_method" value="mini"><span>{{ _('Mini-batch') }}</span></label>
+          <label><input type="radio" name="batch_method" value="bgd"><span>{{ _('All data (batch)') }}</span></label>
+        </div>
+        <small class="hint">{{ _('How many points are used for one correction step.') }}</small>
+      </div>
+      <label class="field" data-show-if="batch_method:mini">
+        <span class="label">{{ _('Mini-batch size') }}</span>
+        <input type="number" name="batch_size" min="1" max="2000" step="1">
+      </label>
+    </details>
+  </div>
+
+  <div data-show-if="model:decision_tree,random_forest,gradient_boosting">
+    <p class="note">{{ _('Tree models do not use gradient descent. They learn by splitting the data into boxes.') }}</p>
+    <p class="hint" data-show-if="model:decision_tree">{{ _('The animation grows the depth one level at a time.') }}</p>
+    <p class="hint" data-show-if="model:random_forest">{{ _('The animation adds trees one at a time and averages them.') }}</p>
+    <label class="field" data-show-if="model:gradient_boosting">
+      <span class="label">{{ _('Boosting learning rate') }} <output data-for="tree_learning_rate"></output></span>
+      <input type="range" name="tree_learning_rate" min="0.01" max="1" step="0.01">
+      <small class="hint">{{ _('How much of each new tree’s correction is added.') }}</small>
+    </label>
+  </div>
+</section>

@@ -1,0 +1,65 @@
+{# Result (newest run) on top, history below. Shared by the playground and the teacher's student page. #}
+<div id="output" class="output" data-user="{{ output_user_id or '' }}">
+  <article class="card result-card">
+    <header class="result-head">
+      <div class="result-titles">
+        <h2 data-role="result-title"></h2>
+        <p data-role="result-sub" class="muted"></p>
+      </div>
+      <span data-role="result-status"></span>
+    </header>
+    <div data-role="result-diff" class="diff-line"></div>
+    <div data-role="progress" class="progress" hidden><div></div></div>
+
+    <div class="viz">
+      <canvas data-role="pred-canvas" aria-label="{{ _('Prediction') }}"></canvas>
+      <div data-role="viz-empty" class="viz-empty">{{ _('No result yet.') }}</div>
+    </div>
+
+    <div class="readout">
+      <span class="readout-step" data-role="step-text">—</span>
+      <span><span class="dot dot-train"></span>{{ _('Training loss') }} <b data-role="train-text">—</b></span>
+      <span><span class="dot dot-val"></span>{{ _('Validation loss') }} <b data-role="val-text">—</b></span>
+    </div>
+
+    <div class="player-bar">
+      <button type="button" class="btn btn-icon" data-role="prev" title="{{ _('Previous frame (←)') }}">⏮</button>
+      <button type="button" class="btn btn-icon btn-play" data-role="play" title="{{ _('Play / pause (Space)') }}">
+        <span class="i-play">▶</span><span class="i-pause">❚❚</span>
+      </button>
+      <button type="button" class="btn btn-icon" data-role="next" title="{{ _('Next frame (→)') }}">⏭</button>
+      <input type="range" data-role="frame-slider" min="0" max="0" value="0" aria-label="{{ _('Epoch') }}">
+      <select data-role="speed" aria-label="{{ _('Speed') }}">
+        <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+      </select>
+      <button type="button" class="btn btn-ghost btn-sm" data-role="mp4">{{ _('Save MP4') }}</button>
+    </div>
+  </article>
+
+  <article class="card history-card">
+    <header class="history-head">
+      <h2>{{ _('History') }}</h2>
+      <span class="muted">{{ _('Yellow cells changed from the run before. Click a row to show it.') }}</span>
+    </header>
+    <div class="table-wrap"><table data-role="history" class="history"></table></div>
+  </article>
+
+  <dialog data-role="mp4-dialog" class="dialog">
+    <form method="dialog">
+      <h3>{{ _('Save MP4') }}</h3>
+      <p class="muted">{{ _('The video is made in your browser (1080×1920): title, prediction, and loss curve.') }}</p>
+      <label class="field"><span class="label">{{ _('Title') }}</span><input name="video_title" maxlength="120"></label>
+      <div class="field-row">
+        <label class="field"><span class="label">{{ _('Speed') }}</span>
+          <select name="video_speed"><option value="0.5">0.5×</option><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        </label>
+        <label class="field check"><input type="checkbox" name="video_log"> <span>{{ _('Loss on a log scale') }}</span></label>
+      </div>
+      <div data-role="mp4-progress" class="progress" hidden><div></div></div>
+      <div class="dialog-actions">
+        <button class="btn btn-ghost" value="cancel" formnovalidate>{{ _('Cancel') }}</button>
+        <button class="btn btn-primary" value="save">{{ _('Save') }}</button>
+      </div>
+    </form>
+  </dialog>
+</div>

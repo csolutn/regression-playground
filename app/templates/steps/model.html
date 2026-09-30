@@ -1,0 +1,72 @@
+{# ② Prediction function: the model. Linear / neural network are the basics; trees are in Advanced. #}
+<section class="step-panel" data-panel="model" role="tabpanel" hidden>
+  <header class="panel-head">
+    <h2><span class="step-no">2</span>{{ _('Prediction function') }}</h2>
+    <p class="muted">{{ _('The shape of graph ŷ = f(x) the model can draw.') }}</p>
+  </header>
+
+  <div class="field">
+    <span class="label">{{ _('Model') }}</span>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="model" value="linear">
+        <b>{{ _('Linear regression') }}</b><small>{{ _('A straight line (or flat plane): ŷ = w·x + b') }}</small></label>
+      <label class="choice"><input type="radio" name="model" value="neural_net">
+        <b>{{ _('Neural network') }}</b><small>{{ _('Hidden layers and activations bend the line') }}</small></label>
+    </div>
+  </div>
+
+  <div data-show-if="model:neural_net">
+    <div class="field">
+      <span class="label">{{ _('Hidden layers') }}</span>
+      <div id="layers-editor" class="layers-editor"></div>
+      <input type="hidden" name="hidden_layers" data-json>
+      <div class="quick">
+        <span class="muted">{{ _('Quick:') }}</span>
+        {% for preset in ['[2]', '[8]', '[8, 8]', '[20, 20]', '[32, 32, 32]'] %}
+          <button type="button" class="btn btn-ghost btn-sm" data-layers="{{ preset }}">{{ preset }}</button>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="field field-with-plot">
+      <label class="field">
+        <span class="label">{{ _('Activation function') }}</span>
+        <select name="activation">
+          {% for a, label in [('relu', 'ReLU'), ('leaky_relu', 'Leaky ReLU'), ('elu', 'ELU'), ('gelu', 'GELU'),
+                               ('tanh', 'tanh'), ('sigmoid', 'sigmoid'), ('linear', _('none (linear)'))] %}
+            <option value="{{ a }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <svg id="activation-svg" class="mini-plot" aria-hidden="true"></svg>
+    </div>
+  </div>
+
+  <div class="structure-box">
+    <h3>{{ _('Model structure') }}</h3>
+    <svg id="structure-svg" class="structure" role="img" aria-label="{{ _('Model structure') }}"></svg>
+    <p id="structure-caption" class="muted"></p>
+  </div>
+
+  <details class="advanced" id="model-advanced">
+    <summary>{{ _('Advanced · other models') }}</summary>
+    <p class="hint">{{ _('Tree models do not draw a smooth curve: they cut x into boxes and predict one value per box.') }}</p>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="model" value="decision_tree">
+        <b>{{ _('Decision tree') }}</b><small>{{ _('Splits x with yes/no questions') }}</small></label>
+      <label class="choice"><input type="radio" name="model" value="random_forest">
+        <b>{{ _('Random forest') }}</b><small>{{ _('Averages many trees trained on random samples') }}</small></label>
+      <label class="choice"><input type="radio" name="model" value="gradient_boosting">
+        <b>{{ _('Gradient boosting') }}</b><small>{{ _('Adds trees one by one; each fixes the error left') }}</small></label>
+    </div>
+    <div class="field-row" data-show-if="model:decision_tree,random_forest,gradient_boosting">
+      <label class="field">
+        <span class="label">{{ _('Max depth') }} <output data-for="max_depth"></output></span>
+        <input type="range" name="max_depth" min="1" max="12" step="1">
+      </label>
+      <label class="field" data-show-if="model:random_forest,gradient_boosting">
+        <span class="label">{{ _('Number of trees') }} <output data-for="n_estimators"></output></span>
+        <input type="range" name="n_estimators" min="1" max="300" step="1">
+      </label>
+    </div>
+  </details>
+</section>

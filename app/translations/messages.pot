@@ -1,0 +1,828 @@
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-01 04:37+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "+ Add layer"
+msgstr ""
+
+msgid "1 input"
+msgstr ""
+
+msgid "1 point at a time"
+msgstr ""
+
+msgid "2 inputs"
+msgstr ""
+
+#, python-brace-format
+msgid "A neural network needs 1 to {max} hidden layers."
+msgstr ""
+
+msgid "A straight line (or flat plane): ŷ = w·x + b"
+msgstr ""
+
+msgid "Activation"
+msgstr ""
+
+msgid "Activation function"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Add one student"
+msgstr ""
+
+msgid "Adds trees one by one; each fixes the error left"
+msgstr ""
+
+msgid "Adjusts the step size for each weight"
+msgstr ""
+
+msgid "Advanced"
+msgstr ""
+
+msgid "Advanced · other models"
+msgstr ""
+
+msgid "All data (batch)"
+msgstr ""
+
+msgid "Averages many trees trained on random samples"
+msgstr ""
+
+msgid "Batch method"
+msgstr ""
+
+#, python-brace-format
+msgid "Before: {v}"
+msgstr ""
+
+msgid "Boosting learning rate"
+msgstr ""
+
+#, python-brace-format
+msgid "Boosting lr {lr}"
+msgstr ""
+
+msgid "Boosting step"
+msgstr ""
+
+msgid "CSV"
+msgstr ""
+
+msgid "CSV file"
+msgstr ""
+
+msgid ""
+"CSV with columns student_id,name (or 학번,이름). Existing students keep their"
+" password and history."
+msgstr ""
+
+#, python-brace-format
+msgid "Can a {act} neural network learn {f} with {loss} loss?"
+msgstr ""
+
+#, python-brace-format
+msgid "Can a {model} learn {f}?"
+msgstr ""
+
+#, python-brace-format
+msgid "Can linear regression learn {f} with {loss} loss?"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Choose a CSV file."
+msgstr ""
+
+msgid "Choose an output column that is not an input column."
+msgstr ""
+
+msgid "Choose at most two input columns."
+msgstr ""
+
+msgid "Choose file…"
+msgstr ""
+
+msgid "Choose one or two input columns."
+msgstr ""
+
+#, python-format
+msgid "Class list imported: %(added)d added, %(updated)d updated."
+msgstr ""
+
+#, python-brace-format
+msgid "Column not found in the CSV: {columns}"
+msgstr ""
+
+#, python-brace-format
+msgid "Could not make the video: {msg}"
+msgstr ""
+
+msgid "Custom formula…"
+msgstr ""
+
+msgid "Data preview"
+msgstr ""
+
+msgid "Data source"
+msgstr ""
+
+msgid "Decision tree"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+#, python-format
+msgid "Delete %(name)s and all their runs?"
+msgstr ""
+
+#, python-brace-format
+msgid "Delete run #{n}? This cannot be undone."
+msgstr ""
+
+#, python-format
+msgid "Deleted %(name)s and their history."
+msgstr ""
+
+msgid "Depth"
+msgstr ""
+
+msgid "Diverged: the loss became infinite. Try a smaller learning rate."
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+msgid "Download all runs (CSV)"
+msgstr ""
+
+#, python-brace-format
+msgid "Each hidden layer needs 1 to {max} neurons."
+msgstr ""
+
+msgid "Enter a student number and a name."
+msgstr ""
+
+msgid "Epoch"
+msgstr ""
+
+msgid "Epochs"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Errors smaller than δ are squared; bigger ones count linearly."
+msgstr ""
+
+msgid "Fewer neurons"
+msgstr ""
+
+msgid "First login: type the same password again to register it."
+msgstr ""
+
+msgid "First row = column names. Numbers only. Up to 1 MB."
+msgstr ""
+
+msgid ""
+"For trees, MSE or MAE also decides how the tree splits (Huber splits like"
+" MSE)."
+msgstr ""
+
+msgid "Formula"
+msgstr ""
+
+msgid "Function"
+msgstr ""
+
+msgid "Function to learn"
+msgstr ""
+
+msgid "Gradient boosting"
+msgstr ""
+
+msgid "Gradient boosting trains with the chosen loss."
+msgstr ""
+
+msgid "Hidden layers"
+msgstr ""
+
+msgid "Hidden layers and activations bend the line"
+msgstr ""
+
+#, python-brace-format
+msgid "Hidden {i}"
+msgstr ""
+
+msgid "History"
+msgstr ""
+
+msgid "How big each correction step is."
+msgstr ""
+
+msgid "How errors are scored"
+msgstr ""
+
+msgid "How many points are used for one correction step."
+msgstr ""
+
+msgid "How many times the model sees all the training data."
+msgstr ""
+
+msgid "How much of each new tree’s correction is added."
+msgstr ""
+
+msgid "How the error between the prediction ŷ and the answer y is scored."
+msgstr ""
+
+msgid "How the graph is corrected"
+msgstr ""
+
+msgid "How the graph is corrected to make the loss smaller."
+msgstr ""
+
+msgid "Huber δ"
+msgstr ""
+
+msgid "Import"
+msgstr ""
+
+msgid "Import class list"
+msgstr ""
+
+msgid "Input"
+msgstr ""
+
+msgid "Input columns"
+msgstr ""
+
+msgid "Input columns (x, one or two)"
+msgstr ""
+
+msgid "Input range (max)"
+msgstr ""
+
+msgid "Input range (min)"
+msgstr ""
+
+msgid "Input variables"
+msgstr ""
+
+#, python-brace-format
+msgid "Invalid value for {field}."
+msgstr ""
+
+msgid "Keeps rolling in the direction it was going"
+msgstr ""
+
+msgid "Last login"
+msgstr ""
+
+msgid "Last run"
+msgstr ""
+
+msgid "Learning rate"
+msgstr ""
+
+msgid "Linear regression"
+msgstr ""
+
+msgid "Load these settings"
+msgstr ""
+
+#, python-brace-format
+msgid "Loaded the settings of run #{n}."
+msgstr ""
+
+msgid "Log in"
+msgstr ""
+
+msgid "Log in with the student number and name on your class list."
+msgstr ""
+
+msgid "Log out"
+msgstr ""
+
+msgid "Loss"
+msgstr ""
+
+msgid "Loss function"
+msgstr ""
+
+msgid "Loss on a log scale"
+msgstr ""
+
+msgid ""
+"Losses are measured on standardized y, so runs with different data can be"
+" compared."
+msgstr ""
+
+msgid "Lowest validation loss"
+msgstr ""
+
+msgid "Max depth"
+msgstr ""
+
+msgid ""
+"Mean absolute error: every unit of error costs the same, so outliers "
+"matter less"
+msgstr ""
+
+msgid "Mean squared error: big mistakes cost a lot"
+msgstr ""
+
+msgid "Mini-batch"
+msgstr ""
+
+msgid "Mini-batch size"
+msgstr ""
+
+msgid "Model"
+msgstr ""
+
+msgid "Model structure"
+msgstr ""
+
+msgid "Momentum + RMSprop: a safe default"
+msgstr ""
+
+msgid "More neurons"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Neural network"
+msgstr ""
+
+#, python-brace-format
+msgid "Neurons in hidden layer {i}"
+msgstr ""
+
+msgid "Next frame (→)"
+msgstr ""
+
+msgid "No file yet"
+msgstr ""
+
+msgid "No result yet."
+msgstr ""
+
+msgid "No runs yet."
+msgstr ""
+
+msgid "No students yet. Import a class list above."
+msgstr ""
+
+msgid "Noise"
+msgstr ""
+
+msgid "Number of points"
+msgstr ""
+
+msgid "Number of trees"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"One tree of depth {d}: up to {leaves} boxes (leaves), each predicting one"
+" value. The animation grows the depth from 1 to {d}."
+msgstr ""
+
+msgid "Optimization"
+msgstr ""
+
+msgid "Optimizer"
+msgstr ""
+
+msgid "Output"
+msgstr ""
+
+msgid "Output column"
+msgstr ""
+
+msgid "Output column (y)"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Password again"
+msgstr ""
+
+#, python-format
+msgid "Password reset for %(name)s. The next login sets a new one."
+msgstr ""
+
+msgid "Penalty for one error (ŷ − y). The chosen loss is highlighted."
+msgstr ""
+
+msgid "Play / pause (Space)"
+msgstr ""
+
+msgid "Playground"
+msgstr ""
+
+msgid "Please log in again."
+msgstr ""
+
+msgid "Prediction"
+msgstr ""
+
+msgid "Prediction (surface)"
+msgstr ""
+
+msgid "Prediction function"
+msgstr ""
+
+msgid "Previous frame (←)"
+msgstr ""
+
+msgid "Questions and answers"
+msgstr ""
+
+msgid "Quick:"
+msgstr ""
+
+msgid "Random forest"
+msgstr ""
+
+msgid "Random seed"
+msgstr ""
+
+msgid "Remove layer"
+msgstr ""
+
+msgid "Reset all settings to the defaults?"
+msgstr ""
+
+msgid "Reset password"
+msgstr ""
+
+msgid "Reset settings"
+msgstr ""
+
+#, python-format
+msgid "Reset the password of %(name)s?"
+msgstr ""
+
+msgid "Result"
+msgstr ""
+
+msgid "Runs"
+msgstr ""
+
+msgid "Same seed = same data and same starting weights."
+msgstr ""
+
+#, python-brace-format
+msgid "Same settings as #{n}"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Save MP4"
+msgstr ""
+
+msgid "Seconds"
+msgstr ""
+
+#, python-brace-format
+msgid "Server error ({status})"
+msgstr ""
+
+msgid "Set up the experiment on the left and press Train."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Shape of the graph"
+msgstr ""
+
+msgid ""
+"Share of points kept aside to check the model on data it did not learn "
+"from."
+msgstr ""
+
+msgid "Show this run"
+msgstr ""
+
+msgid "Speed"
+msgstr ""
+
+msgid "Splits x with yes/no questions"
+msgstr ""
+
+msgid "Splitting (no gradient descent)"
+msgstr ""
+
+msgid "Squared for small errors, absolute for big ones"
+msgstr ""
+
+msgid "Steps straight down the slope"
+msgstr ""
+
+msgid "Stopped (not saved)"
+msgstr ""
+
+msgid "Stopped at the time limit"
+msgstr ""
+
+msgid "Student added."
+msgstr ""
+
+msgid "Student number"
+msgstr ""
+
+msgid "Student updated."
+msgstr ""
+
+msgid "Students"
+msgstr ""
+
+msgid "Teacher"
+msgstr ""
+
+msgid "The CSV file could not be read."
+msgstr ""
+
+msgid "The CSV file is too large (max 1 MB)."
+msgstr ""
+
+msgid "The CSV needs a header row with at least two columns."
+msgstr ""
+
+msgid "The CSV needs at least 10 rows of numbers."
+msgstr ""
+
+msgid "The animation adds trees one at a time and averages them."
+msgstr ""
+
+msgid "The animation grows the depth one level at a time."
+msgstr ""
+
+msgid "The connection closed before the run was saved."
+msgstr ""
+
+msgid "The file could not be read. Save it as CSV (UTF-8)."
+msgstr ""
+
+msgid ""
+"The formula gives invalid values (for example division by zero or the log"
+" of a negative number)."
+msgstr ""
+
+msgid "The formula has a syntax error."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"The formula uses something that is not allowed. Use {vars}, numbers, + - "
+"* / ** and functions like sin, cos, exp, abs, sqrt, max."
+msgstr ""
+
+msgid "The input range minimum must be smaller than the maximum."
+msgstr ""
+
+msgid "The questions (x) and correct answers (y) the model learns from."
+msgstr ""
+
+msgid "The shape of graph ŷ = f(x) the model can draw."
+msgstr ""
+
+msgid "The student number and name do not match the class list. Ask your teacher."
+msgstr ""
+
+msgid "The two passwords are different."
+msgstr ""
+
+msgid ""
+"The video is made in your browser (1080×1920): title, prediction, and "
+"loss curve."
+msgstr ""
+
+msgid "This browser can only record WebM, so the video was saved as WebM."
+msgstr ""
+
+msgid "This browser cannot record video. Try the latest Chrome, Edge or Safari."
+msgstr ""
+
+msgid "This is your first login. The password you type now becomes your password."
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Too much computation: {steps} update steps (limit {limit}). Reduce the "
+"epochs or use a larger batch."
+msgstr ""
+
+msgid "Train"
+msgstr ""
+
+msgid "Train loss"
+msgstr ""
+
+msgid "Training data"
+msgstr ""
+
+msgid "Training loss"
+msgstr ""
+
+msgid "Training…"
+msgstr ""
+
+msgid ""
+"Tree models do not draw a smooth curve: they cut x into boxes and predict"
+" one value per box."
+msgstr ""
+
+msgid ""
+"Tree models do not use gradient descent. They learn by splitting the data"
+" into boxes."
+msgstr ""
+
+msgid "Trees"
+msgstr ""
+
+msgid "True function"
+msgstr ""
+
+msgid "True function (grid)"
+msgstr ""
+
+#, python-brace-format
+msgid "Unknown name in the formula: {name}. Use {vars}."
+msgstr ""
+
+msgid "Upload a CSV file first."
+msgstr ""
+
+#, python-format
+msgid "Use a password of at least %(n)d characters."
+msgstr ""
+
+msgid ""
+"Use x, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, "
+"min."
+msgstr ""
+
+msgid ""
+"Use x1, x2, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, "
+"max, min."
+msgstr ""
+
+msgid "Valid"
+msgstr ""
+
+msgid "Validation data"
+msgstr ""
+
+msgid "Validation loss"
+msgstr ""
+
+msgid "Validation ratio"
+msgstr ""
+
+msgid "Wait until training finishes."
+msgstr ""
+
+msgid "Waiting for a free slot…"
+msgstr ""
+
+msgid "Widths"
+msgstr ""
+
+msgid "Wrong password. If you forgot it, ask your teacher to reset it."
+msgstr ""
+
+msgid "Yellow cells changed from the run before. Click a row to show it."
+msgstr ""
+
+msgid "average"
+msgstr ""
+
+msgid "batch 1"
+msgstr ""
+
+#, python-brace-format
+msgid "batch {n}"
+msgstr ""
+
+#, python-brace-format
+msgid "depth {d}"
+msgstr ""
+
+#, python-brace-format
+msgid "depth {d} (first {k} levels shown)"
+msgstr ""
+
+msgid "diverged"
+msgstr ""
+
+msgid "full batch"
+msgstr ""
+
+msgid "neurons"
+msgstr ""
+
+msgid "noise"
+msgstr ""
+
+msgid "none (linear)"
+msgstr ""
+
+msgid "not yet"
+msgstr ""
+
+msgid "set"
+msgstr ""
+
+msgid "sum in order"
+msgstr ""
+
+msgid "time limit"
+msgstr ""
+
+#, python-brace-format
+msgid "vs #{n}:"
+msgstr ""
+
+#, python-brace-format
+msgid "{field} must be between {min} and {max}."
+msgstr ""
+
+#, python-brace-format
+msgid "{f}: a straight line (or flat plane), {n} numbers to learn."
+msgstr ""
+
+#, python-brace-format
+msgid "{n} epochs"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} points"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{n} trees of depth {d}, added one by one. Each new tree corrects the "
+"error that is left."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{n} trees of depth {d}, each trained on a random sample of the data. The "
+"prediction is their average."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{n} weights and biases to learn. Each hidden neuron bends the line with "
+"{act}."
+msgstr ""
+
+msgid "① Data"
+msgstr ""
+
+msgid "② Model"
+msgstr ""
+
+msgid "③ Loss"
+msgstr ""
+
+msgid "④ Optimization"
+msgstr ""
+
+msgid "■ Stop"
+msgstr ""
+
+msgid "▶ Train"
+msgstr ""
+

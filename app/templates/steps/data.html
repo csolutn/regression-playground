@@ -1,0 +1,111 @@
+{# ① Training data. Input names = keys in app/ml/options.py DEFAULTS. #}
+<section class="step-panel" data-panel="data" role="tabpanel" hidden>
+  <header class="panel-head">
+    <h2><span class="step-no">1</span>{{ _('Training data') }}</h2>
+    <p class="muted">{{ _('The questions (x) and correct answers (y) the model learns from.') }}</p>
+  </header>
+
+  <div data-show-if="data_source:function">
+    <div class="field">
+      <span class="label">{{ _('Input variables') }}</span>
+      <div class="segmented">
+        <label><input type="radio" name="n_inputs" value="1"><span>{{ _('1 input') }} · y = f(x)</span></label>
+        <label><input type="radio" name="n_inputs" value="2"><span>{{ _('2 inputs') }} · y = f(x1, x2)</span></label>
+      </div>
+    </div>
+
+    <label class="field" data-show-if="n_inputs:1">
+      <span class="label">{{ _('Function to learn') }}</span>
+      <select name="function_1d">
+        {% for key, expr in options.presets['1'].items() %}<option value="{{ key }}">y = {{ expr }}</option>{% endfor %}
+        <option value="custom">{{ _('Custom formula…') }}</option>
+      </select>
+    </label>
+    <label class="field" data-show-if="n_inputs:2">
+      <span class="label">{{ _('Function to learn') }}</span>
+      <select name="function_2d">
+        {% for key, expr in options.presets['2'].items() %}<option value="{{ key }}">y = {{ expr }}</option>{% endfor %}
+        <option value="custom">{{ _('Custom formula…') }}</option>
+      </select>
+    </label>
+    <label class="field" data-show-if="n_inputs:1;function_1d:custom">
+      <span class="label">{{ _('Formula') }} <small class="muted">y =</small></span>
+      <input name="expression_1d" class="mono" spellcheck="false" placeholder="x * sin(x)">
+      <small class="hint">{{ _('Use x, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, min.') }}</small>
+    </label>
+    <label class="field" data-show-if="n_inputs:2;function_2d:custom">
+      <span class="label">{{ _('Formula') }} <small class="muted">y =</small></span>
+      <input name="expression_2d" class="mono" spellcheck="false" placeholder="sin(x1) + 0.1 * x2**2">
+      <small class="hint">{{ _('Use x1, x2, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, min.') }}</small>
+    </label>
+
+    <div class="field-row">
+      <label class="field">
+        <span class="label">{{ _('Number of points') }} <output data-for="data_size"></output></span>
+        <input type="range" name="data_size" min="20" max="2000" step="10">
+      </label>
+      <label class="field">
+        <span class="label">{{ _('Noise') }} <output data-for="noise_std"></output></span>
+        <input type="range" name="noise_std" min="0" max="2" step="0.05">
+      </label>
+    </div>
+  </div>
+
+  <div class="preview">
+    <canvas id="data-preview" aria-label="{{ _('Data preview') }}"></canvas>
+    <p id="preview-msg" class="preview-msg" hidden></p>
+  </div>
+
+  <details class="advanced">
+    <summary>{{ _('Advanced') }}</summary>
+    <div class="field">
+      <span class="label">{{ _('Data source') }}</span>
+      <div class="segmented">
+        <label><input type="radio" name="data_source" value="function"><span>{{ _('Formula') }}</span></label>
+        <label><input type="radio" name="data_source" value="csv"><span>{{ _('CSV file') }}</span></label>
+      </div>
+    </div>
+
+    <div id="csv-input" data-show-if="data_source:csv">
+      <div class="field">
+        <span class="label">{{ _('CSV file') }}</span>
+        <div class="file-row">
+          <label class="btn btn-ghost btn-sm">{{ _('Choose file…') }}<input type="file" accept=".csv,text/csv" data-role="csv-file" hidden></label>
+          <span data-role="csv-name" class="muted"></span>
+        </div>
+        <small class="hint">{{ _('First row = column names. Numbers only. Up to 1 MB.') }}</small>
+      </div>
+      <div class="field">
+        <span class="label">{{ _('Input columns (x, one or two)') }}</span>
+        <div data-role="csv-features" class="chips"></div>
+      </div>
+      <label class="field">
+        <span class="label">{{ _('Output column (y)') }}</span>
+        <select name="csv_target"></select>
+      </label>
+    </div>
+
+    <div class="field-row" data-show-if="data_source:function">
+      <label class="field">
+        <span class="label">{{ _('Input range (min)') }}</span>
+        <input type="number" name="x_min" step="any">
+      </label>
+      <label class="field">
+        <span class="label">{{ _('Input range (max)') }}</span>
+        <input type="number" name="x_max" step="any">
+      </label>
+    </div>
+    <div class="field-row">
+      <label class="field">
+        <span class="label">{{ _('Validation ratio') }} <output data-for="validation_ratio"></output></span>
+        <input type="range" name="validation_ratio" min="0.05" max="0.5" step="0.05">
+        <small class="hint">{{ _('Share of points kept aside to check the model on data it did not learn from.') }}</small>
+      </label>
+      <label class="field">
+        <span class="label">{{ _('Random seed') }}</span>
+        <input type="number" name="seed" min="0" step="1">
+        <small class="hint">{{ _('Same seed = same data and same starting weights.') }}</small>
+      </label>
+    </div>
+  </details>
+</section>

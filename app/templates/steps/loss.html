@@ -1,0 +1,34 @@
+{# ③ Loss function #}
+<section class="step-panel" data-panel="loss" role="tabpanel" hidden>
+  <header class="panel-head">
+    <h2><span class="step-no">3</span>{{ _('Loss function') }}</h2>
+    <p class="muted">{{ _('How the error between the prediction ŷ and the answer y is scored.') }}</p>
+  </header>
+
+  <div class="choices">
+    <label class="choice"><input type="radio" name="loss" value="mse">
+      <b>MSE</b><small>{{ _('Mean squared error: big mistakes cost a lot') }}</small></label>
+    <label class="choice"><input type="radio" name="loss" value="mae">
+      <b>MAE (L1)</b><small>{{ _('Mean absolute error: every unit of error costs the same, so outliers matter less') }}</small></label>
+    <label class="choice"><input type="radio" name="loss" value="huber">
+      <b>Huber</b><small>{{ _('Squared for small errors, absolute for big ones') }}</small></label>
+  </div>
+
+  <figure class="loss-shape">
+    <svg id="loss-svg" class="mini-plot wide" aria-hidden="true"></svg>
+    <figcaption class="muted">{{ _('Penalty for one error (ŷ − y). The chosen loss is highlighted.') }}</figcaption>
+  </figure>
+
+  <p class="note" data-show-if="model:decision_tree,random_forest">{{ _('For trees, MSE or MAE also decides how the tree splits (Huber splits like MSE).') }}</p>
+  <p class="note" data-show-if="model:gradient_boosting">{{ _('Gradient boosting trains with the chosen loss.') }}</p>
+  <p class="hint">{{ _('Losses are measured on standardized y, so runs with different data can be compared.') }}</p>
+
+  <details class="advanced" data-show-if="loss:huber">
+    <summary>{{ _('Advanced') }}</summary>
+    <label class="field">
+      <span class="label">{{ _('Huber δ') }} <output data-for="huber_delta"></output></span>
+      <input type="range" name="huber_delta" min="0.1" max="3" step="0.1">
+      <small class="hint">{{ _('Errors smaller than δ are squared; bigger ones count linearly.') }}</small>
+    </label>
+  </details>
+</section>

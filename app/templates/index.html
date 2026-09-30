@@ -1,11 +1,46 @@
-<!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8">
-  <title>Regression Playground</title>
-</head>
-<body>
-  <h1>Regression Playground</h1>
-  <p>지도학습 파이프라인(예측 → 손실 → 최적화)을 눈으로 확인하는 실험 도구 — 준비 중</p>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block body_class %}page-playground{% endblock %}
+{% block content %}
+<main class="split" data-page="playground" data-user="{{ g.user.id }}">
+  <section class="pane pane-settings" aria-label="{{ _('Settings') }}">
+    <form id="settings" autocomplete="off" onsubmit="return false">
+      {# ① → ④ : the supervised-learning loop. Each card opens its panel below. #}
+      <ol class="pipeline" role="tablist">
+        {% for step, no, title, sub in [
+            ('data', 1, _('Training data'), _('Questions and answers') ~ ' (x, y)'),
+            ('model', 2, _('Prediction function'), _('Shape of the graph') ~ ' ŷ = f(x)'),
+            ('loss', 3, _('Loss function'), _('How errors are scored')),
+            ('optim', 4, _('Optimization'), _('How the graph is corrected')),
+          ] %}
+          <li>
+            <button type="button" class="step-card" data-step="{{ step }}" role="tab">
+              <span class="step-title"><span class="step-no">{{ no }}</span>{{ title }}</span>
+              <span class="step-sub">{{ sub }}</span>
+              <span class="step-summary" data-summary="{{ step }}"></span>
+            </button>
+          </li>
+        {% endfor %}
+      </ol>
+
+      <div class="step-panels">
+        {% include 'steps/data.html' %}
+        {% include 'steps/model.html' %}
+        {% include 'steps/loss.html' %}
+        {% include 'steps/optim.html' %}
+      </div>
+    </form>
+
+    <div class="run-bar">
+      <button id="train-btn" type="button" class="btn btn-primary btn-lg">{{ _('▶ Train') }}</button>
+      <span class="muted kbd-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
+      <button id="reset-btn" type="button" class="btn btn-ghost btn-sm">{{ _('Reset settings') }}</button>
+    </div>
+  </section>
+
+  <section class="pane pane-output" aria-label="{{ _('Output') }}">
+    {% include 'partials/output.html' %}
+  </section>
+</main>
+<script>window.OPTIONS = {{ options|tojson }};</script>
+<script type="module" src="{{ url_for('static', filename='js/playground.js') }}"></script>
+{% endblock %}

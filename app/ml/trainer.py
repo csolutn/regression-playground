@@ -1,0 +1,235 @@
+"""② prediction → ③ loss → ④ optimization, streamed as events.
+
+``train(cfg)`` is a generator of plain dicts, so it can be tested without Flask:
+
+  {'type': 'start', 'meta': {...}}                        data points, plot inputs, true function
+  {'type': 'frame', 'step', 'pred', 'train', 'val'}       one animation frame (prediction on the plot inputs)
+  {'type': 'loss', 'steps': [...], 'train': [...], 'val': [...]}   loss history since the last event
+  {'type': 'end', 'final_train', 'final_val', 'steps', 'duration', 'status'}
+
+Losses are measured on standardized y (as in the notebook), so different data and models compare fairly.
+"""
+import math
+import random
+import time
+
+import numpy as np
+import torch
+import torch.nn as nn
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
+
+from .data import build_dataset, expression_for
+from .options import GRADIENT_MODELS, batch_size, step_budget_error
+
+torch.set_num_threads(1)   # many small jobs in parallel, not one big one
+
+ACTIVATIONS = {'relu': nn.ReLU, 'leaky_relu': nn.LeakyReLU, 'elu': nn.ELU, 'gelu': nn.GELU,
+               'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'linear': nn.Identity}
+TARGET_FRAMES = 60         # about this many animation frames per run
+LOSS_EVENTS = 100          # about this many loss events per run
+TIME_LIMIT_S = 120         # stop a run that takes longer than this
+
+
+class BudgetError(ValueError):
+    def __init__(self, err):
+        super().__init__(err[0])
+        self.msgid, self.params = err
+
+
+def structure(cfg):
+    hidden = cfg['hidden_layers'] if cfg['model'] == 'neural_net' else []
+    return [cfg['n_inputs'], *hidden, 1]
+
+
+def build_network(cfg):
+    sizes, layers = structure(cfg), []
+    for i, (n_in, n_out) in enumerate(zip(sizes[:-1], sizes[1:])):
+        layers.append(nn.Linear(n_in, n_out))
+        if i < len(sizes) - 2:          # no activation on the output layer
+            layers.append(ACTIVATIONS[cfg['activation']]())
+    return nn.Sequential(*layers)
+
+
+def build_optimizer(cfg, params):
+    lr = cfg['learning_rate']
+    return {
+        'sgd': lambda: torch.optim.SGD(params, lr=lr),
+        'momentum': lambda: torch.optim.SGD(params, lr=lr, momentum=0.9),
+        'rmsprop': lambda: torch.optim.RMSprop(params, lr=lr),
+        'adam': lambda: torch.optim.Adam(params, lr=lr),
+    }[cfg['optimizer']]()
+
+
+def build_loss(cfg):
+    return {'mse': nn.MSELoss, 'mae': nn.L1Loss,
+            'huber': lambda: nn.HuberLoss(delta=cfg['huber_delta'])}[cfg['loss']]()
+
+
+def loss_np(cfg, pred, true):
+    """Same definitions as build_loss, for the tree models."""
+    e = pred - true
+    if cfg['loss'] == 'mse':
+        return float(np.mean(e ** 2))
+    if cfg['loss'] == 'mae':
+        return float(np.mean(np.abs(e)))
+    d, a = cfg['huber_delta'], np.abs(e)
+    return float(np.mean(np.where(a <= d, 0.5 * e ** 2, d * (a - 0.5 * d))))
+
+
+def rounded(a, digits=4):
+    """Shorter JSON: keep ``digits`` significant digits."""
+    return [float(f'{v:.{digits}g}') for v in np.asarray(a, dtype=float).ravel()]
+
+
+def train(cfg):
+    random.seed(cfg['seed'])
+    np.random.seed(cfg['seed'])
+    torch.manual_seed(cfg['seed'])
+    ds = build_dataset(cfg)
+    if cfg['model'] in GRADIENT_MODELS and (err := step_budget_error(cfg, len(ds.X_train))):
+        raise BudgetError(err)
+
+    yield {'type': 'start', 'meta': meta(cfg, ds)}
+    started = time.monotonic()
+    history = {'steps': [], 'train': [], 'val': []}
+    status = 'done'
+    run = train_gradient if cfg['model'] in GRADIENT_MODELS else train_trees
+    for event in run(cfg, ds, started):
+        if event['type'] == 'loss':
+            for k in history:
+                history[k] += event[k]
+        if event['type'] == 'status':      # 'timeout' or 'diverged'
+            status = event['status']
+            continue
+        yield event
+    yield {'type': 'end', 'status': status, 'steps': history['steps'][-1],
+           'final_train': history['train'][-1], 'final_val': history['val'][-1],
+           'duration': round(time.monotonic() - started, 2)}
+
+
+def meta(cfg, ds):
+    return {
+        'n_inputs': ds.n_inputs,
+        'feature_names': ds.feature_names,
+        'target_name': ds.target_name,
+        'x_train': [rounded(c) for c in ds.X_train.T], 'y_train': rounded(ds.y_train),
+        'x_val': [rounded(c) for c in ds.X_val.T], 'y_val': rounded(ds.y_val),
+        'axes': [rounded(a) for a in ds.axes],
+        'y_true': rounded(ds.y_plot_true) if ds.y_plot_true is not None else None,
+        'expression': expression_for(cfg) if cfg['data_source'] == 'function' else None,
+        'structure': structure(cfg),
+        'model': cfg['model'],
+        'loss': cfg['loss'],
+        'total_steps': total_steps(cfg),
+    }
+
+
+def total_steps(cfg):
+    if cfg['model'] in GRADIENT_MODELS:
+        return cfg['epochs']
+    return cfg['max_depth'] if cfg['model'] == 'decision_tree' else cfg['n_estimators']
+
+
+def frame(ds, step, pred_scaled, train_loss, val_loss):
+    finite = lambda v: float(f'{v:.6g}') if math.isfinite(v) else None
+    return {'type': 'frame', 'step': step, 'pred': rounded(ds.unscale_y(pred_scaled)),
+            'train': finite(train_loss), 'val': finite(val_loss)}
+
+
+def to_tensor(a):
+    return torch.tensor(a, dtype=torch.float32).reshape(len(a), -1)
+
+
+def train_gradient(cfg, ds, started):
+    model = build_network(cfg)
+    optimizer, loss_fn = build_optimizer(cfg, model.parameters()), build_loss(cfg)
+    Xt, yt = to_tensor(ds.scale_x(ds.X_train)), to_tensor(ds.scale_y(ds.y_train))
+    Xv, yv = to_tensor(ds.scale_x(ds.X_val)), to_tensor(ds.scale_y(ds.y_val))
+    Xp = to_tensor(ds.scale_x(ds.X_plot))
+    bs = min(batch_size(cfg, len(Xt)), len(Xt))
+    gen = torch.Generator().manual_seed(cfg['seed'])
+    epochs = cfg['epochs']
+    frame_every = max(1, math.ceil(epochs / TARGET_FRAMES))
+    loss_every = max(1, math.ceil(epochs / LOSS_EVENTS))
+    pending = {'steps': [], 'train': [], 'val': []}
+
+    def evaluate():
+        model.eval()
+        with torch.no_grad():
+            return loss_fn(model(Xt), yt).item(), loss_fn(model(Xv), yv).item()
+
+    tl, vl = evaluate()                   # epoch 0: the untrained model
+    with torch.no_grad():
+        yield frame(ds, 0, model(Xp).numpy(), tl, vl)
+
+    for epoch in range(1, epochs + 1):
+        model.train()
+        order = torch.randperm(len(Xt), generator=gen)
+        for i in range(0, len(Xt), bs):
+            b = order[i:i + bs]
+            pred = model(Xt[b])           # ② prediction
+            loss = loss_fn(pred, yt[b])   # ③ loss
+            optimizer.zero_grad()
+            loss.backward()               #    gradient (backpropagation)
+            optimizer.step()              # ④ optimization: update the weights
+
+        tl, vl = evaluate()
+        diverged = not (math.isfinite(tl) and math.isfinite(vl))
+        for k, v in (('steps', epoch), ('train', tl), ('val', vl)):
+            pending[k].append(v if k == 'steps' else (float(f'{v:.6g}') if math.isfinite(v) else None))
+        last = epoch == epochs or diverged or time.monotonic() - started > TIME_LIMIT_S
+        if epoch % frame_every == 0 or last:
+            with torch.no_grad():
+                pred = np.nan_to_num(model(Xp).numpy(), nan=ds.y_mean)
+            yield frame(ds, epoch, pred, tl, vl)
+        if epoch % loss_every == 0 or last:
+            yield {'type': 'loss', **pending}
+            pending = {'steps': [], 'train': [], 'val': []}
+        if last:
+            if diverged:
+                yield {'type': 'status', 'status': 'diverged'}
+            elif epoch < epochs:
+                yield {'type': 'status', 'status': 'timeout'}
+            return
+
+
+def train_trees(cfg, ds, started):
+    Xt, Xv, Xp = ds.scale_x(ds.X_train), ds.scale_x(ds.X_val), ds.scale_x(ds.X_plot)
+    yt, yv = ds.scale_y(ds.y_train), ds.scale_y(ds.y_val)
+    criterion = 'absolute_error' if cfg['loss'] == 'mae' else 'squared_error'
+    depth, seed = cfg['max_depth'], cfg['seed']
+
+    if cfg['model'] == 'decision_tree':          # grow the depth 1 → max_depth
+        def stages():
+            for d in range(1, depth + 1):
+                m = DecisionTreeRegressor(max_depth=d, criterion=criterion, random_state=seed).fit(Xt, yt)
+                yield d, m.predict(Xt), m.predict(Xv), m.predict(Xp)
+    elif cfg['model'] == 'random_forest':        # add trees one by one and average them
+        rf = RandomForestRegressor(n_estimators=cfg['n_estimators'], max_depth=depth, criterion=criterion,
+                                   random_state=seed).fit(Xt, yt)
+
+        def stages():
+            st = sv = sp = 0
+            for k, tree in enumerate(rf.estimators_, 1):
+                st, sv, sp = st + tree.predict(Xt), sv + tree.predict(Xv), sp + tree.predict(Xp)
+                yield k, st / k, sv / k, sp / k
+    else:                                        # boosting: each tree corrects the previous error
+        gb_loss = {'mse': 'squared_error', 'mae': 'absolute_error', 'huber': 'huber'}[cfg['loss']]
+        gb = GradientBoostingRegressor(n_estimators=cfg['n_estimators'], max_depth=depth, loss=gb_loss,
+                                       learning_rate=cfg['tree_learning_rate'], random_state=seed).fit(Xt, yt)
+
+        def stages():
+            yield from zip(range(1, cfg['n_estimators'] + 1),
+                           gb.staged_predict(Xt), gb.staged_predict(Xv), gb.staged_predict(Xp))
+
+    n_steps = total_steps(cfg)
+    every = max(1, math.ceil(n_steps / TARGET_FRAMES))
+    history = {'steps': [], 'train': [], 'val': []}
+    for step, pt, pv, pp in stages():
+        tl, vl = float(f'{loss_np(cfg, pt, yt):.6g}'), float(f'{loss_np(cfg, pv, yv):.6g}')
+        for k, v in (('steps', step), ('train', tl), ('val', vl)):
+            history[k].append(v)
+        if step == 1 or step % every == 0 or step == n_steps:
+            yield frame(ds, step, pp, tl, vl)
+    yield {'type': 'loss', **history}
