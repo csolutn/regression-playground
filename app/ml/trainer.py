@@ -26,7 +26,7 @@ torch.set_num_threads(1)   # many small jobs in parallel, not one big one
 
 ACTIVATIONS = {'relu': nn.ReLU, 'leaky_relu': nn.LeakyReLU, 'elu': nn.ELU, 'gelu': nn.GELU,
                'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'linear': nn.Identity}
-TARGET_FRAMES = 60         # about this many animation frames per run
+MAX_FRAMES = 300           # one frame per epoch (or tree) up to this many, then every k-th
 LOSS_EVENTS = 100          # about this many loss events per run
 TIME_LIMIT_S = 120         # stop a run that takes longer than this
 
@@ -150,7 +150,7 @@ def train_gradient(cfg, ds, started):
     bs = min(batch_size(cfg, len(Xt)), len(Xt))
     gen = torch.Generator().manual_seed(cfg['seed'])
     epochs = cfg['epochs']
-    frame_every = max(1, math.ceil(epochs / TARGET_FRAMES))
+    frame_every = max(1, math.ceil(epochs / MAX_FRAMES))
     loss_every = max(1, math.ceil(epochs / LOSS_EVENTS))
     pending = {'steps': [], 'train': [], 'val': []}
 
@@ -224,7 +224,7 @@ def train_trees(cfg, ds, started):
                            gb.staged_predict(Xt), gb.staged_predict(Xv), gb.staged_predict(Xp))
 
     n_steps = total_steps(cfg)
-    every = max(1, math.ceil(n_steps / TARGET_FRAMES))
+    every = max(1, math.ceil(n_steps / MAX_FRAMES))
     history = {'steps': [], 'train': [], 'val': []}
     for step, pt, pv, pp in stages():
         tl, vl = float(f'{loss_np(cfg, pt, yt):.6g}'), float(f'{loss_np(cfg, pv, yv):.6g}')

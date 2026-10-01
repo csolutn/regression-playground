@@ -3,8 +3,14 @@
 import { DEFAULT_VIEW, drawPrediction, fitCanvas, fmtLoss, screenTheme } from './plot.js';
 import { stepLabel } from './describe.js';
 
-export const BASE_FRAME_MS = 200;   // time per frame at 1× (the notebook GIF used 200 ms)
+const RUN_MS = 16_000;               // a whole run takes about this long at 1×
+const MAX_FRAME_MS = 267;           // runs with few frames (e.g. a shallow tree) don't flash by
 const END_HOLD_MS = 1200;           // pause on the last frame before looping
+
+// time per frame for a run of n frames at the given speed
+export function frameMs(n, speed = 1) {
+  return Math.min(MAX_FRAME_MS, RUN_MS / Math.max(1, n)) / speed;
+}
 
 export class Player {
   constructor(root) {
@@ -38,6 +44,7 @@ export class Player {
 
   get frames() { return this.run?.frames || []; }
   get speedFactor() { return +this.speed.value || 1; }
+  get frameMs() { return frameMs(this.frames.length, this.speedFactor); }
 
   setRun(run, { live = false } = {}) {
     this.pause();
@@ -78,9 +85,9 @@ export class Player {
       this.idx = atEnd ? 0 : this.idx + 1;
       this.sync();
       const last = this.idx >= this.frames.length - 1;
-      this.timer = setTimeout(tick, BASE_FRAME_MS / this.speedFactor + (last ? END_HOLD_MS : 0));
+      this.timer = setTimeout(tick, this.frameMs + (last ? END_HOLD_MS : 0));
     };
-    this.timer = setTimeout(tick, BASE_FRAME_MS / this.speedFactor);
+    this.timer = setTimeout(tick, this.frameMs);
     this.sync();
   }
 

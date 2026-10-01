@@ -3,7 +3,7 @@
 // WebCodecs + mp4-muxer when available; otherwise MediaRecorder (may produce WebM).
 import { t } from './i18n.js';
 import { dataSummary } from './describe.js';
-import { BASE_FRAME_MS } from './player.js';
+import { frameMs } from './player.js';
 import { DEFAULT_VIEW, FONT, LIGHT, drawLoss, drawPrediction } from './plot.js';
 
 const W = 1080, H = 1920, S = 2;          // S: plot scale (fonts and lines) in the video
@@ -15,7 +15,7 @@ export async function exportVideo(run, { title, speed = 1, log = false, view = D
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
   const n = run.frames.length;
-  const hold = Math.round(BASE_FRAME_MS / speed * 1000);
+  const hold = Math.round(frameMs(n, speed) * 1000);
   const durations = run.frames.map((_, i) => hold + (i === 0 ? FIRST_HOLD_US : 0) + (i === n - 1 ? LAST_HOLD_US : 0));
   const draw = i => drawVideoFrame(ctx, run, i, title, log, view);
 

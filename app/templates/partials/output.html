@@ -1,5 +1,5 @@
 {# Result (newest run) on top, history below. Shared by the playground and the teacher's student page. #}
-<div id="output" class="output" data-user="{{ output_user_id or '' }}">
+<div id="output" class="output" data-user="{{ output_user_id or '' }}" data-login="{{ output_login_id or g.user.login_id }}">
   <article class="card result-card">
     <header class="result-head">
       <div class="result-titles">
@@ -30,7 +30,7 @@
       <button type="button" class="btn btn-icon" data-role="next" title="{{ _('Next frame (→)') }}">⏭</button>
       <input type="range" data-role="frame-slider" min="0" max="0" value="0" aria-label="{{ _('Epoch') }}">
       <select data-role="speed" aria-label="{{ _('Speed') }}">
-        <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+        <option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="2.25">2.25×</option><option value="2.5">2.5×</option>
       </select>
       <button type="button" class="btn btn-ghost btn-sm" data-role="mp4">{{ _('Save MP4') }}</button>
     </div>
@@ -40,6 +40,15 @@
     <header class="history-head">
       <h2>{{ _('History') }}</h2>
       <span class="muted">{{ _('Yellow cells changed from the run before. Click a row to show it.') }}</span>
+      <div class="history-tools">
+        <input type="date" data-role="date-from" aria-label="{{ _('From date') }}">
+        <span class="muted">–</span>
+        <input type="date" data-role="date-to" aria-label="{{ _('To date') }}">
+        <button type="button" class="btn btn-ghost btn-sm" data-role="date-today">{{ _('Today') }}</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-role="date-all">{{ _('All') }}</button>
+        <span class="muted" data-role="history-count"></span>
+        <button type="button" class="btn btn-ghost btn-sm" data-role="csv">{{ _('Save CSV') }}</button>
+      </div>
     </header>
     <div class="table-wrap"><table data-role="history" class="history"></table></div>
   </article>
@@ -47,11 +56,10 @@
   <dialog data-role="mp4-dialog" class="dialog">
     <form method="dialog">
       <h3>{{ _('Save MP4') }}</h3>
-      <p class="muted">{{ _('The video is made in your browser (1080×1920): title, prediction, and loss curve.') }}</p>
       <label class="field"><span class="label">{{ _('Title') }}</span><input name="video_title" maxlength="120"></label>
       <div class="field-row">
         <label class="field"><span class="label">{{ _('Speed') }}</span>
-          <select name="video_speed"><option value="0.5">0.5×</option><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
+          <select name="video_speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="2.25">2.25×</option><option value="2.5">2.5×</option></select>
         </label>
         <label class="field check"><input type="checkbox" name="video_log"> <span>{{ _('Loss on a log scale') }}</span></label>
       </div>

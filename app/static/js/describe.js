@@ -82,10 +82,10 @@ export function configBadge(cfg) {
   return [`${modelName(cfg.model)} • ${loss}`, modelSummary(cfg).split(' · ').slice(1).join(' · ')];
 }
 
-// Default MP4 title, e.g. "Can a ReLU neural network learn x·sin(x) with MAE (L1) loss?"
+// Default MP4 title, e.g. "Can a ReLU neural network learn x·sin(x)?"
 export function videoTitle(cfg) {
-  const f = targetLabel(cfg), loss = lossName(cfg);
-  if (cfg.model === 'neural_net') return t('Can a {act} neural network learn {f} with {loss} loss?', { act: activationName(cfg.activation), f, loss });
-  if (cfg.model === 'linear') return t('Can linear regression learn {f} with {loss} loss?', { f, loss });
+  const f = targetLabel(cfg);
+  if (cfg.model === 'neural_net') return t('Can a {act} neural network learn {f}?', { act: activationName(cfg.activation), f });
+  if (cfg.model === 'linear') return t('Can linear regression learn {f}?', { f });
   return t('Can a {model} learn {f}?', { model: modelName(cfg.model).toLowerCase(), f });
 }

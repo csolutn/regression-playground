@@ -1,4 +1,5 @@
 // History table: newest run on top; a cell is highlighted when it differs from the run before it.
+// A date filter limits the rows shown, and the shown rows can be saved as CSV.
 import { t } from './i18n.js';
 import { fmtLoss } from './plot.js';
 import { dataSummary, lossSummary, modelSummary, optimSummary } from './describe.js';
@@ -21,6 +22,8 @@ export class History {
     this.handlers = { onView, onLoad, onDelete };
     this.rows = [];
     this.activeId = null;
+    this.filter = { from: '', to: '' };      // local dates 'YYYY-MM-DD', '' = open
+    this.onRender = null;
     table.addEventListener('click', e => this.onClick(e));
   }
 
@@ -28,7 +31,26 @@ export class History {
   add(row) { this.rows.unshift(row); this.render(); }
   remove(id) { this.rows = this.rows.filter(r => r.id !== id); this.render(); }
   setActive(id) { this.activeId = id; this.render(); }
+  setFilter(filter) { this.filter = { ...this.filter, ...filter }; this.render(); }
+  // "before" is always the run just before, even when the filter hides it
   previous(row) { return this.rows[this.rows.indexOf(row) + 1] || null; }
+
+  get filtered() { return !!(this.filter.from || this.filter.to); }
+  get visible() {
+    const { from, to } = this.filter;
+    return this.rows.filter(r => { const d = localDate(r.created_at); return (!from || d >= from) && (!to || d <= to); });
+  }
+
+  // the shown rows as CSV (UTF-8 with BOM so Excel reads Korean)
+  toCsv() {
+    const head = ['#', t('Time'), ...SETTING_COLUMNS.map(c => c.label()), t('Train loss'), t('Validation loss'),
+      t('Steps'), t('Seconds'), t('Status'), t('Settings (JSON)')];
+    const lines = this.visible.map(r => [
+      r.seq, localDateTime(r.created_at), ...SETTING_COLUMNS.map(c => c.get(r.config)),
+      r.final_train, r.final_val, r.steps, r.duration, STATUS()[r.status] || '', JSON.stringify(r.config),
+    ]);
+    return '\ufeff' + [head, ...lines].map(cells => cells.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  }
 
   onClick(e) {
     const btn = e.target.closest('button[data-act]');
@@ -41,14 +63,15 @@ export class History {
   }
 
   render() {
-    const best = this.rows.filter(r => r.final_val != null).reduce((b, r) => (!b || r.final_val < b.final_val ? r : b), null);
+    const rows = this.visible;
+    const best = rows.filter(r => r.final_val != null).reduce((b, r) => (!b || r.final_val < b.final_val ? r : b), null);
     const head = `<thead><tr>
       <th>#</th><th>${t('Time')}</th>
       ${SETTING_COLUMNS.map(c => `<th>${c.label()}</th>`).join('')}
       <th class="num">${t('Train loss')}</th><th class="num">${t('Validation loss')}</th><th class="num">${t('Seconds')}</th><th></th>
     </tr></thead>`;
     const L = { view: esc(t('Show this run')), load: esc(t('Load these settings')), del: esc(t('Delete')), best: esc(t('Lowest validation loss')) };
-    const body = this.rows.map(r => {
+    const body = rows.map(r => {
       const prev = this.previous(r);
       const cells = SETTING_COLUMNS.map(c => {
         const now = c.get(r.config), before = prev ? c.get(prev.config) : now;
@@ -58,9 +81,11 @@ export class History {
       }).join('');
       const status = STATUS()[r.status];
       const time = new Date(r.created_at);
+      const short = localDate(r.created_at) === localDate(new Date())
+        ? { hour: '2-digit', minute: '2-digit' } : { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
       return `<tr data-id="${r.id}" class="${r.id === this.activeId ? 'active' : ''}">
         <td class="seq">${r.seq}</td>
-        <td class="time" title="${time.toLocaleString(LANG)}">${time.toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit' })}</td>
+        <td class="time" title="${time.toLocaleString(LANG)}">${time.toLocaleString(LANG, short)}</td>
         ${cells}
         <td class="num">${fmtLoss(r.final_train)}</td>
         <td class="num ${r === best ? 'best' : ''}">${fmtLoss(r.final_val)}${r === best ? ` <span class="star" title="${L.best}">★</span>` : ''}${status ? ` <span class="pill pill-warn">${status}</span>` : ''}</td>
@@ -71,8 +96,10 @@ export class History {
           <button type="button" class="btn btn-icon btn-ghost" data-act="del" title="${L.del}">🗑</button>`}
         </td></tr>`;
     }).join('');
-    const empty = `<tbody><tr><td colspan="10" class="empty">${t('No runs yet.')}</td></tr></tbody>`;
-    this.table.innerHTML = head + (this.rows.length ? `<tbody>${body}</tbody>` : empty);
+    const none = this.rows.length ? t('No runs in this period.') : t('No runs yet.');
+    const empty = `<tbody><tr><td colspan="10" class="empty">${none}</td></tr></tbody>`;
+    this.table.innerHTML = head + (rows.length ? `<tbody>${body}</tbody>` : empty);
+    this.onRender?.(rows.length, this.rows.length);
   }
 }
 
@@ -95,6 +122,25 @@ function changedParts(before, now) {
   if (a.length !== b.length) return { before, now };
   const idx = a.map((_, i) => i).filter(i => a[i] !== b[i]);
   return { before: idx.map(i => a[i]).join(' · '), now: idx.map(i => b[i]).join(' · ') };
+}
+
+// 'YYYY-MM-DD' / 'YYYY-MM-DD HH:MM:SS' in the viewer's time zone (dates in the filter are local too)
+export function localDate(when) {
+  const d = new Date(when), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function localDateTime(when) {
+  const d = new Date(when), p = n => String(n).padStart(2, '0');
+  return `${localDate(d)} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+function csvCell(v) {
+  if (v == null) return '';
+  if (typeof v === 'number') return String(v);
+  let s = String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;       // a custom formula like "=..." must not run in Excel
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 export function esc(s) {

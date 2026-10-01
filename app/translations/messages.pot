@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 04:37+0900\n"
+"POT-Creation-Date: 2026-10-01 10:50+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -60,6 +60,9 @@ msgstr ""
 msgid "Advanced · other models"
 msgstr ""
 
+msgid "All"
+msgstr ""
+
 msgid "All data (batch)"
 msgstr ""
 
@@ -95,7 +98,7 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
-msgid "Can a {act} neural network learn {f} with {loss} loss?"
+msgid "Can a {act} neural network learn {f}?"
 msgstr ""
 
 #, python-brace-format
@@ -103,7 +106,7 @@ msgid "Can a {model} learn {f}?"
 msgstr ""
 
 #, python-brace-format
-msgid "Can linear regression learn {f} with {loss} loss?"
+msgid "Can linear regression learn {f}?"
 msgstr ""
 
 msgid "Cancel"
@@ -209,6 +212,9 @@ msgid ""
 msgstr ""
 
 msgid "Formula"
+msgstr ""
+
+msgid "From date"
 msgstr ""
 
 msgid "Function"
@@ -387,6 +393,9 @@ msgstr ""
 msgid "No result yet."
 msgstr ""
 
+msgid "No runs in this period."
+msgstr ""
+
 msgid "No runs yet."
 msgstr ""
 
@@ -501,6 +510,9 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
+msgid "Save CSV"
+msgstr ""
+
 msgid "Save MP4"
 msgstr ""
 
@@ -515,6 +527,9 @@ msgid "Set up the experiment on the left and press Train."
 msgstr ""
 
 msgid "Settings"
+msgstr ""
+
+msgid "Settings (JSON)"
 msgstr ""
 
 msgid "Shape of the graph"
@@ -538,6 +553,12 @@ msgid "Splitting (no gradient descent)"
 msgstr ""
 
 msgid "Squared for small errors, absolute for big ones"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Steps"
 msgstr ""
 
 msgid "Steps straight down the slope"
@@ -617,11 +638,6 @@ msgstr ""
 msgid "The two passwords are different."
 msgstr ""
 
-msgid ""
-"The video is made in your browser (1080×1920): title, prediction, and "
-"loss curve."
-msgstr ""
-
 msgid "This browser can only record WebM, so the video was saved as WebM."
 msgstr ""
 
@@ -635,6 +651,12 @@ msgid "Time"
 msgstr ""
 
 msgid "Title"
+msgstr ""
+
+msgid "To date"
+msgstr ""
+
+msgid "Today"
 msgstr ""
 
 #, python-brace-format
@@ -784,6 +806,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{n} epochs"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} of {total} runs"
 msgstr ""
 
 #, python-brace-format

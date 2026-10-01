@@ -3,7 +3,7 @@
 import { t } from './i18n.js';
 import { api } from './api.js';
 import { Player } from './player.js';
-import { History, diffSummary, esc } from './history.js';
+import { History, diffSummary, esc, localDate } from './history.js';
 import { exportVideo, saveBlob } from './recorder.js';
 import { fmtLoss } from './plot.js';
 import { dataSummary, lossSummary, modelSummary, optimSummary, videoTitle } from './describe.js';
@@ -15,7 +15,9 @@ export class OutputPanel {
       title: $('result-title'), sub: $('result-sub'), status: $('result-status'), diff: $('result-diff'),
       progress: $('progress'), bar: root.querySelector('[data-role="progress"] > div'),
       mp4: $('mp4'), dialog: $('mp4-dialog'),
+      from: $('date-from'), to: $('date-to'), count: $('history-count'), csv: $('csv'),
     };
+    this.login = root.dataset.login || '';
     this.userId = userId;
     this.toast = toast;
     this.cache = new Map();                   // run id → full run (frames etc.)
@@ -28,6 +30,7 @@ export class OutputPanel {
     });
     this.el.mp4.addEventListener('click', () => this.openMp4Dialog());
     this.setupMp4Dialog();
+    this.setupHistoryTools($);
     this.showHeader(null);
   }
 
@@ -76,6 +79,29 @@ export class OutputPanel {
     } catch (err) {
       this.toast?.(err.message, 'error');
     }
+  }
+
+  // ---------- history: date filter and CSV ----------
+
+  setupHistoryTools($) {
+    const { from, to, count, csv } = this.el;
+    const apply = () => this.history.setFilter({ from: from.value, to: to.value });
+    const set = (a, b) => { from.value = a; to.value = b; apply(); };
+    from.addEventListener('change', () => { to.min = from.value; apply(); });
+    to.addEventListener('change', () => { from.max = to.value; apply(); });
+    $('date-today').addEventListener('click', () => { const d = localDate(new Date()); set(d, d); });
+    $('date-all').addEventListener('click', () => set('', ''));
+    this.history.onRender = (shown, total) => {
+      count.textContent = this.history.filtered ? t('{n} of {total} runs', { n: shown, total }) : '';
+      csv.disabled = shown === 0;
+    };
+    csv.addEventListener('click', () => {
+      const { from: a, to: b } = this.history.filter;
+      const span = a || b ? `_${a || 'start'}_${b || localDate(new Date())}` : '';
+      const blob = new Blob([this.history.toCsv()], { type: 'text/csv;charset=utf-8' });
+      saveBlob(blob, `history_${this.login || 'runs'}${span}.csv`);
+    });
+    this.history.render();
   }
 
   // ---------- live training ----------

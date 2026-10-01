@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 04:37+0900\n"
+"POT-Creation-Date: 2026-10-01 10:50+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -61,6 +61,9 @@ msgstr "고급 설정"
 msgid "Advanced · other models"
 msgstr "고급 설정 · 다른 예측 모델"
 
+msgid "All"
+msgstr "전체"
+
 msgid "All data (batch)"
 msgstr "전체 데이터 (BGD)"
 
@@ -94,16 +97,16 @@ msgid "CSV with columns student_id,name (or 학번,이름). Existing students ke
 msgstr "열 이름이 학번,이름(또는 student_id,name)인 CSV 파일. 이미 있는 학생의 비밀번호와 이력은 그대로 유지됩니다."
 
 #, python-brace-format
-msgid "Can a {act} neural network learn {f} with {loss} loss?"
-msgstr "{act} 신경망은 {loss} 손실로 {f} 함수를 배울 수 있을까?"
+msgid "Can a {act} neural network learn {f}?"
+msgstr "{act} 신경망은 {f} 함수를 배울 수 있을까?"
 
 #, python-brace-format
 msgid "Can a {model} learn {f}?"
 msgstr "{model} 모델은 {f} 함수를 배울 수 있을까?"
 
 #, python-brace-format
-msgid "Can linear regression learn {f} with {loss} loss?"
-msgstr "선형회귀는 {loss} 손실로 {f} 함수를 배울 수 있을까?"
+msgid "Can linear regression learn {f}?"
+msgstr "선형회귀는 {f} 함수를 배울 수 있을까?"
 
 msgid "Cancel"
 msgstr "취소"
@@ -207,6 +210,9 @@ msgstr "트리에서는 MSE/MAE가 가지를 나누는 기준도 됩니다 (Hube
 
 msgid "Formula"
 msgstr "수식"
+
+msgid "From date"
+msgstr "시작 날짜"
 
 msgid "Function"
 msgstr "함수"
@@ -380,6 +386,9 @@ msgstr "아직 파일 없음"
 msgid "No result yet."
 msgstr "아직 결과가 없습니다."
 
+msgid "No runs in this period."
+msgstr "이 기간에는 실행 기록이 없습니다."
+
 msgid "No runs yet."
 msgstr "아직 실험이 없습니다."
 
@@ -492,6 +501,9 @@ msgstr "#{n} 실험과 같은 설정"
 msgid "Save"
 msgstr "저장"
 
+msgid "Save CSV"
+msgstr "CSV 저장"
+
 msgid "Save MP4"
 msgstr "MP4 저장"
 
@@ -507,6 +519,9 @@ msgstr "왼쪽에서 실험을 설정하고 학습 버튼을 누르세요."
 
 msgid "Settings"
 msgstr "설정"
+
+msgid "Settings (JSON)"
+msgstr "설정 (JSON)"
 
 msgid "Shape of the graph"
 msgstr "그래프의 모양"
@@ -528,6 +543,12 @@ msgstr "분할 학습 (경사하강법 없음)"
 
 msgid "Squared for small errors, absolute for big ones"
 msgstr "작은 오차는 제곱, 큰 오차는 절댓값"
+
+msgid "Status"
+msgstr "상태"
+
+msgid "Steps"
+msgstr "단계 수"
 
 msgid "Steps straight down the slope"
 msgstr "기울기 방향으로 그대로 한 걸음"
@@ -602,9 +623,6 @@ msgstr "학번과 이름이 명단과 맞지 않습니다. 선생님께 문의�
 msgid "The two passwords are different."
 msgstr "두 비밀번호가 다릅니다."
 
-msgid "The video is made in your browser (1080×1920): title, prediction, and loss curve."
-msgstr "영상은 이 브라우저에서 만들어집니다 (1080×1920): 제목, 모델 예측, 손실 그래프."
-
 msgid "This browser can only record WebM, so the video was saved as WebM."
 msgstr "이 브라우저는 WebM만 녹화할 수 있어 WebM으로 저장했습니다."
 
@@ -619,6 +637,12 @@ msgstr "시각"
 
 msgid "Title"
 msgstr "제목"
+
+msgid "To date"
+msgstr "끝 날짜"
+
+msgid "Today"
+msgstr "오늘"
 
 #, python-brace-format
 msgid "Too much computation: {steps} update steps (limit {limit}). Reduce the epochs or use a larger batch."
@@ -760,6 +784,10 @@ msgid "{n} epochs"
 msgstr "{n} 에포크"
 
 #, python-brace-format
+msgid "{n} of {total} runs"
+msgstr "{total}개 중 {n}개"
+
+#, python-brace-format
 msgid "{n} points"
 msgstr "데이터 {n}개"
 
@@ -792,4 +820,3 @@ msgstr "■ 중지"
 
 msgid "▶ Train"
 msgstr "▶ 학습"
-
