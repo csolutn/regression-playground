@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 10:50+0900\n"
+"POT-Creation-Date: 2026-10-01 17:26+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -36,6 +36,9 @@ msgstr "신경망의 은닉층은 1~{max}개여야 합니다."
 
 msgid "A straight line (or flat plane): ŷ = w·x + b"
 msgstr "직선(또는 평면): ŷ = w·x + b"
+
+msgid "About the password"
+msgstr "비밀번호 안내"
 
 msgid "Activation"
 msgstr "활성화"
@@ -111,6 +114,9 @@ msgstr "선형회귀는 {f} 함수를 배울 수 있을까?"
 msgid "Cancel"
 msgstr "취소"
 
+msgid "Car speed → braking distance"
+msgstr "자동차 속도 → 제동 거리"
+
 msgid "Choose a CSV file."
 msgstr "CSV 파일을 선택하세요."
 
@@ -129,6 +135,9 @@ msgstr "입력 열을 한두 개 고르세요."
 #, python-format
 msgid "Class list imported: %(added)d added, %(updated)d updated."
 msgstr "명단을 불러왔습니다: %(added)d명 추가, %(updated)d명 수정."
+
+msgid "Close"
+msgstr "닫기"
 
 #, python-brace-format
 msgid "Column not found in the CSV: {columns}"
@@ -239,6 +248,12 @@ msgstr "은닉층 {i}"
 msgid "History"
 msgstr "학습 이력"
 
+msgid "Hour of day → temperature"
+msgstr "하루 중 시각 → 기온"
+
+msgid "House size + age → price (2 inputs)"
+msgstr "집 넓이 + 연식 → 가격 (입력 2개)"
+
 msgid "How big each correction step is."
 msgstr "한 번에 얼마나 크게 고칠지 정합니다."
 
@@ -265,6 +280,10 @@ msgstr "손실이 줄어들도록 그래프를 고치는 방법입니다."
 
 msgid "Huber δ"
 msgstr "Huber δ"
+
+#, python-format
+msgid "If you lose your password, ask your teacher, %(name)s."
+msgstr "비밀번호를 분실할 경우 교사 %(name)s에게 문의하세요."
 
 msgid "Import"
 msgstr "불러오기"
@@ -319,17 +338,23 @@ msgstr "#{n} 실험의 설정을 불러왔습니다."
 msgid "Log in"
 msgstr "로그인"
 
-msgid "Log in with the student number and name on your class list."
-msgstr "명단에 있는 학번과 이름으로 로그인하세요."
+msgid "Log in with your student number and name."
+msgstr "학번과 이름으로 로그인하세요."
 
 msgid "Log out"
 msgstr "로그아웃"
+
+msgid "Log scale"
+msgstr "로그 스케일"
 
 msgid "Loss"
 msgstr "손실"
 
 msgid "Loss function"
 msgstr "손실함수"
+
+msgid "Loss graph"
+msgstr "손실 그래프"
 
 msgid "Loss on a log scale"
 msgstr "손실을 로그 눈금으로"
@@ -398,11 +423,23 @@ msgstr "아직 학생이 없습니다. 위에서 명단을 불러오세요."
 msgid "Noise"
 msgstr "노이즈"
 
+msgid "Not trained yet"
+msgstr "학습 전"
+
 msgid "Number of points"
 msgstr "데이터 개수"
 
 msgid "Number of trees"
 msgstr "트리 개수"
+
+msgid "One step after each small group of points"
+msgstr "작은 묶음마다 한 걸음"
+
+msgid "One step after every single point"
+msgstr "데이터 하나마다 한 걸음"
+
+msgid "One step after looking at all the data"
+msgstr "데이터 전체를 보고 한 걸음"
 
 #, python-brace-format
 msgid "One tree of depth {d}: up to {leaves} boxes (leaves), each predicting one value. The animation grows the depth from 1 to {d}."
@@ -498,6 +535,12 @@ msgstr "시드가 같으면 데이터와 처음 가중치가 같습니다."
 msgid "Same settings as #{n}"
 msgstr "#{n} 실험과 같은 설정"
 
+msgid "Sample data"
+msgstr "샘플 데이터"
+
+msgid "Sample data (made up)…"
+msgstr "샘플 데이터 (예시용)…"
+
 msgid "Save"
 msgstr "저장"
 
@@ -529,6 +572,9 @@ msgstr "그래프의 모양"
 msgid "Share of points kept aside to check the model on data it did not learn from."
 msgstr "학습에 쓰지 않고 따로 두었다가, 처음 보는 데이터로 모델을 확인하는 비율입니다."
 
+msgid "Show loss graph"
+msgstr "손실 그래프 보기"
+
 msgid "Show this run"
 msgstr "이 실험 보기"
 
@@ -550,9 +596,6 @@ msgstr "상태"
 msgid "Steps"
 msgstr "단계 수"
 
-msgid "Steps straight down the slope"
-msgstr "기울기 방향으로 그대로 한 걸음"
-
 msgid "Stopped (not saved)"
 msgstr "중지됨 (저장 안 함)"
 
@@ -571,8 +614,14 @@ msgstr "학생 정보를 수정했습니다."
 msgid "Students"
 msgstr "학생"
 
+msgid "Study hours → exam score"
+msgstr "공부 시간 → 시험 점수"
+
 msgid "Teacher"
 msgstr "교사"
+
+msgid "Temperature → ice cream sales"
+msgstr "기온 → 아이스크림 판매량"
 
 msgid "The CSV file could not be read."
 msgstr "CSV 파일을 읽을 수 없습니다."
@@ -613,6 +662,9 @@ msgstr "입력 범위의 최솟값은 최댓값보다 작아야 합니다."
 
 msgid "The questions (x) and correct answers (y) the model learns from."
 msgstr "모델이 배울 문제(x)와 정답(y)입니다."
+
+msgid "The server is busy. Try again in a moment."
+msgstr "지금 서버가 바쁩니다. 잠시 후 다시 시도해 주세요."
 
 msgid "The shape of graph ŷ = f(x) the model can draw."
 msgstr "모델이 그릴 수 있는 그래프 ŷ = f(x)의 모양입니다."
@@ -656,6 +708,9 @@ msgstr "학습 손실"
 
 msgid "Training data"
 msgstr "훈련 데이터"
+
+msgid "Training failed on the server. Try again."
+msgstr "서버에서 학습 중 문제가 생겼습니다. 다시 시도해 주세요."
 
 msgid "Training loss"
 msgstr "학습 손실"
@@ -721,6 +776,9 @@ msgstr "비밀번호가 틀렸습니다. 잊었다면 선생님께 초기화를 
 
 msgid "Yellow cells changed from the run before. Click a row to show it."
 msgstr "노란 칸은 바로 전 실험과 달라진 설정입니다. 행을 누르면 그 실험을 보여 줍니다."
+
+msgid "Your password is set to what you type at your first login."
+msgstr "비밀번호는 첫 로그인시 입력한 값으로 설정됩니다."
 
 msgid "average"
 msgstr "평균"
@@ -820,3 +878,4 @@ msgstr "■ 중지"
 
 msgid "▶ Train"
 msgstr "▶ 학습"
+

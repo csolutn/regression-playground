@@ -1,7 +1,5 @@
-// Custom inputs: hidden-layer editor, CSV upload with column pickers, and the data preview.
+// Custom inputs: hidden-layer editor and CSV upload with column pickers.
 import { t } from './i18n.js';
-import { api } from './api.js';
-import { drawPrediction, fitCanvas, screenTheme } from './plot.js';
 
 // ---------- ② hidden layers: [8, 8] ----------
 
@@ -68,6 +66,7 @@ function headerOf(text) {
 
 export function mountCsvInput(root, settings, { maxBytes, toast }) {
   const file = root.querySelector('[data-role=csv-file]');
+  const sample = root.querySelector('[data-role=csv-sample]');
   const features = root.querySelector('[data-role=csv-features]');
   const target = root.querySelector('select[name=csv_target]');
   const name = root.querySelector('[data-role=csv-name]');
@@ -77,15 +76,31 @@ export function mountCsvInput(root, settings, { maxBytes, toast }) {
     const f = file.files[0];
     if (!f) return;
     if (f.size > maxBytes) { toast(t('The CSV file is too large (max 1 MB).'), 'error'); file.value = ''; return; }
-    const text = decode(await f.arrayBuffer());
+    load(f.name, decode(await f.arrayBuffer()));
+    file.value = '';
+  });
+
+  sample.addEventListener('change', async () => {
+    const url = sample.value;
+    sample.value = '';
+    if (!url) return;
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.statusText);
+      load(url.split('/').pop(), await r.text());
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
+
+  function load(fileName, text) {
     const cols = headerOf(text);
     if (cols.length < 2) { toast(t('The CSV needs a header row with at least two columns.'), 'error'); return; }
     settings.set({
-      csv_name: f.name, csv_text: text, data_source: 'csv',
+      csv_name: fileName, csv_text: text, data_source: 'csv',
       csv_features: cols.slice(0, Math.min(2, cols.length - 1)), csv_target: cols.at(-1),
     });
-    file.value = '';
-  });
+  }
 
   features.addEventListener('change', e => {
     const checked = [...features.querySelectorAll('input:checked')];
@@ -116,52 +131,4 @@ export function mountCsvInput(root, settings, { maxBytes, toast }) {
 
   settings.addEventListener('change', render);
   render();
-}
-
-// ---------- ① data preview (server builds the same data the trainer will use) ----------
-
-const DATA_KEYS = ['data_source', 'n_inputs', 'function_1d', 'function_2d', 'expression_1d', 'expression_2d',
-  'x_min', 'x_max', 'data_size', 'noise_std', 'validation_ratio', 'seed', 'csv_text', 'csv_features', 'csv_target'];
-
-export function mountPreview(canvas, message, settings) {
-  let last = '', timer = null, meta = null, seq = 0;
-
-  const draw = () => {
-    const { ctx, w, h } = fitCanvas(canvas);
-    const th = screenTheme();
-    ctx.fillStyle = th.bg;
-    ctx.fillRect(0, 0, w, h);
-    if (!meta) return;
-    const cfg = settings.get();
-    drawPrediction(ctx, { x: 0, y: 0, w, h }, { meta, config: cfg, frames: [] }, 0, th, 0.85, { badges: false });
-  };
-
-  async function fetchPreview() {
-    const cfg = settings.get();
-    const key = JSON.stringify(DATA_KEYS.map(k => cfg[k]));
-    if (key === last) return;
-    last = key;
-    const mine = ++seq;
-    try {
-      const m = await api.preview(cfg);
-      if (mine !== seq) return;
-      meta = m;
-      message.textContent = '';
-      message.hidden = true;
-    } catch (err) {
-      if (mine !== seq) return;
-      meta = null;
-      message.textContent = err.messages ? err.messages.join(' ') : String(err);
-      message.hidden = false;
-    }
-    draw();
-  }
-
-  settings.addEventListener('change', e => {
-    if (!e.detail.keys.some(k => DATA_KEYS.includes(k))) return;
-    clearTimeout(timer);
-    timer = setTimeout(fetchPreview, 350);
-  });
-  new ResizeObserver(draw).observe(canvas);
-  fetchPreview();
 }

@@ -176,11 +176,13 @@ function polyline(ctx, xs, ys, X, Y) {
 // ---------- ② prediction ----------
 
 // Frame i of a run: the model's prediction plus Epoch and settings badges
+// opts.dataOnly: just the data points (before training), without the true function or a prediction
 export function drawPrediction(ctx, r, run, idx, th, s = 1, opts = {}) {
-  const frame = run.frames[idx];
-  const P = run.meta.n_inputs === 1
-    ? drawPrediction1D(ctx, r, run.meta, frame?.pred, th, s)
-    : drawPrediction2D(ctx, r, run.meta, frame?.pred, th, s, opts.view || DEFAULT_VIEW);
+  const frame = opts.dataOnly ? null : run.frames[idx];
+  const m = opts.dataOnly ? { ...run.meta, y_true: null } : run.meta;
+  const P = m.n_inputs === 1
+    ? drawPrediction1D(ctx, r, m, frame?.pred, th, s, !opts.dataOnly)
+    : drawPrediction2D(ctx, r, m, frame?.pred, th, s, opts.view || DEFAULT_VIEW, !opts.dataOnly);
   if (opts.badges === false) return;
   const total = run.meta.total_steps;
   const step = frame ? frame.step : 0;
@@ -189,7 +191,7 @@ export function drawPrediction(ctx, r, run, idx, th, s = 1, opts = {}) {
   badge(ctx, configBadge(run.config), P.x + P.w - 10 * s, P.y + 10 * s, 'right', th, s, MONO, 11.5);
 }
 
-function drawPrediction1D(ctx, r, m, pred, th, s) {
+function drawPrediction1D(ctx, r, m, pred, th, s, withPred) {
   const xs = m.axes[0];
   const [ylo, yhi] = yRange(m);
   const xlo = xs[0], xhi = xs[xs.length - 1];
@@ -234,7 +236,7 @@ function drawPrediction1D(ctx, r, m, pred, th, s) {
     { kind: 'dot', color: th.val, label: t('Validation data') },
   ];
   if (m.y_true) items.push({ color: th.truth, width: 1.6, dash: [6, 5], label: t('True function') });
-  items.push({ color: th.pred, width: 3.4, label: t('Prediction') });
+  if (withPred) items.push({ color: th.pred, width: 3.4, label: t('Prediction') });
   legend(ctx, items, P.x + P.w - 10 * s, P.y + P.h - 10 * s, 'right', th, s);
   return P;
 }
@@ -250,7 +252,7 @@ function coolwarm(u) {
   return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(',')})`;
 }
 
-function drawPrediction2D(ctx, r, m, pred, th, s, view) {
+function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred) {
   const [ax1, ax2] = m.axes, n1 = ax1.length, n2 = ax2.length;
   const [zlo, zhi] = yRange(m);
   const P = { x: r.x + 4 * s, y: r.y + 4 * s, w: r.w - 8 * s, h: r.h - 8 * s };
@@ -327,10 +329,8 @@ function drawPrediction2D(ctx, r, m, pred, th, s, view) {
   lab(0, ca > 0 ? -1.12 : 1.12, m.feature_names[0]);
   lab(sa > 0 ? 1.12 : -1.12, 0, m.feature_names[1]);
 
-  const note = [
-    { kind: 'dot', color: th.train, label: t('Training data') },
-    { color: coolwarm(0.8), width: 6, label: t('Prediction (surface)') },
-  ];
+  const note = [{ kind: 'dot', color: th.train, label: t('Training data') }];
+  if (withPred) note.push({ color: coolwarm(0.8), width: 6, label: t('Prediction (surface)') });
   if (m.y_true) note.push({ color: th.muted, width: 1, label: t('True function (grid)') });
   legend(ctx, note, P.x + P.w - 10 * s, P.y + P.h - 10 * s, 'right', th, s);
   return P;

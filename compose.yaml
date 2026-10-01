@@ -1,0 +1,38 @@
+# The playground on the Mac mini, published only through a Cloudflare Tunnel (no open ports).
+#   docker compose up -d --build        start / update
+#   docker compose logs -f web          logs
+# Secrets live in deploy.env and tunnel.env (not in git; copy the *.example files).
+services:
+  web:
+    build: .
+    env_file: deploy.env
+    environment:
+      TRUST_PROXY: "1"                  # behind cloudflared: trust X-Forwarded-Proto, send secure cookies
+    volumes:
+      - data:/srv/instance              # playground.db
+    ports:
+      - "127.0.0.1:8080:8000"           # this Mac only, for the teacher and checks; students use the tunnel
+    restart: unless-stopped
+    cpus: 7                             # leave room inside the VM for gunicorn and cloudflared
+    mem_limit: 6g
+    pids_limit: 512
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    env_file: tunnel.env                # TUNNEL_TOKEN from the Cloudflare dashboard
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 256m
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+volumes:
+  data:

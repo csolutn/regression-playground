@@ -17,6 +17,7 @@ def N_(s):
 
 
 GRADIENT_MODELS = ('linear', 'neural_net')
+PLAIN_GD = ('bgd', 'sgd', 'mini')     # gradient descent whose name fixes the batch: all data / 1 point / a mini-batch
 TREE_MODELS = ('decision_tree', 'random_forest', 'gradient_boosting')
 
 DEFAULTS = {
@@ -39,7 +40,7 @@ DEFAULTS = {
     'csv_target': '',
     # ② prediction function (model)
     'model': 'neural_net',
-    'hidden_layers': [8, 8],
+    'hidden_layers': [4],
     'activation': 'relu',
     'max_depth': 4,
     'n_estimators': 50,
@@ -47,10 +48,10 @@ DEFAULTS = {
     'loss': 'mse',
     'huber_delta': 1.0,
     # ④ optimization
-    'optimizer': 'adam',
+    'optimizer': 'bgd',
     'learning_rate': 0.01,
-    'epochs': 300,
-    'batch_method': 'mini',
+    'epochs': 1000,
+    'batch_method': 'bgd',
     'batch_size': 32,
     'tree_learning_rate': 0.1,
 }
@@ -63,7 +64,7 @@ CHOICES = {
     'model': GRADIENT_MODELS + TREE_MODELS,
     'activation': ('relu', 'leaky_relu', 'elu', 'gelu', 'tanh', 'sigmoid', 'linear'),
     'loss': ('mse', 'mae', 'huber'),
-    'optimizer': ('sgd', 'momentum', 'rmsprop', 'adam'),
+    'optimizer': PLAIN_GD + ('momentum', 'rmsprop', 'adam'),
     'batch_method': ('sgd', 'mini', 'bgd'),
 }
 
@@ -74,11 +75,11 @@ RANGES = {  # (min, max) inclusive
     'noise_std': (0, 10),
     'validation_ratio': (0.05, 0.5),
     'seed': (0, 2**31 - 1),
-    'max_depth': (1, 12),
-    'n_estimators': (1, 300),
+    'max_depth': (1, 8),
+    'n_estimators': (1, 100),
     'huber_delta': (0.05, 10),
     'learning_rate': (1e-5, 1),
-    'epochs': (1, 3000),
+    'epochs': (1, 1500),
     'batch_size': (1, 2000),
     'tree_learning_rate': (0.01, 1),
 }
@@ -98,8 +99,8 @@ FIELD_LABELS = {
 }
 
 MAX_HIDDEN_LAYERS = 6
-MAX_NEURONS = 64
-MAX_GRADIENT_STEPS = 300_000     # epochs × mini-batches per epoch, protects the server
+MAX_NEURONS = 32
+MAX_GRADIENT_STEPS = 400_000     # epochs × mini-batches per epoch, protects the server; SGD on the default data at the default epochs fits
 MAX_CSV_BYTES = 1_000_000
 MAX_CSV_ROWS = 5000
 
@@ -141,6 +142,9 @@ def validate(raw):
     for key, (lo, hi) in RANGES.items():
         if isinstance(cfg[key], (int, float)) and not lo <= cfg[key] <= hi:
             errors.append((N_('{field} must be between {min} and {max}.'), {'field': key, 'min': lo, 'max': hi}))
+
+    if cfg['optimizer'] in PLAIN_GD:      # e.g. SGD really steps after every single point
+        cfg['batch_method'] = cfg['optimizer']
 
     if cfg['x_min'] >= cfg['x_max']:
         errors.append((N_('The input range minimum must be smaller than the maximum.'), {}))

@@ -9,8 +9,12 @@
     <div class="field">
       <span class="label">{{ _('Optimizer') }}</span>
       <div class="choices choices-2">
+        <label class="choice"><input type="radio" name="optimizer" value="bgd">
+          <b>BGD</b><small>{{ _('One step after looking at all the data') }}</small></label>
         <label class="choice"><input type="radio" name="optimizer" value="sgd">
-          <b>SGD</b><small>{{ _('Steps straight down the slope') }}</small></label>
+          <b>SGD</b><small>{{ _('One step after every single point') }}</small></label>
+        <label class="choice"><input type="radio" name="optimizer" value="mini">
+          <b>{{ _('Mini-batch') }}</b><small>{{ _('One step after each small group of points') }}</small></label>
         <label class="choice"><input type="radio" name="optimizer" value="momentum">
           <b>Momentum</b><small>{{ _('Keeps rolling in the direction it was going') }}</small></label>
         <label class="choice"><input type="radio" name="optimizer" value="rmsprop">
@@ -29,14 +33,14 @@
       </label>
       <label class="field">
         <span class="label">{{ _('Epochs') }} <output data-for="epochs"></output></span>
-        <input type="range" name="epochs" min="10" max="3000" step="10">
+        <input type="range" name="epochs" min="10" max="1500" step="10">
         <small class="hint">{{ _('How many times the model sees all the training data.') }}</small>
       </label>
     </div>
 
     <details class="advanced">
       <summary>{{ _('Advanced') }}</summary>
-      <div class="field">
+      <div class="field" data-show-if="optimizer:momentum,rmsprop,adam">
         <span class="label">{{ _('Batch method') }}</span>
         <div class="segmented">
           <label><input type="radio" name="batch_method" value="sgd"><span>{{ _('1 point at a time') }}</span></label>

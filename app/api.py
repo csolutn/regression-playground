@@ -2,10 +2,13 @@
 
 POST /api/train streams NDJSON events from app.ml.trainer (see its docstring), then
 saves the run and sends {'type': 'saved', 'run': row}. The browser draws everything,
-so the server only sends numbers.
+so the server only sends numbers. Runs train in worker processes (app.ml.pool); while all
+are busy the stream sends {'type': 'queued'} every few seconds, and {'type': 'error',
+'message'} when the wait or the worker takes too long.
 """
 import json
 import threading
+import time
 
 from flask import Blueprint, Response, abort, current_app, g, jsonify, request, stream_with_context
 from flask_babel import gettext
@@ -14,20 +17,22 @@ from .auth import login_required
 from .extensions import db
 from .ml import data as ml_data
 from .ml import options, trainer
+from .ml.pool import TrainingPool
 from .models import Run, User
 
 bp = Blueprint('api', __name__, url_prefix='/api')
-_slots = None
-_slots_lock = threading.Lock()
+_pool = None
+_pool_lock = threading.Lock()
+QUEUE_POLL_S = 3       # a 'queued' line this often keeps the browser informed and notices one that left
 
 
-def training_slots():
-    """Limits how many runs train at the same time (MAX_CONCURRENT_TRAININGS)."""
-    global _slots
-    with _slots_lock:
-        if _slots is None:
-            _slots = threading.BoundedSemaphore(current_app.config['MAX_CONCURRENT_TRAININGS'])
-        return _slots
+def training_pool():
+    """MAX_CONCURRENT_TRAININGS worker processes, started on the first run."""
+    global _pool
+    with _pool_lock:
+        if _pool is None:
+            _pool = TrainingPool(current_app.config['MAX_CONCURRENT_TRAININGS'])
+        return _pool
 
 
 def translate(msgid, params):
@@ -73,24 +78,31 @@ def train():
     if errors:
         return error_response(errors)
     try:                           # fail fast on bad data before starting the stream
-        events = trainer.train(cfg)
-        first = next(events)
+        trainer.check(cfg)
     except (ml_data.DataError, trainer.BudgetError) as exc:
         return error_response([(exc.msgid, exc.params)])
-    user_id = g.user.id
+    user_id, conf = g.user.id, current_app.config
 
     @stream_with_context
     def generate():
-        slots = training_slots()
-        if not slots.acquire(blocking=False):
-            yield line({'type': 'queued'})
-            slots.acquire()
+        pool = training_pool()
+        if not pool.acquire(timeout=0):
+            give_up = time.monotonic() + conf['QUEUE_TIMEOUT_S']
+            while True:
+                yield line({'type': 'queued'})
+                if pool.acquire(timeout=QUEUE_POLL_S):
+                    break
+                if time.monotonic() > give_up:
+                    yield line({'type': 'error', 'message': gettext('The server is busy. Try again in a moment.')})
+                    return
+        limit = conf['TRAINING_TIME_LIMIT_S']
+        stored = {'meta': None, 'frames': [], 'loss': {'steps': [], 'train': [], 'val': []}}
+        end = None
         try:
-            stored = {'meta': first['meta'], 'frames': [], 'loss': {'steps': [], 'train': [], 'val': []}}
-            yield line(first)
-            end = None
-            for event in events:
-                if event['type'] == 'frame':
+            for event in pool.stream(cfg, time_limit=limit, idle_timeout=limit + 30):   # frees the slot itself
+                if event['type'] == 'start':
+                    stored['meta'] = event['meta']
+                elif event['type'] == 'frame':
                     stored['frames'].append({k: event[k] for k in ('step', 'pred', 'train', 'val')})
                 elif event['type'] == 'loss':
                     for k in stored['loss']:
@@ -98,10 +110,12 @@ def train():
                 elif event['type'] == 'end':
                     end = event
                 yield line(event)
-            run = save_run(user_id, cfg, end, stored)
-            yield line({'type': 'saved', 'run': run.to_row()})
-        finally:
-            slots.release()
+        except (RuntimeError, TimeoutError):
+            current_app.logger.exception('training failed')
+            yield line({'type': 'error', 'message': gettext('Training failed on the server. Try again.')})
+            return
+        run = save_run(user_id, cfg, end, stored)
+        yield line({'type': 'saved', 'run': run.to_row()})
 
     return Response(generate(), mimetype='application/x-ndjson',
                     headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})

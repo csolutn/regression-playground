@@ -14,6 +14,13 @@ def test_login_requires_roster_and_sets_password_on_first_login(client):
     assert client.get('/').status_code == 200
 
 
+def test_login_page_explains_the_password(client):
+    html = client.get('/login').get_data(as_text=True)
+    assert '명단에 있는' not in html
+    assert '비밀번호는 첫 로그인시 입력한 값으로 설정됩니다.' in html
+    assert '교사 정솔에게 문의하세요' in html
+
+
 def test_name_spaces_are_ignored(client):
     assert login(client, name='김 하늘').status_code == 302
 
@@ -90,3 +97,22 @@ def test_history_tools_name_the_csv_after_the_student(client):
     client.post('/logout')
     login(client, 'teacher', '선생님', 'teachpw', confirm=False)
     assert 'data-login="20101"' in client.get('/teacher/students/1').get_data(as_text=True)
+
+
+def test_train_gives_up_when_every_worker_is_busy(app, client, monkeypatch):
+    from app import api
+    monkeypatch.setattr(api, 'QUEUE_POLL_S', 0.05)
+    app.config['QUEUE_TIMEOUT_S'] = 0.1
+    login(client)
+    with app.app_context():
+        pool = api.training_pool()
+    taken = 0
+    while pool.acquire(timeout=0):
+        taken += 1
+    try:
+        r = client.post('/api/train', json={'epochs': 10})
+        events = [json.loads(line) for line in r.get_data(as_text=True).splitlines()]
+        assert events[0]['type'] == 'queued' and events[-1]['type'] == 'error'
+    finally:
+        for _ in range(taken):
+            pool.slots.release()

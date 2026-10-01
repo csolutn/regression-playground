@@ -2,7 +2,8 @@
 //   data-show-if="model:neural_net"                 shown when model is neural_net
 //   data-show-if="n_inputs:1;function_1d:custom"    all clauses must match (values separated by ,)
 //   data-json                                       hidden input holding a JSON value (e.g. hidden_layers)
-// Values are kept per user in localStorage, so a reload keeps the experiment.
+// Values are kept per user in localStorage, so a reload keeps the experiment
+// (playground.js bumps the key version when the defaults change, so everyone starts from them once).
 
 export class Settings extends EventTarget {
   constructor(form, defaults, storageKey) {

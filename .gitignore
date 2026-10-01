@@ -13,3 +13,8 @@ instance/
 # OS / editor
 .DS_Store
 .vscode/
+
+# Deploy secrets and backups
+deploy.env
+tunnel.env
+backups/

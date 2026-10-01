@@ -13,7 +13,7 @@ export class OutputPanel {
     const $ = role => root.querySelector(`[data-role="${role}"]`);
     this.el = {
       title: $('result-title'), sub: $('result-sub'), status: $('result-status'), diff: $('result-diff'),
-      progress: $('progress'), bar: root.querySelector('[data-role="progress"] > div'),
+      busy: $('viz-busy'), busyText: $('busy-text'), bar: root.querySelector('[data-role="progress"] > div'),
       mp4: $('mp4'), dialog: $('mp4-dialog'),
       from: $('date-from'), to: $('date-to'), count: $('history-count'), csv: $('csv'),
     };
@@ -104,6 +104,15 @@ export class OutputPanel {
     this.history.render();
   }
 
+  // ---------- data preview: the data the next run will learn from, before training ----------
+
+  showPreview(config, meta, error = null) {
+    const run = { preview: true, config, meta, error, frames: [], loss: { steps: [], train: [], val: [] }, row: null };
+    this.player.setRun(run);
+    this.history.setActive(null);
+    this.showHeader(run);
+  }
+
   // ---------- live training ----------
 
   startLive(config) {
@@ -119,6 +128,7 @@ export class OutputPanel {
     if (ev.type === 'queued') {
       this.el.status.className = 'pill';
       this.el.status.textContent = t('Waiting for a free slot…');
+      this.setProgress(0, t('Waiting for a free slot…'));
     } else if (ev.type === 'start') {
       run.meta = ev.meta;
       this.player.setRun(run, { live: true });
@@ -131,6 +141,9 @@ export class OutputPanel {
       for (const k of ['steps', 'train', 'val']) run.loss[k].push(...ev[k]);
     } else if (ev.type === 'end') {
       run.end = ev;
+    } else if (ev.type === 'error') {
+      this.stopLive(run, t('Error'));
+      this.toast?.(ev.message, 'error');
     } else if (ev.type === 'saved') {
       run.live = false;
       run.row = ev.run;
@@ -140,6 +153,7 @@ export class OutputPanel {
       this.player.endLive();
       this.setProgress(null);
       this.showHeader(run);
+      this.player.playFromStart();          // the run is done: replay it from epoch 0 at the chosen speed
     }
   }
 
@@ -150,9 +164,14 @@ export class OutputPanel {
     this.showHeader(run, message);
   }
 
-  setProgress(p) {
-    this.el.progress.hidden = p == null;
-    if (p != null) this.el.bar.style.width = `${Math.round(Math.min(1, p) * 100)}%`;
+  // progress bar over the graph while training (p = 0…1, null hides it)
+  setProgress(p, text) {
+    const { busy, busyText, bar } = this.el;
+    busy.hidden = p == null;
+    if (p == null) return;
+    const pct = Math.round(Math.min(1, p) * 100);
+    bar.style.width = `${pct}%`;
+    busyText.textContent = text || `${t('Training…')} ${pct}%`;
   }
 
   // ---------- header: what this run is, and what changed from the one before ----------
@@ -168,6 +187,14 @@ export class OutputPanel {
       return;
     }
     const cfg = run.config;
+    if (run.preview) {
+      title.textContent = t('Data preview');
+      sub.textContent = dataSummary(cfg);
+      status.className = run.error ? 'pill pill-warn' : 'pill';
+      status.textContent = run.error ? t('Error') : t('Not trained yet');
+      diff.innerHTML = '';
+      return;
+    }
     title.textContent = run.row ? `#${run.row.seq} · ${modelSummary(cfg)}` : modelSummary(cfg);
     sub.textContent = [dataSummary(cfg), lossSummary(cfg), optimSummary(cfg)].join('  |  ');
 

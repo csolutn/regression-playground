@@ -6,6 +6,7 @@ const OPTIONS = () => window.OPTIONS || { presets: { 1: {}, 2: {} } };
 export const GRADIENT_MODELS = ['linear', 'neural_net'];
 export const TREE_MODELS = ['decision_tree', 'random_forest', 'gradient_boosting'];
 export const isTree = cfg => TREE_MODELS.includes(cfg.model);
+export const PLAIN_GD = ['bgd', 'sgd', 'mini'];     // the optimizer's name fixes the batch (app/ml/options.py)
 
 export const modelName = m => ({
   linear: t('Linear regression'), neural_net: t('Neural network'), decision_tree: t('Decision tree'),
@@ -13,7 +14,9 @@ export const modelName = m => ({
 })[m] || m;
 
 export const lossName = cfg => ({ mse: 'MSE', mae: 'MAE (L1)', huber: `Huber (δ=${cfg.huber_delta})` })[cfg.loss];
-export const optimizerName = o => ({ sgd: 'SGD', momentum: 'Momentum', rmsprop: 'RMSprop', adam: 'Adam' })[o] || o;
+export const optimizerName = o => ({
+  bgd: 'BGD', mini: t('Mini-batch'), sgd: 'SGD', momentum: 'Momentum', rmsprop: 'RMSprop', adam: 'Adam',
+})[o] || o;
 export const activationName = a => ({
   relu: 'ReLU', leaky_relu: 'Leaky ReLU', elu: 'ELU', gelu: 'GELU', tanh: 'tanh', sigmoid: 'sigmoid', linear: t('none (linear)'),
 })[a] || a;

@@ -51,11 +51,6 @@
     </div>
   </div>
 
-  <div class="preview">
-    <canvas id="data-preview" aria-label="{{ _('Data preview') }}"></canvas>
-    <p id="preview-msg" class="preview-msg" hidden></p>
-  </div>
-
   <details class="advanced">
     <summary>{{ _('Advanced') }}</summary>
     <div class="field">
@@ -71,6 +66,14 @@
         <span class="label">{{ _('CSV file') }}</span>
         <div class="file-row">
           <label class="btn btn-ghost btn-sm">{{ _('Choose file…') }}<input type="file" accept=".csv,text/csv" data-role="csv-file" hidden></label>
+          <select data-role="csv-sample" aria-label="{{ _('Sample data') }}">
+            <option value="">{{ _('Sample data (made up)…') }}</option>
+            {% for key, label in [('study_hours', _('Study hours → exam score')), ('ice_cream', _('Temperature → ice cream sales')),
+                                  ('braking', _('Car speed → braking distance')), ('daily_temperature', _('Hour of day → temperature')),
+                                  ('house_price', _('House size + age → price (2 inputs)'))] %}
+              <option value="{{ url_for('static', filename='samples/' ~ key ~ '.csv') }}">{{ label }}</option>
+            {% endfor %}
+          </select>
           <span data-role="csv-name" class="muted"></span>
         </div>
         <small class="hint">{{ _('First row = column names. Numbers only. Up to 1 MB.') }}</small>

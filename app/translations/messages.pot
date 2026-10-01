@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 10:50+0900\n"
+"POT-Creation-Date: 2026-10-01 17:26+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -34,6 +34,9 @@ msgid "A neural network needs 1 to {max} hidden layers."
 msgstr ""
 
 msgid "A straight line (or flat plane): ŷ = w·x + b"
+msgstr ""
+
+msgid "About the password"
 msgstr ""
 
 msgid "Activation"
@@ -92,9 +95,7 @@ msgstr ""
 msgid "CSV file"
 msgstr ""
 
-msgid ""
-"CSV with columns student_id,name (or 학번,이름). Existing students keep their"
-" password and history."
+msgid "CSV with columns student_id,name (or 학번,이름). Existing students keep their password and history."
 msgstr ""
 
 #, python-brace-format
@@ -110,6 +111,9 @@ msgid "Can linear regression learn {f}?"
 msgstr ""
 
 msgid "Cancel"
+msgstr ""
+
+msgid "Car speed → braking distance"
 msgstr ""
 
 msgid "Choose a CSV file."
@@ -129,6 +133,9 @@ msgstr ""
 
 #, python-format
 msgid "Class list imported: %(added)d added, %(updated)d updated."
+msgstr ""
+
+msgid "Close"
 msgstr ""
 
 #, python-brace-format
@@ -206,9 +213,7 @@ msgstr ""
 msgid "First row = column names. Numbers only. Up to 1 MB."
 msgstr ""
 
-msgid ""
-"For trees, MSE or MAE also decides how the tree splits (Huber splits like"
-" MSE)."
+msgid "For trees, MSE or MAE also decides how the tree splits (Huber splits like MSE)."
 msgstr ""
 
 msgid "Formula"
@@ -242,6 +247,12 @@ msgstr ""
 msgid "History"
 msgstr ""
 
+msgid "Hour of day → temperature"
+msgstr ""
+
+msgid "House size + age → price (2 inputs)"
+msgstr ""
+
 msgid "How big each correction step is."
 msgstr ""
 
@@ -267,6 +278,10 @@ msgid "How the graph is corrected to make the loss smaller."
 msgstr ""
 
 msgid "Huber δ"
+msgstr ""
+
+#, python-format
+msgid "If you lose your password, ask your teacher, %(name)s."
 msgstr ""
 
 msgid "Import"
@@ -322,10 +337,13 @@ msgstr ""
 msgid "Log in"
 msgstr ""
 
-msgid "Log in with the student number and name on your class list."
+msgid "Log in with your student number and name."
 msgstr ""
 
 msgid "Log out"
+msgstr ""
+
+msgid "Log scale"
 msgstr ""
 
 msgid "Loss"
@@ -334,12 +352,13 @@ msgstr ""
 msgid "Loss function"
 msgstr ""
 
+msgid "Loss graph"
+msgstr ""
+
 msgid "Loss on a log scale"
 msgstr ""
 
-msgid ""
-"Losses are measured on standardized y, so runs with different data can be"
-" compared."
+msgid "Losses are measured on standardized y, so runs with different data can be compared."
 msgstr ""
 
 msgid "Lowest validation loss"
@@ -348,9 +367,7 @@ msgstr ""
 msgid "Max depth"
 msgstr ""
 
-msgid ""
-"Mean absolute error: every unit of error costs the same, so outliers "
-"matter less"
+msgid "Mean absolute error: every unit of error costs the same, so outliers matter less"
 msgstr ""
 
 msgid "Mean squared error: big mistakes cost a lot"
@@ -405,16 +422,26 @@ msgstr ""
 msgid "Noise"
 msgstr ""
 
+msgid "Not trained yet"
+msgstr ""
+
 msgid "Number of points"
 msgstr ""
 
 msgid "Number of trees"
 msgstr ""
 
+msgid "One step after each small group of points"
+msgstr ""
+
+msgid "One step after every single point"
+msgstr ""
+
+msgid "One step after looking at all the data"
+msgstr ""
+
 #, python-brace-format
-msgid ""
-"One tree of depth {d}: up to {leaves} boxes (leaves), each predicting one"
-" value. The animation grows the depth from 1 to {d}."
+msgid "One tree of depth {d}: up to {leaves} boxes (leaves), each predicting one value. The animation grows the depth from 1 to {d}."
 msgstr ""
 
 msgid "Optimization"
@@ -507,6 +534,12 @@ msgstr ""
 msgid "Same settings as #{n}"
 msgstr ""
 
+msgid "Sample data"
+msgstr ""
+
+msgid "Sample data (made up)…"
+msgstr ""
+
 msgid "Save"
 msgstr ""
 
@@ -535,9 +568,10 @@ msgstr ""
 msgid "Shape of the graph"
 msgstr ""
 
-msgid ""
-"Share of points kept aside to check the model on data it did not learn "
-"from."
+msgid "Share of points kept aside to check the model on data it did not learn from."
+msgstr ""
+
+msgid "Show loss graph"
 msgstr ""
 
 msgid "Show this run"
@@ -561,9 +595,6 @@ msgstr ""
 msgid "Steps"
 msgstr ""
 
-msgid "Steps straight down the slope"
-msgstr ""
-
 msgid "Stopped (not saved)"
 msgstr ""
 
@@ -582,7 +613,13 @@ msgstr ""
 msgid "Students"
 msgstr ""
 
+msgid "Study hours → exam score"
+msgstr ""
+
 msgid "Teacher"
+msgstr ""
+
+msgid "Temperature → ice cream sales"
 msgstr ""
 
 msgid "The CSV file could not be read."
@@ -609,24 +646,23 @@ msgstr ""
 msgid "The file could not be read. Save it as CSV (UTF-8)."
 msgstr ""
 
-msgid ""
-"The formula gives invalid values (for example division by zero or the log"
-" of a negative number)."
+msgid "The formula gives invalid values (for example division by zero or the log of a negative number)."
 msgstr ""
 
 msgid "The formula has a syntax error."
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"The formula uses something that is not allowed. Use {vars}, numbers, + - "
-"* / ** and functions like sin, cos, exp, abs, sqrt, max."
+msgid "The formula uses something that is not allowed. Use {vars}, numbers, + - * / ** and functions like sin, cos, exp, abs, sqrt, max."
 msgstr ""
 
 msgid "The input range minimum must be smaller than the maximum."
 msgstr ""
 
 msgid "The questions (x) and correct answers (y) the model learns from."
+msgstr ""
+
+msgid "The server is busy. Try again in a moment."
 msgstr ""
 
 msgid "The shape of graph ŷ = f(x) the model can draw."
@@ -660,9 +696,7 @@ msgid "Today"
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"Too much computation: {steps} update steps (limit {limit}). Reduce the "
-"epochs or use a larger batch."
+msgid "Too much computation: {steps} update steps (limit {limit}). Reduce the epochs or use a larger batch."
 msgstr ""
 
 msgid "Train"
@@ -674,20 +708,19 @@ msgstr ""
 msgid "Training data"
 msgstr ""
 
+msgid "Training failed on the server. Try again."
+msgstr ""
+
 msgid "Training loss"
 msgstr ""
 
 msgid "Training…"
 msgstr ""
 
-msgid ""
-"Tree models do not draw a smooth curve: they cut x into boxes and predict"
-" one value per box."
+msgid "Tree models do not draw a smooth curve: they cut x into boxes and predict one value per box."
 msgstr ""
 
-msgid ""
-"Tree models do not use gradient descent. They learn by splitting the data"
-" into boxes."
+msgid "Tree models do not use gradient descent. They learn by splitting the data into boxes."
 msgstr ""
 
 msgid "Trees"
@@ -710,14 +743,10 @@ msgstr ""
 msgid "Use a password of at least %(n)d characters."
 msgstr ""
 
-msgid ""
-"Use x, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, "
-"min."
+msgid "Use x, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, min."
 msgstr ""
 
-msgid ""
-"Use x1, x2, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, "
-"max, min."
+msgid "Use x1, x2, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, min."
 msgstr ""
 
 msgid "Valid"
@@ -745,6 +774,9 @@ msgid "Wrong password. If you forgot it, ask your teacher to reset it."
 msgstr ""
 
 msgid "Yellow cells changed from the run before. Click a row to show it."
+msgstr ""
+
+msgid "Your password is set to what you type at your first login."
 msgstr ""
 
 msgid "average"
@@ -817,21 +849,15 @@ msgid "{n} points"
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"{n} trees of depth {d}, added one by one. Each new tree corrects the "
-"error that is left."
+msgid "{n} trees of depth {d}, added one by one. Each new tree corrects the error that is left."
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"{n} trees of depth {d}, each trained on a random sample of the data. The "
-"prediction is their average."
+msgid "{n} trees of depth {d}, each trained on a random sample of the data. The prediction is their average."
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"{n} weights and biases to learn. Each hidden neuron bends the line with "
-"{act}."
+msgid "{n} weights and biases to learn. Each hidden neuron bends the line with {act}."
 msgstr ""
 
 msgid "① Data"

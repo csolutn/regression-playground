@@ -14,6 +14,11 @@ def create_app(config=None):
     app.config.from_object(Config)
     if config:
         app.config.update(config)
+    if not (app.debug or app.testing) and app.config['SECRET_KEY'] in ('dev', 'change-me', ''):
+        raise RuntimeError('Set SECRET_KEY to a long random value (see deploy.env.example).')
+    if app.config['TRUST_PROXY']:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     db.init_app(app)
     babel.init_app(app, locale_selector=select_locale)

@@ -83,7 +83,8 @@ kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--border);
 .btn-block { width: 100%; }
 .btn-icon { min-width: 32px; min-height: 32px; padding: 0 8px; }
 
-input:not([type=radio]):not([type=checkbox]):not([type=range]):not([type=file]), select {
+/* :where keeps this at element specificity, so component rules can override it */
+input:where(:not([type=radio], [type=checkbox], [type=range], [type=file])), select {
   width: 100%; min-height: 36px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px;
   background: var(--surface); color: var(--text); font: inherit;
 }
@@ -123,6 +124,7 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
 .chip:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
 .file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.file-row select { width: auto; min-height: 28px; padding: 2px 8px; font-size: 13px; }
 
 .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
 .pill-ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
@@ -208,9 +210,6 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .advanced > summary { cursor: pointer; font-weight: 700; color: var(--muted); font-size: 13px; margin-bottom: 10px; list-style-position: inside; }
 .advanced[open] > summary { color: var(--text); }
 
-.preview { position: relative; margin: 4px 0 8px; }
-.preview canvas { display: block; width: 100%; height: 200px; border-radius: 8px; }
-.preview-msg { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 16px; text-align: center; color: var(--danger); background: color-mix(in srgb, var(--surface) 88%, transparent); border-radius: 8px; }
 
 .layers-editor { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .layer-row { display: flex; align-items: center; gap: 6px; }
@@ -277,6 +276,10 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .viz { position: relative; margin-top: 12px; }
 .viz canvas { display: block; width: 100%; aspect-ratio: 16 / 10; max-height: calc(100vh - 330px); min-height: 260px; border-radius: 8px; touch-action: none; }
 .viz-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+.viz-empty.is-error { padding: 16px; text-align: center; color: var(--danger); }
+.viz-busy { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 8px; background: color-mix(in srgb, var(--surface) 55%, transparent); }
+.viz-busy-box { width: min(320px, calc(100% - 32px)); padding: 14px 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); text-align: center; font-weight: 600; box-shadow: 0 4px 16px rgba(0, 0, 0, .08); }
+.viz-busy-box .progress { height: 8px; border-radius: 4px; }
 
 .readout { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: center; margin-top: 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
 .readout b { font-size: 15px; margin-left: 4px; }
@@ -294,8 +297,8 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 
 .history-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
 .history-head span { font-size: 12.5px; }
-.history-tools { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
-.history-tools input[type=date] { width: auto; min-height: 28px; padding: 2px 6px; font-size: 13px; }
+.history-tools { display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-left: auto; }
+.history-tools input[type=date] { flex: none; width: auto; min-height: 28px; padding: 2px 6px; font-size: 13px; }
 .table-wrap { overflow-x: auto; }
 table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .history th { text-align: left; font-weight: 700; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -314,6 +317,13 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .dialog { border: 1px solid var(--border); border-radius: 12px; padding: 20px; width: min(480px, calc(100vw - 32px)); background: var(--surface); color: var(--text); }
 .dialog::backdrop { background: rgba(0, 0, 0, .35); }
 .dialog h3 { font-size: 16px; margin-bottom: 14px; }
+.dialog-wide { width: min(820px, calc(100vw - 32px)); }
+.dialog-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.dialog-head h3 { margin: 0 auto 0 0; }
+.dialog-head .check { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.loss-canvas { display: block; width: 100%; height: min(400px, 60vh); }
+.link-btn { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.link-btn:disabled { color: var(--muted); cursor: default; text-decoration: none; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 
 /* ---------- teacher ---------- */
@@ -338,6 +348,7 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .pipeline li + li::before, .pipeline li + li::after { display: none; }
   .field-row, .admin-forms, .field-with-plot, .choices-2 { grid-template-columns: 1fr; }
   .topnav .who { display: none; }
+  .history-tools { flex-wrap: wrap; }
   .split { grid-template-columns: 1fr; }
   .pane-settings form, .pane-output { padding: 12px; }
 }

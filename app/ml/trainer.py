@@ -20,15 +20,16 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
 from .data import build_dataset, expression_for
-from .options import GRADIENT_MODELS, batch_size, step_budget_error
+from .options import GRADIENT_MODELS, PLAIN_GD, batch_size, step_budget_error
 
 torch.set_num_threads(1)   # many small jobs in parallel, not one big one
+torch.backends.mkldnn.enabled = False   # oneDNN (Linux builds) makes these tiny ops ~6× slower
 
 ACTIVATIONS = {'relu': nn.ReLU, 'leaky_relu': nn.LeakyReLU, 'elu': nn.ELU, 'gelu': nn.GELU,
                'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'linear': nn.Identity}
 MAX_FRAMES = 300           # one frame per epoch (or tree) up to this many, then every k-th
 LOSS_EVENTS = 100          # about this many loss events per run
-TIME_LIMIT_S = 120         # stop a run that takes longer than this
+TIME_LIMIT_S = 30          # stop a run that takes longer than this (saved as 'timeout')
 
 
 class BudgetError(ValueError):
@@ -54,7 +55,7 @@ def build_network(cfg):
 def build_optimizer(cfg, params):
     lr = cfg['learning_rate']
     return {
-        'sgd': lambda: torch.optim.SGD(params, lr=lr),
+        **dict.fromkeys(PLAIN_GD, lambda: torch.optim.SGD(params, lr=lr)),
         'momentum': lambda: torch.optim.SGD(params, lr=lr, momentum=0.9),
         'rmsprop': lambda: torch.optim.RMSprop(params, lr=lr),
         'adam': lambda: torch.optim.Adam(params, lr=lr),
@@ -82,20 +83,26 @@ def rounded(a, digits=4):
     return [float(f'{v:.{digits}g}') for v in np.asarray(a, dtype=float).ravel()]
 
 
-def train(cfg):
-    random.seed(cfg['seed'])
-    np.random.seed(cfg['seed'])
-    torch.manual_seed(cfg['seed'])
+def check(cfg):
+    """Build the data and check the step budget; raises DataError or BudgetError."""
     ds = build_dataset(cfg)
     if cfg['model'] in GRADIENT_MODELS and (err := step_budget_error(cfg, len(ds.X_train))):
         raise BudgetError(err)
+    return ds
+
+
+def train(cfg, time_limit=TIME_LIMIT_S):
+    random.seed(cfg['seed'])
+    np.random.seed(cfg['seed'])
+    torch.manual_seed(cfg['seed'])
+    ds = check(cfg)
 
     yield {'type': 'start', 'meta': meta(cfg, ds)}
     started = time.monotonic()
     history = {'steps': [], 'train': [], 'val': []}
     status = 'done'
     run = train_gradient if cfg['model'] in GRADIENT_MODELS else train_trees
-    for event in run(cfg, ds, started):
+    for event in run(cfg, ds, started + time_limit):
         if event['type'] == 'loss':
             for k in history:
                 history[k] += event[k]
@@ -141,7 +148,7 @@ def to_tensor(a):
     return torch.tensor(a, dtype=torch.float32).reshape(len(a), -1)
 
 
-def train_gradient(cfg, ds, started):
+def train_gradient(cfg, ds, deadline):
     model = build_network(cfg)
     optimizer, loss_fn = build_optimizer(cfg, model.parameters()), build_loss(cfg)
     Xt, yt = to_tensor(ds.scale_x(ds.X_train)), to_tensor(ds.scale_y(ds.y_train))
@@ -178,7 +185,7 @@ def train_gradient(cfg, ds, started):
         diverged = not (math.isfinite(tl) and math.isfinite(vl))
         for k, v in (('steps', epoch), ('train', tl), ('val', vl)):
             pending[k].append(v if k == 'steps' else (float(f'{v:.6g}') if math.isfinite(v) else None))
-        last = epoch == epochs or diverged or time.monotonic() - started > TIME_LIMIT_S
+        last = epoch == epochs or diverged or time.monotonic() > deadline
         if epoch % frame_every == 0 or last:
             with torch.no_grad():
                 pred = np.nan_to_num(model(Xp).numpy(), nan=ds.y_mean)
@@ -194,7 +201,7 @@ def train_gradient(cfg, ds, started):
             return
 
 
-def train_trees(cfg, ds, started):
+def train_trees(cfg, ds, deadline):   # sklearn fits are quick; the deadline is not checked
     Xt, Xv, Xp = ds.scale_x(ds.X_train), ds.scale_x(ds.X_val), ds.scale_x(ds.X_plot)
     yt, yv = ds.scale_y(ds.y_train), ds.scale_y(ds.y_val)
     criterion = 'absolute_error' if cfg['loss'] == 'mae' else 'squared_error'

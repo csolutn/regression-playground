@@ -1,6 +1,8 @@
 // Animation of a run in the browser: play / pause / seek with the epoch slider.
 // The server only sends numbers (frames); every image is drawn here.
-import { DEFAULT_VIEW, drawPrediction, fitCanvas, fmtLoss, screenTheme } from './plot.js';
+// While a run is training only its data is drawn (the output panel shows a progress bar over it):
+// frames arrive much faster than they are played back, which looks like instant convergence.
+import { DEFAULT_VIEW, drawLoss, drawPrediction, fitCanvas, fmtLoss, screenTheme } from './plot.js';
 import { stepLabel } from './describe.js';
 
 const RUN_MS = 16_000;               // a whole run takes about this long at 1×
@@ -17,6 +19,7 @@ export class Player {
     const $ = role => root.querySelector(`[data-role="${role}"]`);
     this.canvas = $('pred-canvas');
     this.empty = $('viz-empty');
+    this.emptyText = this.empty.textContent;
     this.slider = $('frame-slider');
     this.playBtn = $('play');
     this.prevBtn = $('prev');
@@ -25,6 +28,7 @@ export class Player {
     this.stepText = $('step-text');
     this.trainText = $('train-text');
     this.valText = $('val-text');
+    this.loss = { open: $('loss-open'), dialog: $('loss-dialog'), canvas: $('loss-canvas'), log: $('loss-log') };
     this.run = null;
     this.idx = 0;
     this.follow = false;          // live training: keep showing the newest frame
@@ -36,7 +40,9 @@ export class Player {
     this.nextBtn.addEventListener('click', () => this.seek(this.idx + 1));
     this.slider.addEventListener('input', () => this.seek(+this.slider.value));
     document.addEventListener('keydown', e => this.onKey(e));
+    this.enableLossPopup($('loss-close'));
     new ResizeObserver(() => this.render()).observe(this.canvas);
+    new ResizeObserver(() => this.render()).observe(this.loss.canvas);
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.render());
     this.enableRotate();
     this.sync();
@@ -91,6 +97,12 @@ export class Player {
     this.sync();
   }
 
+  playFromStart() {
+    this.pause();
+    this.idx = 0;
+    this.play();
+  }
+
   pause() {
     clearTimeout(this.timer);
     this.timer = null;
@@ -98,7 +110,7 @@ export class Player {
   }
 
   onKey(e) {
-    if (!this.frames.length || e.target.closest('input, select, textarea, button, dialog') || e.metaKey || e.ctrlKey) return;
+    if (!this.frames.length || this.run?.live || e.target.closest('input, select, textarea, button, dialog') || e.metaKey || e.ctrlKey) return;
     if (e.key === ' ') { e.preventDefault(); this.timer ? this.pause() : this.play(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); this.seek(this.idx - 1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); this.seek(this.idx + 1); }
@@ -106,13 +118,16 @@ export class Player {
 
   // controls and numbers for the current frame
   sync() {
-    const n = this.frames.length, f = this.frames[this.idx];
+    const n = this.run?.live ? 0 : this.frames.length, f = n ? this.frames[this.idx] : null;
     this.slider.max = Math.max(0, n - 1);
     this.slider.value = this.idx;
     for (const el of [this.slider, this.playBtn, this.prevBtn, this.nextBtn]) el.disabled = n < 2;
+    this.loss.open.disabled = !this.run?.meta || !!this.run.preview || !!this.run.live;
     this.playBtn.classList.toggle('is-playing', !!this.timer);
     this.playBtn.setAttribute('aria-pressed', String(!!this.timer));
     this.empty.hidden = !!this.run?.meta;
+    this.empty.textContent = this.run?.error || this.emptyText;
+    this.empty.classList.toggle('is-error', !!this.run?.error);
     if (f && this.run?.meta) {
       this.stepText.textContent = `${stepLabel(this.run.meta.model)} ${f.step.toLocaleString()} / ${this.run.meta.total_steps.toLocaleString()}`;
       this.trainText.textContent = fmtLoss(f.train);
@@ -134,8 +149,29 @@ export class Player {
       ctx.fillRect(0, 0, w, h);
       if (!this.run?.meta) return;
       const s = Math.max(0.8, Math.min(1.25, w / 700));
-      drawPrediction(ctx, { x: 0, y: 0, w, h }, this.run, this.idx, th, s, { view: this.view });
+      const preview = !!(this.run.preview || this.run.live);     // data before / while training: points only
+      drawPrediction(ctx, { x: 0, y: 0, w, h }, this.run, this.idx, th, s, { view: this.view, dataOnly: preview, badges: !preview });
+      if (this.loss.dialog.open) this.renderLoss(th);
     });
+  }
+
+  // loss curve up to the current frame, so it moves with the animation
+  renderLoss(th) {
+    const { ctx, w, h } = fitCanvas(this.loss.canvas);
+    ctx.fillStyle = th.bg;
+    ctx.fillRect(0, 0, w, h);
+    const f = this.frames[this.idx];
+    if (f) drawLoss(ctx, { x: 0, y: 0, w, h }, this.run, f.step, th, Math.max(0.8, Math.min(1.1, w / 700)), { log: this.loss.log.checked });
+  }
+
+  // "Show loss graph" opens a popup; ✕, Esc, a click outside or the link again closes it
+  enableLossPopup(closeBtn) {
+    const { open, dialog, log } = this.loss;
+    const close = () => dialog.close();
+    open.addEventListener('click', () => (dialog.open ? close() : (dialog.showModal(), this.render())));
+    closeBtn.addEventListener('click', close);
+    dialog.addEventListener('click', e => { if (e.target === dialog) close(); });
+    log.addEventListener('change', () => this.render());
   }
 
   // drag to rotate the 3D surface (2 input variables)

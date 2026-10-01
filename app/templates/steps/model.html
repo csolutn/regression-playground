@@ -22,7 +22,7 @@
       <input type="hidden" name="hidden_layers" data-json>
       <div class="quick">
         <span class="muted">{{ _('Quick:') }}</span>
-        {% for preset in ['[2]', '[2, 2]', '[8, 8]', '[4, 4, 4]', '[8, 8, 8]'] %}
+        {% for preset in ['[4]', '[2, 2]', '[8, 8]', '[4, 4, 4]', '[8, 8, 8]'] %}
           <button type="button" class="btn btn-ghost btn-sm" data-layers="{{ preset }}">{{ preset }}</button>
         {% endfor %}
       </div>
@@ -31,8 +31,7 @@
       <label class="field">
         <span class="label">{{ _('Activation function') }}</span>
         <select name="activation">
-          {% for a, label in [('relu', 'ReLU'), ('leaky_relu', 'Leaky ReLU'), ('elu', 'ELU'), ('gelu', 'GELU'),
-                               ('tanh', 'tanh'), ('sigmoid', 'sigmoid'), ('linear', _('none (linear)'))] %}
+          {% for a, label in [('relu', 'ReLU'), ('sigmoid', 'sigmoid'), ('tanh', 'tanh'), ('gelu', 'GELU')] %}
             <option value="{{ a }}">{{ label }}</option>
           {% endfor %}
         </select>
@@ -61,11 +60,11 @@
     <div class="field-row" data-show-if="model:decision_tree,random_forest,gradient_boosting">
       <label class="field">
         <span class="label">{{ _('Max depth') }} <output data-for="max_depth"></output></span>
-        <input type="range" name="max_depth" min="1" max="12" step="1">
+        <input type="range" name="max_depth" min="1" max="8" step="1">
       </label>
       <label class="field" data-show-if="model:random_forest,gradient_boosting">
         <span class="label">{{ _('Number of trees') }} <output data-for="n_estimators"></output></span>
-        <input type="range" name="n_estimators" min="1" max="300" step="1">
+        <input type="range" name="n_estimators" min="1" max="100" step="1">
       </label>
     </div>
   </details>
