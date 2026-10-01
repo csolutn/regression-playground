@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 17:26+0900\n"
+"POT-Creation-Date: 2026-10-01 20:46+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -800,6 +800,10 @@ msgstr "깊이 {d} (위 {k}단계만 표시)"
 
 msgid "diverged"
 msgstr "발산"
+
+#, python-format
+msgid "e.g. %(example)s"
+msgstr "예) %(example)s"
 
 msgid "full batch"
 msgstr "전체 배치"

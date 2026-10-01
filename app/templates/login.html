@@ -8,11 +8,11 @@
       <button type="button" class="link-btn" data-role="pw-help-open" aria-haspopup="dialog">{{ _('About the password') }}</button></p>
     <label class="field">
       <span>{{ _('Student number') }}</span>
-      <input name="login_id" value="{{ form.login_id }}" required autocomplete="username" autofocus>
+      <input name="login_id" value="{{ form.login_id }}" required autocomplete="username" autofocus placeholder="{{ _('e.g. %(example)s', example='21401') }}">
     </label>
     <label class="field">
       <span>{{ _('Name') }}</span>
-      <input name="name" value="{{ form.name }}" required autocomplete="name">
+      <input name="name" value="{{ form.name }}" required autocomplete="name" placeholder="{{ _('e.g. %(example)s', example='김경기') }}">
     </label>
     <label class="field">
       <span>{{ _('Password') }}</span>
