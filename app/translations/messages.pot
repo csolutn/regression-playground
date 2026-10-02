@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 21:41+0900\n"
+"POT-Creation-Date: 2026-10-02 21:51+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -263,6 +263,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Hidden {i}"
+msgstr ""
+
+msgid "Highlighted cells changed from the run before. Click a row to show it."
 msgstr ""
 
 msgid "History"
@@ -821,9 +824,6 @@ msgid "With a smaller network or fewer epochs it trains in the browser."
 msgstr ""
 
 msgid "Wrong password. If you forgot it, ask your teacher to reset it."
-msgstr ""
-
-msgid "Yellow cells changed from the run before. Click a row to show it."
 msgstr ""
 
 msgid "You are using it as a guest. The training history is not saved and is gone when you reload the page."

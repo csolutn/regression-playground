@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 21:41+0900\n"
+"POT-Creation-Date: 2026-10-02 21:51+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -265,6 +265,9 @@ msgstr "은닉층과 활성화 함수로 선을 구부림"
 #, python-brace-format
 msgid "Hidden {i}"
 msgstr "은닉층 {i}"
+
+msgid "Highlighted cells changed from the run before. Click a row to show it."
+msgstr "하이라이트 된 셀은 바로 전 실험과 달라진 설정입니다. 행을 누르면 그 실험을 보여 줍니다."
 
 msgid "History"
 msgstr "학습 이력"
@@ -823,9 +826,6 @@ msgstr "신경망이나 에포크를 줄이면 브라우저에서 학습할 수 
 
 msgid "Wrong password. If you forgot it, ask your teacher to reset it."
 msgstr "비밀번호가 틀렸습니다. 잊었다면 선생님께 초기화를 요청하세요."
-
-msgid "Yellow cells changed from the run before. Click a row to show it."
-msgstr "노란 칸은 바로 전 실험과 달라진 설정입니다. 행을 누르면 그 실험을 보여 줍니다."
 
 msgid "You are using it as a guest. The training history is not saved and is gone when you reload the page."
 msgstr "게스트로 이용 중입니다. 학습이력은 기록되지 않고 새로고침하면 사라집니다."
