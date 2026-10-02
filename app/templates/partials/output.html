@@ -46,15 +46,17 @@
 
   <article class="card history-card">
     <header class="history-head">
-      <h2>{{ _('History') }}</h2>
-      <span class="muted">{{ _('Highlighted cells changed from the run before. Click a row to show it.') }}</span>
-      {% if g.guest %}
-        <p class="note guest-note">{{ _('You are using it as a guest. The training history is not saved and is gone when you reload the page.') }}</p>
-      {% endif %}
+      <div class="history-titles">
+        <h2>{{ _('History') }}</h2>
+        <span class="muted">{{ _('Highlighted cells changed from the run before. Click a row to show it.') }}</span>
+      </div>
       <div class="history-tools">
         <span class="muted" data-role="history-count"></span>
         <button type="button" class="btn btn-ghost btn-sm" data-role="csv">{{ _('Save CSV') }}</button>
       </div>
+      {% if g.guest %}
+        <p class="note guest-note">{{ _('You are using it as a guest. The training history is not saved and is gone when you reload the page.') }}</p>
+      {% endif %}
     </header>
     <div class="table-wrap"><table data-role="history" class="history"></table></div>
     {# opened by the filter icons next to "Time" and "① Data" in the table head #}

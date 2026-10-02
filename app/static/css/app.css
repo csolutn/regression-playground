@@ -304,9 +304,11 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .btn-play.is-playing .i-play { display: none; }
 .btn-play.is-playing .i-pause { display: inline; }
 
-.history-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+/* title and hint on the left, count + Save CSV on the right of the same row; the guest note below */
+.history-head { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.history-titles { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
 .history-head span { font-size: 12.5px; }
-.history-tools { display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-left: auto; }
+.history-tools { display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-left: auto; flex: none; }
 .table-wrap { overflow-x: auto; }
 table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .history th { text-align: left; font-weight: 700; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
