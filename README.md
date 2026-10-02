@@ -3,6 +3,8 @@
 A web GUI for exploring supervised regression. Students set up the four steps of the
 learning loop, press **Train**, and watch the prediction change in the browser.
 
+**Demo: <https://ml.solsam.app>** — choose "Use as a guest" below the login form; no account needed.
+
 ```
 ① Training data  →  ② Prediction function  →  ③ Loss function  →  ④ Optimization
    (x, y)             ŷ = f(x)                 how errors are scored   how the graph is corrected
