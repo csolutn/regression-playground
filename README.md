@@ -90,7 +90,7 @@ Mac: System Settings → Energy → prevent automatic sleep and start up after a
 Update with `git pull && docker compose up -d --build && docker image prune -f` (the last part deletes
 the untagged images left by earlier builds; tagged ones such as a rollback image stay). Static files are served at
 `/static/<hash of app/static>/…` and cached for a year, so after a deploy no browser mixes old JS with the new page. Back up with `scripts/backup.sh`
-(copies the database into `backups/`, keeps 30; run it daily, e.g. from launchd).
+(copies the database into `backups/`, or `BACKUP_DIR` if set, e.g. a synced cloud folder; keeps 30; run it daily, e.g. from launchd).
 
 ## Where to change things
 
