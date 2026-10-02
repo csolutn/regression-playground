@@ -113,7 +113,13 @@ def test_teacher_pages(client):
     assert len(rows) == 1
     assert client.get('/teacher/students/1').status_code == 200
     csv = client.get('/teacher/runs.csv').get_data(as_text=True)
-    assert '20101' in csv
+    assert '20101' in csv and 'created_at (UTC)' in csv
+    utc = csv.splitlines()[1].split(',')[3]
+    seoul = client.get('/teacher/runs.csv?tz=Asia/Seoul').get_data(as_text=True)
+    assert 'created_at (Asia/Seoul)' in seoul
+    from datetime import datetime, timedelta
+    assert datetime.fromisoformat(seoul.splitlines()[1].split(',')[3]) - datetime.fromisoformat(utc) == timedelta(hours=9)
+    assert 'created_at (UTC)' in client.get('/teacher/runs.csv?tz=../../etc/passwd').get_data(as_text=True)
     roster = '학번,이름\n20103,박산\n20101,김하늘\n'.encode('cp949')
     from io import BytesIO
     r = client.post('/teacher/roster', data={'roster': (BytesIO(roster), 'r.csv')}, follow_redirects=True)

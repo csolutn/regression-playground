@@ -1,6 +1,8 @@
 """Teacher pages: class list, password reset, and every student's history."""
 import csv
 import io
+from datetime import timezone
+from zoneinfo import ZoneInfo
 
 from flask import Blueprint, Response, abort, flash, redirect, render_template, request, url_for
 from flask_babel import gettext as _
@@ -93,18 +95,24 @@ def student(user_id):
 @bp.get('/runs.csv')
 @teacher_required
 def export_runs():
-    """All runs as a spreadsheet (UTF-8 with BOM so Excel shows Korean correctly)."""
+    """All runs as a spreadsheet (UTF-8 with BOM so Excel shows Korean correctly).
+    Times are in ?tz= (the teacher's browser time zone, added by the page), else UTC."""
+    try:
+        zone = ZoneInfo(request.args.get('tz') or 'UTC')
+    except (KeyError, ValueError):                # unknown or malformed zone name
+        zone = ZoneInfo('UTC')
     out = io.StringIO()
     out.write('﻿')
     w = csv.writer(out)
     keys = ['function_1d', 'function_2d', 'data_size', 'noise_std', 'model', 'hidden_layers', 'activation',
             'max_depth', 'n_estimators', 'loss', 'optimizer', 'learning_rate', 'epochs', 'batch_method']
-    w.writerow(['student_id', 'name', 'run', 'created_at', 'status', 'final_train_loss', 'final_val_loss',
+    w.writerow(['student_id', 'name', 'run', f'created_at ({zone.key})', 'status', 'final_train_loss', 'final_val_loss',
                 'duration_s', 'n_inputs', 'data_source'] + keys)
     rows = db.session.execute(db.select(Run, User).join(User).order_by(User.login_id, Run.seq))
     for run, user in rows:
         cfg = run.config
-        w.writerow([user.login_id, user.name, run.seq, run.created_at.isoformat(), run.status, run.final_train,
+        created = run.created_at.replace(tzinfo=timezone.utc).astimezone(zone)   # stored as naive UTC
+        w.writerow([user.login_id, user.name, run.seq, f'{created:%Y-%m-%d %H:%M:%S}', run.status, run.final_train,
                     run.final_val, run.duration, cfg.get('n_inputs'), cfg.get('data_source')] + [cfg.get(k) for k in keys])
     return Response(out.getvalue(), mimetype='text/csv',
                     headers={'Content-Disposition': 'attachment; filename=runs.csv'})
