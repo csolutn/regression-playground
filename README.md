@@ -62,8 +62,8 @@ every fifth student running the largest allowed SGD run, the others still starte
 ## Deploy (Mac mini + Cloudflare Tunnel)
 
 The app runs in Docker inside a Colima VM with fixed CPU and memory, so a busy class cannot slow
-down the rest of the Mac. Students reach it at `https://ml.emiclear.org` through a Cloudflare Tunnel:
-the Mac opens no ports (only `127.0.0.1:8080` for the teacher on the Mac itself).
+down the rest of the Mac. Students reach it at `https://ml.solsam.app` through a Cloudflare Tunnel:
+the Mac opens no ports (only `127.0.0.1:18001` for the teacher on the Mac itself).
 
 ```bash
 brew install colima docker docker-compose
@@ -75,10 +75,11 @@ docker compose up -d --build
 docker compose exec web flask --app app create-teacher
 ```
 
-Cloudflare: the `emiclear.org` zone must use Cloudflare's nameservers (when moving it, copy every
-existing DNS record first, MX / SPF / DKIM included, or e-mail stops). Then Zero Trust → Networks →
+Cloudflare: the `solsam.app` zone must use Cloudflare's nameservers (bought at Cloudflare Registrar,
+so it already does; a domain moved from elsewhere needs every DNS record copied first, MX / SPF /
+DKIM included, or e-mail stops). Then Zero Trust → Networks →
 Tunnels → Create (cloudflared) → copy the token into `tunnel.env` → Public hostname
-`ml.emiclear.org` → service `http://web:8000`. Also: SSL/TLS → Always Use HTTPS; a rate-limiting rule
+`ml.solsam.app` → service `http://web:8000`. Also: SSL/TLS → Always Use HTTPS; a rate-limiting rule
 for `/login`; optionally Cloudflare Access (e-mail one-time code) on `/teacher*`.
 
 In the container (8-CPU VM, 6 trainings at once) 30 students pressing Train together all finished within

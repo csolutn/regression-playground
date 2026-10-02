@@ -11,7 +11,7 @@ services:
     volumes:
       - data:/srv/instance              # playground.db
     ports:
-      - "127.0.0.1:8080:8000"           # this Mac only, for the teacher and checks; students use the tunnel
+      - "127.0.0.1:18001:8000"          # this Mac only, for the teacher and checks; students use the tunnel
     restart: unless-stopped
     cpus: 7                             # leave room inside the VM for gunicorn and cloudflared
     mem_limit: 6g
