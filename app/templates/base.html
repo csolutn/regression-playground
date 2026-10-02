@@ -21,6 +21,8 @@
           <a href="{{ url_for('admin.index') }}">{{ _('Teacher') }}</a>
         {% endif %}
         <span class="who">{{ g.user.login_id }} · {{ g.user.name }}</span>
+      {% elif g.guest %}
+        <span class="who">{{ _('Guest') }}</span>
       {% endif %}
       <span class="lang">
         {% for code, label in languages.items() %}
@@ -31,6 +33,8 @@
         <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
           <button class="btn btn-ghost btn-sm">{{ _('Log out') }}</button>
         </form>
+      {% elif g.guest and request.endpoint != 'auth.login' %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.login') }}">{{ _('Log in') }}</a>
       {% endif %}
     </nav>
   </header>

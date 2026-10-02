@@ -5,7 +5,8 @@
   <form method="post" class="card login-card">
     <h1>{{ _('Log in') }}</h1>
     <p class="muted">{{ _('Log in with your student number and name.') }}
-      <button type="button" class="link-btn" data-role="pw-help-open" aria-haspopup="dialog">{{ _('About the password') }}</button></p>
+      <button type="button" class="info-btn" data-role="pw-help-open" aria-haspopup="dialog"
+              title="{{ _('About logging in') }}" aria-label="{{ _('About logging in') }}">i</button></p>
     <label class="field">
       <span>{{ _('Student number') }}</span>
       <input name="login_id" value="{{ form.login_id }}" required autocomplete="username" {{ '' if first_login else 'autofocus' }} placeholder="{{ _('e.g. %(example)s', example='21401') }}">
@@ -26,13 +27,16 @@
       <p class="hint">{{ _('This is your first login. The password you type now becomes your password.') }}</p>
     {% endif %}
     <button class="btn btn-primary btn-block">{{ _('Log in') }}</button>
+    {# looks like a quiet link; a POST, so another site cannot switch a logged-in student to guest #}
+    <p class="guest-link"><button class="quiet-link" formaction="{{ url_for('auth.guest') }}" formnovalidate>{{ _('Use as a guest') }}</button></p>
   </form>
 </main>
 <dialog class="dialog" id="pw-help" aria-labelledby="pw-help-title">
   <form method="dialog">
-    <h3 id="pw-help-title">{{ _('About the password') }}</h3>
-    <p>{{ _('Your password is set to what you type at your first login.') }}</p>
-    <p>{{ _('If you lose your password, ask your teacher, %(name)s.', name=config.TEACHER_NAME) }}</p>
+    <h3 id="pw-help-title">{{ _('About logging in') }}</h3>
+    <p>{{ _('Only registered users can log in.') }}</p>
+    <p>{{ _('For registered users, the password is set to what you type at your first login.') }}</p>
+    <p>{{ _('As a guest, your runs are not saved on the server and some features (tree models and large neural networks) are not available.') }}</p>
     <div class="dialog-actions"><button class="btn btn-primary">{{ _('Close') }}</button></div>
   </form>
 </dialog>

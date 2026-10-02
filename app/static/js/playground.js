@@ -12,7 +12,9 @@ import { toast } from './toast.js';
 const OPTIONS = window.OPTIONS;
 const root = document.querySelector('[data-page=playground]');
 const form = document.getElementById('settings');
-const settings = new Settings(form, OPTIONS.defaults, `mlp.settings.v2.${root.dataset.user}`);
+const guest = root.dataset.guest === '1';        // no database: runs train in this browser and stay in this page
+const settings = new Settings(form, OPTIONS.defaults, `mlp.settings.v2.${root.dataset.user}`,
+  guest ? () => sessionStorage : () => localStorage);
 
 // ---------- step cards ① → ④ ----------
 
@@ -74,6 +76,7 @@ refresh();
 
 const output = new OutputPanel(document.getElementById('output'), {
   toast,
+  guest,
   onLoadSettings: run => {
     settings.set(run.config);
     dataPreview.cancel();             // keep showing that run, not its data
@@ -130,7 +133,7 @@ async function train() {
   trainBtn.textContent = t('■ Stop');
   const run = output.startLive(cfg);
   try {
-    await trainRun(cfg, ev => output.liveEvent(run, ev), controller.signal);
+    await trainRun(cfg, ev => output.liveEvent(run, ev), controller.signal, { guest });
     if (run.live) output.stopLive(run, t('The connection closed before the run was saved.'));
   } catch (err) {
     if (err.name === 'AbortError') output.stopLive(run, t('Stopped (not saved)'));

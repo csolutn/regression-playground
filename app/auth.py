@@ -1,7 +1,9 @@
-"""Login with student number + name + password.
+"""Login with student number + name + password, or use the playground as a guest.
 
 Students come from the teacher's roster. The first login sets the password
 (typed twice); after that the same password is required. A teacher can reset it.
+Guests (a public demo) get the playground without the database: their runs train in
+the browser and live only in that page, and server training is for logged-in users.
 """
 from functools import wraps
 
@@ -20,12 +22,25 @@ MIN_PASSWORD_LENGTH = 4
 def load_user():
     uid = session.get('uid')
     g.user = db.session.get(User, uid) if uid else None
+    g.guest = g.user is None and session.get('guest') is True
 
 
 def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         if g.user is None:
+            if request.path.startswith('/api/'):
+                abort(401)
+            return redirect(url_for('auth.login', next=request.path))
+        return view(*args, **kwargs)
+    return wrapped
+
+
+def user_or_guest_required(view):
+    """Pages and API calls a guest may use too (nothing that reads or writes the database)."""
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if g.user is None and not g.guest:
             if request.path.startswith('/api/'):
                 abort(401)
             return redirect(url_for('auth.login', next=request.path))
@@ -93,6 +108,17 @@ def finish_login(user):
     if next_url.startswith('/') and not next_url.startswith('//'):
         return redirect(next_url)
     return redirect(url_for('admin.index' if user.is_teacher else 'main.index'))
+
+
+@bp.post('/guest')
+def guest():
+    """"Use as a guest" below the login form (a POST, so another site cannot switch a student to guest)."""
+    lang = session.get('lang')
+    session.clear()
+    session['guest'] = True          # until the browser closes (not a permanent session)
+    if lang:
+        session['lang'] = lang
+    return redirect(url_for('main.index'))
 
 
 @bp.post('/logout')

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 19:17+0900\n"
+"POT-Creation-Date: 2026-10-02 20:35+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,7 +36,7 @@ msgstr ""
 msgid "A straight line (or flat plane): ŷ = w·x + b"
 msgstr ""
 
-msgid "About the password"
+msgid "About logging in"
 msgstr ""
 
 msgid "Activation"
@@ -70,6 +70,12 @@ msgid "All data"
 msgstr ""
 
 msgid "All data (batch)"
+msgstr ""
+
+msgid "As a guest, runs train in this browser and are not saved: they are gone when you reload the page. Tree models are for logged-in users."
+msgstr ""
+
+msgid "As a guest, your runs are not saved on the server and some features (tree models and large neural networks) are not available."
 msgstr ""
 
 msgid "Averages many trees trained on random samples"
@@ -225,6 +231,9 @@ msgstr ""
 msgid "First row = column names. Numbers only. Up to 1 MB."
 msgstr ""
 
+msgid "For registered users, the password is set to what you type at your first login."
+msgstr ""
+
 msgid "For trees, MSE or MAE also decides how the tree splits (Huber splits like MSE)."
 msgstr ""
 
@@ -244,6 +253,9 @@ msgid "Gradient boosting"
 msgstr ""
 
 msgid "Gradient boosting trains with the chosen loss."
+msgstr ""
+
+msgid "Guest"
 msgstr ""
 
 msgid "Hidden layers"
@@ -290,10 +302,6 @@ msgid "How the graph is corrected to make the loss smaller."
 msgstr ""
 
 msgid "Huber δ"
-msgstr ""
-
-#, python-format
-msgid "If you lose your password, ask your teacher, %(name)s."
 msgstr ""
 
 msgid "Import"
@@ -463,6 +471,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "One tree of depth {d}: up to {leaves} boxes (leaves), each predicting one value. The animation grows the depth from 1 to {d}."
+msgstr ""
+
+msgid "Only registered users can log in."
 msgstr ""
 
 msgid "Optimization"
@@ -713,6 +724,9 @@ msgstr ""
 msgid "This is your first login. The password you type now becomes your password."
 msgstr ""
 
+msgid "This run is too big for the browser. Make the network or the epochs smaller, or log in to train it on the server."
+msgstr ""
+
 msgid "Time"
 msgstr ""
 
@@ -753,6 +767,9 @@ msgstr ""
 msgid "Tree models do not use gradient descent. They learn by splitting the data into boxes."
 msgstr ""
 
+msgid "Tree models train on the server: log in to use them."
+msgstr ""
+
 msgid "Trees"
 msgstr ""
 
@@ -771,6 +788,9 @@ msgstr ""
 
 #, python-format
 msgid "Use a password of at least %(n)d characters."
+msgstr ""
+
+msgid "Use as a guest"
 msgstr ""
 
 msgid "Use x, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, min."
@@ -804,9 +824,6 @@ msgid "Wrong password. If you forgot it, ask your teacher to reset it."
 msgstr ""
 
 msgid "Yellow cells changed from the run before. Click a row to show it."
-msgstr ""
-
-msgid "Your password is set to what you type at your first login."
 msgstr ""
 
 msgid "average"

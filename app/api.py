@@ -19,7 +19,7 @@ import time
 from flask import Blueprint, Response, abort, current_app, g, jsonify, request, stream_with_context
 from flask_babel import gettext
 
-from .auth import login_required
+from .auth import login_required, user_or_guest_required
 from .extensions import db
 from .ml import data as ml_data
 from .ml import options, trainer
@@ -64,7 +64,7 @@ def line(obj):
 
 
 @bp.post('/preview')
-@login_required
+@user_or_guest_required
 def preview():
     """Data points and the true function, for the preview in ① training data."""
     cfg, errors = read_config()
@@ -78,7 +78,7 @@ def preview():
 
 
 @bp.post('/prepare')
-@login_required
+@user_or_guest_required
 def prepare():
     """For a linear or neural network run: {'browser': True, 'meta', 'time_limit_s'}, or {'browser': False}."""
     cfg, errors = read_config()

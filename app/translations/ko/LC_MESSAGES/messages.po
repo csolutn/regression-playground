@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 19:17+0900\n"
+"POT-Creation-Date: 2026-10-02 20:35+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -37,8 +37,8 @@ msgstr "신경망의 은닉층은 1~{max}개여야 합니다."
 msgid "A straight line (or flat plane): ŷ = w·x + b"
 msgstr "직선(또는 평면): ŷ = w·x + b"
 
-msgid "About the password"
-msgstr "비밀번호 안내"
+msgid "About logging in"
+msgstr "이용 안내"
 
 msgid "Activation"
 msgstr "활성화"
@@ -72,6 +72,12 @@ msgstr "모든 데이터"
 
 msgid "All data (batch)"
 msgstr "전체 데이터 (BGD)"
+
+msgid "As a guest, runs train in this browser and are not saved: they are gone when you reload the page. Tree models are for logged-in users."
+msgstr "게스트로 이용 중입니다. 학습은 이 브라우저에서 하고 기록은 저장되지 않아 새로고침하면 사라집니다. 트리 모델은 로그인한 사용자만 쓸 수 있습니다."
+
+msgid "As a guest, your runs are not saved on the server and some features (tree models and large neural networks) are not available."
+msgstr "게스트로 이용할 경우 이용 내역이 서버에 저장되지 않으며 몇몇 기능(트리 모델과 큰 신경망 모델)의 이용이 제한됩니다."
 
 msgid "Averages many trees trained on random samples"
 msgstr "무작위 표본으로 만든 여러 트리의 평균"
@@ -226,6 +232,9 @@ msgstr "첫 로그인입니다. 같은 비밀번호를 한 번 더 입력하면 
 msgid "First row = column names. Numbers only. Up to 1 MB."
 msgstr "첫 줄은 열 이름, 나머지는 숫자만. 최대 1 MB."
 
+msgid "For registered users, the password is set to what you type at your first login."
+msgstr "등록된 사용자의 경우 비밀번호는 첫 로그인 시 입력한 값으로 설정됩니다."
+
 msgid "For trees, MSE or MAE also decides how the tree splits (Huber splits like MSE)."
 msgstr "트리에서는 MSE/MAE가 가지를 나누는 기준도 됩니다 (Huber는 MSE처럼 나눕니다)."
 
@@ -246,6 +255,9 @@ msgstr "그래디언트 부스팅"
 
 msgid "Gradient boosting trains with the chosen loss."
 msgstr "그래디언트 부스팅은 선택한 손실로 학습합니다."
+
+msgid "Guest"
+msgstr "게스트"
 
 msgid "Hidden layers"
 msgstr "은닉층"
@@ -292,10 +304,6 @@ msgstr "손실이 줄어들도록 그래프를 고치는 방법입니다."
 
 msgid "Huber δ"
 msgstr "Huber δ"
-
-#, python-format
-msgid "If you lose your password, ask your teacher, %(name)s."
-msgstr "비밀번호를 분실할 경우 교사 %(name)s에게 문의하세요."
 
 msgid "Import"
 msgstr "불러오기"
@@ -465,6 +473,9 @@ msgstr "데이터 전체를 보고 한 걸음"
 #, python-brace-format
 msgid "One tree of depth {d}: up to {leaves} boxes (leaves), each predicting one value. The animation grows the depth from 1 to {d}."
 msgstr "깊이 {d}인 트리 하나: 최대 {leaves}개의 칸(잎)으로 나누고 칸마다 값 하나를 예측합니다. 애니메이션은 깊이를 1부터 {d}까지 키웁니다."
+
+msgid "Only registered users can log in."
+msgstr "로그인은 등록된 사용자만 가능합니다."
 
 msgid "Optimization"
 msgstr "최적화"
@@ -714,6 +725,9 @@ msgstr "이 브라우저는 영상을 만들 수 없습니다. 최신 Chrome, Ed
 msgid "This is your first login. The password you type now becomes your password."
 msgstr "첫 로그인입니다. 지금 입력한 비밀번호가 앞으로의 비밀번호가 됩니다."
 
+msgid "This run is too big for the browser. Make the network or the epochs smaller, or log in to train it on the server."
+msgstr "브라우저에서 학습하기에는 너무 큰 설정입니다. 신경망이나 에포크를 줄이거나, 로그인해서 서버에서 학습하세요."
+
 msgid "Time"
 msgstr "시각"
 
@@ -754,6 +768,9 @@ msgstr "트리 모델은 매끄러운 곡선 대신 x를 여러 칸으로 나누
 msgid "Tree models do not use gradient descent. They learn by splitting the data into boxes."
 msgstr "트리 모델은 경사하강법을 쓰지 않고, 데이터를 여러 칸으로 나누며 학습합니다."
 
+msgid "Tree models train on the server: log in to use them."
+msgstr "트리 모델은 서버에서 학습하므로 로그인해야 쓸 수 있습니다."
+
 msgid "Trees"
 msgstr "트리 개수"
 
@@ -773,6 +790,9 @@ msgstr "먼저 CSV 파일을 올리세요."
 #, python-format
 msgid "Use a password of at least %(n)d characters."
 msgstr "비밀번호는 %(n)d자 이상이어야 합니다."
+
+msgid "Use as a guest"
+msgstr "게스트로 이용하기"
 
 msgid "Use x, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, min."
 msgstr "x, 숫자, + - * / ** 와 sin, cos, exp, log, abs, sqrt, tanh, max, min을 쓸 수 있습니다."
@@ -806,9 +826,6 @@ msgstr "비밀번호가 틀렸습니다. 잊었다면 선생님께 초기화를 
 
 msgid "Yellow cells changed from the run before. Click a row to show it."
 msgstr "노란 칸은 바로 전 실험과 달라진 설정입니다. 행을 누르면 그 실험을 보여 줍니다."
-
-msgid "Your password is set to what you type at your first login."
-msgstr "비밀번호는 첫 로그인시 입력한 값으로 설정됩니다."
 
 msgid "average"
 msgstr "평균"

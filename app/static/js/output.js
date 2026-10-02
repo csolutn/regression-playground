@@ -9,7 +9,7 @@ import { fmtLoss } from './plot.js';
 import { dataSummary, lossSummary, modelSummary, optimSummary, videoTitle } from './describe.js';
 
 export class OutputPanel {
-  constructor(root, { readonly = false, userId = null, toast, onLoadSettings } = {}) {
+  constructor(root, { readonly = false, userId = null, guest = false, toast, onLoadSettings } = {}) {
     const $ = role => root.querySelector(`[data-role="${role}"]`);
     this.el = {
       title: $('result-title'), sub: $('result-sub'), status: $('result-status'), diff: $('result-diff'),
@@ -19,6 +19,7 @@ export class OutputPanel {
     };
     this.login = root.dataset.login || '';
     this.userId = userId;
+    this.guest = guest;                       // runs live only in this page (train.js makes their rows)
     this.toast = toast;
     this.cache = new Map();                   // run id → full run (frames etc.)
     this.player = new Player(root);
@@ -38,6 +39,7 @@ export class OutputPanel {
   get run() { return this.player.run; }
 
   async init() {
+    if (this.guest) return;
     try {
       const rows = await api.runs(this.userId);
       this.history.setRows(rows);
@@ -70,7 +72,7 @@ export class OutputPanel {
   async remove(row) {
     if (!confirm(t('Delete run #{n}? This cannot be undone.', { n: row.seq }))) return;
     try {
-      await api.deleteRun(row.id);
+      if (!this.guest) await api.deleteRun(row.id);
       this.cache.delete(row.id);
       this.history.remove(row.id);
       if (this.run?.row?.id === row.id) {

@@ -25,9 +25,10 @@ def test_first_login_keeps_the_typed_password(client):
 
 def test_login_page_explains_the_password(client):
     html = client.get('/login').get_data(as_text=True)
-    assert '명단에 있는' not in html
-    assert '비밀번호는 첫 로그인시 입력한 값으로 설정됩니다.' in html
-    assert '교사 정솔에게 문의하세요' in html
+    assert '명단에 있는' not in html and 'class="info-btn"' in html
+    assert '로그인은 등록된 사용자만 가능합니다.' in html
+    assert '등록된 사용자의 경우 비밀번호는 첫 로그인 시 입력한 값으로 설정됩니다.' in html
+    assert '트리 모델과 큰 신경망 모델' in html
 
 
 def test_name_spaces_are_ignored(client):
@@ -37,6 +38,29 @@ def test_name_spaces_are_ignored(client):
 def test_api_requires_login(client):
     assert client.get('/api/runs').status_code == 401
     assert client.post('/api/train', json={}).status_code == 401
+
+
+def test_guest_uses_the_browser_only_and_nothing_is_saved(client):
+    page = client.get('/login').get_data(as_text=True)
+    assert 'formaction="/guest"' in page
+    assert client.get('/').status_code == 302                         # the login page stays the first page
+    r = client.post('/guest')
+    assert r.status_code == 302 and r.headers['Location'].endswith('/')
+    page = client.get('/').get_data(as_text=True)
+    assert 'data-guest="1"' in page and 'data-login="guest"' in page
+    assert client.post('/api/preview', json={'epochs': 20}).status_code == 200
+    prep = client.post('/api/prepare', json={'epochs': 20, 'model': 'linear'})
+    assert prep.status_code == 200 and prep.get_json()['browser'] is True
+    for method, path in [('post', '/api/train'), ('post', '/api/runs'), ('get', '/api/runs'), ('get', '/api/runs/1')]:
+        assert getattr(client, method)(path, json={}).status_code == 401, path
+    assert client.get('/teacher/').status_code == 302
+
+
+def test_logging_in_ends_the_guest_session(client):
+    client.post('/guest')
+    login(client)
+    page = client.get('/').get_data(as_text=True)
+    assert 'data-guest=""' in page and 'data-login="20101"' in page
 
 
 def train(client, **cfg):

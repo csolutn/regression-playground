@@ -17,6 +17,8 @@ learning loop, press **Train**, and watch the prediction change in the browser.
 - **Save MP4**: a 1080×1920 video (title, prediction, loss curve) made in the browser.
   The server sends only numbers, so animation and video cost no server time.
 - Login: student number + name from the teacher's class list. The first login sets the password.
+- Guests (public demo, "Use as a guest" below the login form): no database. Runs train in the browser and
+  stay in that page (gone on reload); tree models and runs too big for the browser need a login.
 - Teacher page (`/teacher`): import the class list, reset passwords, see every student's history,
   download all runs as CSV.
 
@@ -106,7 +108,6 @@ the untagged images left by earlier builds; tagged ones such as a rollback image
 | Video layout and size | `app/static/js/recorder.js` (`W`, `H` at the top) |
 | History columns, change highlighting, filters (date, data) and ★ | `app/static/js/history.js`; what counts as the same data: `dataKey` in `describe.js` |
 | App name | `APP_NAME` in `app/config.py` |
-| Teacher named on the login page (lost password) | `TEACHER_NAME` in `app/config.py` (or the `TEACHER_NAME` env) |
 | Database tables | `app/models.py` |
 
 ## Translations (Babel)

@@ -4,7 +4,6 @@ from datetime import timedelta
 
 class Config:
     APP_NAME = 'Machine Learning Playground'   # shown in every language
-    TEACHER_NAME = os.environ.get('TEACHER_NAME', '정솔')   # login page: whom to ask about a lost password
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev')
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///playground.db')   # file in instance/
     SESSION_COOKIE_SAMESITE = 'Lax'

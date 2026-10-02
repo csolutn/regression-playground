@@ -165,6 +165,15 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .login-card h1 { margin-bottom: 4px; }
 .login-card p { margin: 0 0 12px; }
 .login-card .hint { margin: -6px 0 12px; }
+.login-card .guest-link { margin: 14px 0 0; text-align: center; }
+.quiet-link { border: 0; padding: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer;
+  text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--muted) 45%, transparent); text-underline-offset: 3px; }
+.quiet-link:hover { color: var(--text); }
+.info-btn { display: inline-grid; place-items: center; width: 17px; height: 17px; margin-left: 4px; padding: 0; vertical-align: 1px;
+  border: 1.3px solid var(--muted); border-radius: 50%; background: none; color: var(--muted);
+  font: italic 700 11px/1 Georgia, 'Times New Roman', serif; cursor: pointer; }
+.info-btn:hover { color: var(--accent); border-color: var(--accent); }
+.guest-note { flex-basis: 100%; margin: 0; }
 
 /* ---------- playground: left settings / right output ---------- */
 .page-playground { overflow: hidden; }

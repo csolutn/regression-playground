@@ -1,5 +1,5 @@
 {# Result (newest run) on top, history below. Shared by the playground and the teacher's student page. #}
-<div id="output" class="output" data-user="{{ output_user_id or '' }}" data-login="{{ output_login_id or g.user.login_id }}">
+<div id="output" class="output" data-user="{{ output_user_id or '' }}" data-login="{{ output_login_id or (g.user.login_id if g.user else 'guest') }}">
   <article class="card result-card">
     <header class="result-head">
       <div class="result-titles">
@@ -48,6 +48,9 @@
     <header class="history-head">
       <h2>{{ _('History') }}</h2>
       <span class="muted">{{ _('Yellow cells changed from the run before. Click a row to show it.') }}</span>
+      {% if g.guest %}
+        <p class="note guest-note">{{ _('As a guest, runs train in this browser and are not saved: they are gone when you reload the page. Tree models are for logged-in users.') }}</p>
+      {% endif %}
       <div class="history-tools">
         <span class="muted" data-role="history-count"></span>
         <button type="button" class="btn btn-ghost btn-sm" data-role="csv">{{ _('Save CSV') }}</button>

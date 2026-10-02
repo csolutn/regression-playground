@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block body_class %}page-playground{% endblock %}
 {% block content %}
-<main class="split" data-page="playground" data-user="{{ g.user.id }}">
+<main class="split" data-page="playground" data-user="{{ g.user.id if g.user else 'guest' }}" data-guest="{{ '1' if g.guest else '' }}">
   <section class="pane pane-settings" aria-label="{{ _('Settings') }}">
     <form id="settings" autocomplete="off" onsubmit="return false">
       {# ① → ④ : the supervised-learning loop. Each card opens its panel below. #}
