@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 23:40+0900\n"
+"POT-Creation-Date: 2026-10-03 00:16+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -189,6 +189,9 @@ msgid "Done"
 msgstr ""
 
 msgid "Download all runs (CSV)"
+msgstr ""
+
+msgid "E-mail"
 msgstr ""
 
 #, python-brace-format

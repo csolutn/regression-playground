@@ -30,6 +30,7 @@
     {# looks like a quiet link; a POST, so another site cannot switch a logged-in student to guest #}
     <p class="guest-link"><button class="quiet-link" formaction="{{ url_for('auth.guest') }}" formnovalidate>{{ _('Use as a guest') }}</button></p>
   </form>
+  {% include 'partials/credits.html' %}
 </main>
 <dialog class="dialog" id="pw-help" aria-labelledby="pw-help-title">
   <form method="dialog">

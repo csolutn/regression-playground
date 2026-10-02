@@ -31,9 +31,10 @@
     </form>
 
     <div class="run-bar">
-      <button id="train-btn" type="button" class="btn btn-primary btn-lg">{{ _('▶ Train') }}</button>
-      <span class="muted kbd-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
-      <button id="reset-btn" type="button" class="btn btn-ghost btn-sm">{{ _('Reset settings') }}</button>
+      {% include 'partials/credits.html' %}
+      <button id="reset-btn" type="button" class="btn btn-ghost">{{ _('Reset settings') }}</button>
+      {# Ctrl+Enter (⌘+Enter) still trains; only the tooltip mentions it #}
+      <button id="train-btn" type="button" class="btn btn-primary btn-lg" title="Ctrl+Enter">{{ _('▶ Train') }}</button>
     </div>
   </section>
 
