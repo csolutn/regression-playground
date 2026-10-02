@@ -313,7 +313,7 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .history-more { display: flex; justify-content: center; }
 .history-more .btn { margin-top: 10px; }
 table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.history th { text-align: left; font-weight: 700; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.history th { text-align: left; font-weight: 700; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; vertical-align: middle; }
 .history td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .history tbody tr[data-id] { cursor: pointer; }
 .history tbody tr[data-id]:hover { background: var(--surface-2); }
@@ -326,7 +326,8 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .history .actions { white-space: nowrap; text-align: right; }
 .history .empty { text-align: center; color: var(--muted); padding: 24px; }
 .history-card { position: relative; }
-.th-filter { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-left: 2px; padding: 0; vertical-align: -5px;
+/* centred on the text; the negative margins keep the 20px icon from making its header cell taller than the others */
+.th-filter { display: inline-grid; place-items: center; width: 20px; height: 20px; margin: -4px 0 -4px 2px; padding: 0; vertical-align: middle;
   border: 1px solid transparent; border-radius: 5px; background: none; color: var(--muted); opacity: .55; cursor: pointer; }
 .th-filter:hover { opacity: 1; border-color: var(--border); }
 .th-filter.on { opacity: 1; color: var(--accent-text); background: var(--accent); }
