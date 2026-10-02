@@ -8,7 +8,7 @@ import { DEFAULT_VIEW, FONT, LIGHT, drawLoss, drawPrediction } from './plot.js';
 
 const W = 1080, H = 1920, S = 2;          // S: plot scale (fonts and lines) in the video
 const FIRST_HOLD_US = 500_000, LAST_HOLD_US = 2_000_000;
-const MUXER_SRC = '/static/vendor/mp4-muxer.min.js';
+const MUXER_SRC = new URL('../vendor/mp4-muxer.min.js', import.meta.url).href;   // under the same versioned /static/ path
 
 export async function exportVideo(run, { title, speed = 1, log = false, view = DEFAULT_VIEW, onProgress = () => {} }) {
   const canvas = document.createElement('canvas');

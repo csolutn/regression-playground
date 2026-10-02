@@ -125,3 +125,17 @@ def test_train_gives_up_when_every_worker_is_busy(app, client, monkeypatch):
     finally:
         for _ in range(taken):
             pool.slots.release()
+
+
+def test_static_urls_carry_a_version_and_are_cached(app, client, tmp_path):
+    from app import create_app, static_version
+    login(client)
+    page = client.get('/').get_data(as_text=True)
+    version = app.config['STATIC_VERSION']
+    assert version == static_version() and f'/static/{version}/js/playground.js' in page
+    prod = create_app({'DEBUG': False, 'SECRET_KEY': 'test', 'SQLALCHEMY_DATABASE_URI': f'sqlite:///{tmp_path}/p.db'})
+    client = prod.test_client()                                 # like the server: not in debug mode
+    r = client.get(f'/static/{version}/js/playground.js')
+    assert r.status_code == 200 and 'max-age=31536000' in r.headers['Cache-Control']
+    r = client.get('/static/js/playground.js')                 # an old page asking for the unversioned URL
+    assert r.status_code == 200 and 'no-cache' in r.headers['Cache-Control']
