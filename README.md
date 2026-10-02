@@ -6,8 +6,8 @@ learning loop, press **Train**, and watch the prediction change in the browser.
 **Demo: <https://ml.solsam.app>** — choose "Use as a guest" below the login form; no account needed.
 
 ```
-① Training data  →  ② Prediction function  →  ③ Loss function  →  ④ Optimization
-   (x, y)             ŷ = f(x)                 how errors are scored   how the graph is corrected
+① Training data  →  ② Predictor  →  ③ Loss function        →  ④ Optimization
+   (x, y)             ŷ = f(x)        how errors are scored     how the graph is corrected
 ```
 
 - Left pane: the four step cards; each opens its settings. The basics come first; **Advanced** holds the rest.

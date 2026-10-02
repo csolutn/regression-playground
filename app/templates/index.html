@@ -8,7 +8,7 @@
       <ol class="pipeline" role="tablist">
         {% for step, no, title, sub in [
             ('data', 1, _('Training data'), _('Questions and answers') ~ ' (x, y)'),
-            ('model', 2, _('Prediction function'), _('Shape of the graph') ~ ' ŷ = f(x)'),
+            ('model', 2, _('Predictor'), _('Shape of the graph') ~ ' ŷ = f(x)'),
             ('loss', 3, _('Loss function'), _('How errors are scored')),
             ('optim', 4, _('Optimization'), _('How the graph is corrected')),
           ] %}
