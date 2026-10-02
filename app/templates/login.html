@@ -8,7 +8,7 @@
       <button type="button" class="link-btn" data-role="pw-help-open" aria-haspopup="dialog">{{ _('About the password') }}</button></p>
     <label class="field">
       <span>{{ _('Student number') }}</span>
-      <input name="login_id" value="{{ form.login_id }}" required autocomplete="username" autofocus placeholder="{{ _('e.g. %(example)s', example='21401') }}">
+      <input name="login_id" value="{{ form.login_id }}" required autocomplete="username" {{ '' if first_login else 'autofocus' }} placeholder="{{ _('e.g. %(example)s', example='21401') }}">
     </label>
     <label class="field">
       <span>{{ _('Name') }}</span>
@@ -16,12 +16,12 @@
     </label>
     <label class="field">
       <span>{{ _('Password') }}</span>
-      <input name="password" type="password" required autocomplete="{{ 'new-password' if first_login else 'current-password' }}">
+      <input name="password" type="password" value="{{ kept_password }}" required autocomplete="{{ 'new-password' if first_login else 'current-password' }}">
     </label>
     {% if first_login %}
       <label class="field">
         <span>{{ _('Password again') }}</span>
-        <input name="password_confirm" type="password" required autocomplete="new-password">
+        <input name="password_confirm" type="password" required autocomplete="new-password" autofocus>
       </label>
       <p class="hint">{{ _('This is your first login. The password you type now becomes your password.') }}</p>
     {% endif %}

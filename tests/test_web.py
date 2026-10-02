@@ -14,6 +14,15 @@ def test_login_requires_roster_and_sets_password_on_first_login(client):
     assert client.get('/').status_code == 200
 
 
+def test_first_login_keeps_the_typed_password(client):
+    r = client.post('/login', data={'login_id': '20101', 'name': '김하늘', 'password': 'pass1234'})
+    html = r.get_data(as_text=True)
+    assert 'value="pass1234"' in html and r.headers['Cache-Control'] == 'no-store'
+    r = client.post('/login', data={'login_id': '20101', 'name': '김하늘', 'password': 'pass1234',
+                                    'password_confirm': 'other123'})
+    assert 'value="pass1234"' not in r.get_data(as_text=True)      # mismatch: retype both
+
+
 def test_login_page_explains_the_password(client):
     html = client.get('/login').get_data(as_text=True)
     assert '명단에 있는' not in html

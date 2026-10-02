@@ -5,7 +5,7 @@ Students come from the teacher's roster. The first login sets the password
 """
 from functools import wraps
 
-from flask import Blueprint, abort, flash, g, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, flash, g, make_response, redirect, render_template, request, session, url_for
 from flask_babel import gettext as _
 
 from .extensions import db
@@ -50,7 +50,7 @@ def normalize_name(name):
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = {'login_id': '', 'name': ''}
-    first_login = False
+    first_login, kept_password = False, ''
     if request.method == 'POST':
         form = {'login_id': request.form.get('login_id', '').strip(), 'name': request.form.get('name', '').strip()}
         password = request.form.get('password', '')
@@ -62,6 +62,7 @@ def login():
             first_login = True
             confirm = request.form.get('password_confirm')
             if confirm is None:
+                kept_password = password    # refilled so only the confirmation needs typing
                 flash(_('First login: type the same password again to register it.'), 'info')
             elif len(password) < MIN_PASSWORD_LENGTH:
                 flash(_('Use a password of at least %(n)d characters.', n=MIN_PASSWORD_LENGTH), 'error')
@@ -74,7 +75,10 @@ def login():
             flash(_('Wrong password. If you forgot it, ask your teacher to reset it.'), 'error')
         else:
             return finish_login(user)
-    return render_template('login.html', form=form, first_login=first_login)
+    resp = make_response(render_template('login.html', form=form, first_login=first_login,
+                                         kept_password=kept_password))
+    resp.headers['Cache-Control'] = 'no-store'     # the page may carry the typed password
+    return resp
 
 
 def finish_login(user):
