@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 23:31+0900\n"
+"POT-Creation-Date: 2026-10-02 23:40+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -625,6 +625,9 @@ msgstr "이 실험 보기"
 
 msgid "Slope w"
 msgstr "기울기 w"
+
+msgid "Sort by validation loss"
+msgstr "검증 손실로 정렬"
 
 msgid "Speed"
 msgstr "속도"

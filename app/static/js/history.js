@@ -1,6 +1,7 @@
 // History table: newest run on top; a cell is highlighted when it differs from the run before it.
 // Filter icons next to "Time" (a date range) and "① Data" (one of the data sets used so far) limit the
-// rows shown; ★ marks the lowest validation loss of each data set; the shown rows can be saved as CSV.
+// rows shown; the arrow next to "Validation loss" sorts by it (lowest first → highest first → newest first);
+// ★ marks the lowest validation loss of each data set; the shown rows can be saved as CSV.
 // The server sends the newest runs a page at a time: `older` is the run just below the loaded ones
 // (null once everything is loaded), `total` the count of all runs.
 import { t } from './i18n.js';
@@ -17,6 +18,9 @@ export const SETTING_COLUMNS = [
   { key: 'optim', label: () => t('④ Optimization'), get: optimSummary },
 ];
 
+const NEXT_SORT = { '': 'asc', asc: 'desc', desc: '' };
+const SORT_ARROW = { '': '↕', asc: '↑', desc: '↓' };
+
 const LANG = document.documentElement.lang || undefined;
 const STATUS = () => ({ timeout: t('time limit'), diverged: t('diverged') });
 
@@ -31,6 +35,7 @@ export class History {
     this.total = 0;
     this.activeId = null;
     this.filter = { from: '', to: '', data: '' };      // local dates 'YYYY-MM-DD' and a dataKey; '' = no limit
+    this.sort = '';                                     // by validation loss: '' (newest first) | 'asc' | 'desc'
     this.onRender = null;
     table.addEventListener('click', e => this.onClick(e));
     this.setupPopup();
@@ -47,6 +52,7 @@ export class History {
   }
   setActive(id) { this.activeId = id; this.render(); }
   setFilter(filter) { this.filter = { ...this.filter, ...filter }; this.render(); }
+  setSort(sort) { this.sort = sort; this.render(); }
   // "before" is always the run just before, even when the filter hides it
   previous(row) {
     const i = this.rows.indexOf(row);
@@ -56,10 +62,13 @@ export class History {
   get filtered() { return !!(this.filter.from || this.filter.to || this.filter.data); }
   get visible() {
     const { from, to, data } = this.filter;
-    return this.rows.filter(r => {
+    const rows = this.rows.filter(r => {
       const d = localDate(r.created_at);
       return (!from || d >= from) && (!to || d <= to) && (!data || dataKey(r.config) === data);
     });
+    if (!this.sort) return rows;
+    const sign = this.sort === 'asc' ? 1 : -1;       // runs without a validation loss go last; ties stay newest first
+    return rows.sort((a, b) => (a.final_val == null) - (b.final_val == null) || sign * (a.final_val - b.final_val));
   }
 
   // data (formulas / CSV files) used so far, most recent first: dataKey → { label, count }
@@ -85,6 +94,10 @@ export class History {
   }
 
   onClick(e) {
+    if (e.target.closest('button[data-sort]')) {
+      Promise.resolve(this.handlers.onNeedAll?.()).then(() => this.setSort(NEXT_SORT[this.sort]));
+      return;
+    }
     const icon = e.target.closest('button[data-filter]');
     if (icon) {
       const kind = icon.dataset.filter;       // loading the rest redraws the table, so find the icon again
@@ -113,10 +126,14 @@ export class History {
     const best = new Set(bestOf.values());
     const icon = (kind, on, label) =>
       `<button type="button" class="th-filter${on ? ' on' : ''}" data-filter="${kind}" title="${esc(label)}" aria-label="${esc(label)}" aria-haspopup="dialog">${FUNNEL}</button>`;
+    const sortLabel = esc(t('Sort by validation loss'));
+    const sortButton = `<button type="button" class="th-filter th-sort${this.sort ? ' on' : ''}" data-sort title="${sortLabel}" aria-label="${sortLabel}">${SORT_ARROW[this.sort]}</button>`;
     const head = `<thead><tr>
       <th>#</th><th>${t('Time')} ${icon('time', this.filter.from || this.filter.to, t('Filter by date'))}</th>
       ${SETTING_COLUMNS.map(c => `<th>${c.label()}${c.key === 'data' ? ' ' + icon('data', this.filter.data, t('Filter by data')) : ''}</th>`).join('')}
-      <th class="num">${t('Train loss')}</th><th class="num">${t('Validation loss')}</th><th class="num">${t('Seconds')}</th><th></th>
+      <th class="num">${t('Train loss')}</th>
+      <th class="num" aria-sort="${{ '': 'none', asc: 'ascending', desc: 'descending' }[this.sort]}">${t('Validation loss')} ${sortButton}</th>
+      <th class="num">${t('Seconds')}</th><th></th>
     </tr></thead>`;
     const L = { view: esc(t('Show this run')), load: esc(t('Load these settings')), del: esc(t('Delete')), best: esc(t('Lowest validation loss for this data')) };
     const body = rows.map(r => {

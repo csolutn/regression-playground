@@ -67,3 +67,19 @@ test('the last loaded row is compared with the run just below the page', () => {
   h.remove(page[0].id);
   assert.equal(h.total, 2);
 });
+
+test('sorting by validation loss: lowest first, highest first, then newest first again', () => {
+  const rows = [row({}, 0.5), row({}, null), row({}, 0.2), row({}, 0.9)].reverse();
+  const { h, shown } = table(rows);
+  const ids = vals => vals.map(v => rows.find(r => r.final_val === v).id);
+  h.setSort('asc');
+  assert.deepEqual(shown(), ids([0.2, 0.5, 0.9, null]));
+  h.setSort('desc');
+  assert.deepEqual(shown(), ids([0.9, 0.5, 0.2, null]));
+  h.setSort('');
+  assert.deepEqual(shown(), rows.map(r => r.id));
+  h.setFilter({ data: dataKey(FN) });
+  h.setSort('asc');
+  assert.equal(h.visible.length, 4);
+  assert.equal(h.previous(rows[0]), rows[1]);          // "changed from the run before" stays by time
+});
