@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()   # before Config reads the environment
 
-from flask import Flask, send_from_directory  # noqa: E402
+from flask import Flask, request, send_from_directory  # noqa: E402
 
 from .config import Config  # noqa: E402
 from .extensions import babel, db  # noqa: E402
@@ -44,6 +44,12 @@ def create_app(config=None):
         if rest and len(head) == 10 and all(c in '0123456789abcdef' for c in head):
             filename = rest
         return send_from_directory(app.static_folder, filename, max_age=0)
+
+    @app.get('/favicon.ico')
+    @app.get('/apple-touch-icon.png')
+    def root_icon():
+        """Browsers and iOS ask for these at the site root, whatever the page links."""
+        return send_from_directory(STATIC_DIR / 'icons', request.path.lstrip('/'), max_age=24 * 3600)
     if not (app.debug or app.testing) and app.config['SECRET_KEY'] in ('dev', 'change-me', ''):
         raise RuntimeError('Set SECRET_KEY to a long random value (see deploy.env.example).')
     if app.config['TRUST_PROXY']:

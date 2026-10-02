@@ -191,3 +191,11 @@ def test_static_urls_carry_a_version_and_are_cached(app, client, tmp_path):
     assert r.status_code == 200 and 'no-cache' in r.headers['Cache-Control']
     r = client.get('/static/0123456789/js/train-worker.js')    # a page from an older deploy
     assert r.status_code == 200 and 'no-cache' in r.headers['Cache-Control']
+
+
+def test_icons_for_safari_and_ios(client):
+    page = client.get('/login').get_data(as_text=True)
+    assert 'icons/favicon-32.png' in page and 'icons/apple-touch-icon.png' in page
+    for path, kind in [('/favicon.ico', 'image/'), ('/apple-touch-icon.png', 'image/png')]:
+        r = client.get(path)
+        assert r.status_code == 200 and r.content_type.startswith(kind), path
