@@ -194,6 +194,28 @@ def step_budget_error(cfg, n_train):
     return None
 
 
+# Linear and neural network runs train in the student's browser (app/static/js/nn.js) to spare the server,
+# except when the browser would be much slower: plain JavaScript pays for every multiplication, while
+# torch pays for every update step. Estimated seconds, measured on the Mac mini (Chrome's V8 via Node).
+BROWSER_S_PER_MULTIPLY = 0.33e-9
+BROWSER_S_PER_UPDATE = 5e-9          # per weight, per step
+SERVER_S_PER_STEP = 20e-6
+SERVER_S_PER_LAYER_STEP = 7e-6
+BROWSER_SLOW_S = 3                   # a school PC takes perhaps 2-3× longer
+
+
+def trains_in_browser(cfg, n_train, n_val):
+    """True unless the browser would take over BROWSER_SLOW_S and over twice the server's time."""
+    sizes = [cfg['n_inputs'], *(cfg['hidden_layers'] if cfg['model'] == 'neural_net' else []), 1]
+    multiplies = sum(a * b for a, b in zip(sizes, sizes[1:]))      # one prediction of one point
+    weights = multiplies + sum(sizes[1:])
+    steps = cfg['epochs'] * math.ceil(n_train / min(batch_size(cfg, n_train), n_train))
+    browser = (BROWSER_S_PER_MULTIPLY * cfg['epochs'] * multiplies * (4 * n_train + n_val)   # train ×3, evaluate
+               + BROWSER_S_PER_UPDATE * steps * weights)
+    server = steps * (SERVER_S_PER_STEP + SERVER_S_PER_LAYER_STEP * (len(sizes) - 1))
+    return browser <= BROWSER_SLOW_S or browser <= 2 * server
+
+
 def public_options():
     """What the browser needs to build the settings form."""
     return {

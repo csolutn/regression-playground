@@ -1,12 +1,18 @@
 """JSON API used by the playground page.
 
-POST /api/train streams NDJSON events from app.ml.trainer (see its docstring), then
-saves the run and sends {'type': 'saved', 'run': row}. The browser draws everything,
-so the server only sends numbers. Runs train in worker processes (app.ml.pool); while all
-are busy the stream sends {'type': 'queued'} every few seconds, and {'type': 'error',
-'message'} when the wait or the worker takes too long.
+Linear and neural network runs usually train in the browser: POST /api/prepare returns the data
+(the trainer's meta) and whether the browser should train it (options.trains_in_browser); the
+browser then saves the run with POST /api/runs.
+
+POST /api/train trains on the server instead (tree models, and the runs the browser would be
+slow at). It streams NDJSON events from app.ml.trainer (see its docstring), then saves the run
+and sends {'type': 'saved', 'run': row}. The browser draws everything, so the server only sends
+numbers. Runs train in worker processes (app.ml.pool); while all are busy the stream sends
+{'type': 'queued'} every few seconds, and {'type': 'error', 'message'} when the wait or the
+worker takes too long.
 """
 import json
+import math
 import threading
 import time
 
@@ -71,6 +77,25 @@ def preview():
     return jsonify(trainer.meta(cfg, ds))
 
 
+@bp.post('/prepare')
+@login_required
+def prepare():
+    """For a linear or neural network run: {'browser': True, 'meta', 'time_limit_s'}, or {'browser': False}."""
+    cfg, errors = read_config()
+    if errors:
+        return error_response(errors)
+    if cfg['model'] not in options.GRADIENT_MODELS:
+        abort(400)
+    try:
+        ds = trainer.check(cfg)
+    except (ml_data.DataError, trainer.BudgetError) as exc:
+        return error_response([(exc.msgid, exc.params)])
+    if not options.trains_in_browser(cfg, len(ds.X_train), len(ds.X_val)):
+        return jsonify({'browser': False})
+    return jsonify({'browser': True, 'meta': trainer.meta(cfg, ds),
+                    'time_limit_s': current_app.config['TRAINING_TIME_LIMIT_S']})
+
+
 @bp.post('/train')
 @login_required
 def train():
@@ -130,6 +155,67 @@ def save_run(user_id, cfg, end, stored):
     db.session.add(run)
     db.session.commit()
     return run
+
+
+MAX_UPLOAD_BYTES = 8 * 1024 * 1024     # 300 frames of a 30 × 30 surface are about 2 MB
+
+
+@bp.post('/runs')
+@login_required
+def upload_run():
+    """Save a run trained in the browser: {config, frames, loss, end}. The server rebuilds the data itself."""
+    request.max_content_length = MAX_UPLOAD_BYTES
+    if not request.is_json:
+        abort(415)
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        abort(400)
+    cfg, errors = options.validate(body.get('config'))
+    if errors:
+        return error_response(errors)
+    if cfg['model'] not in options.GRADIENT_MODELS:
+        abort(400)
+    try:
+        ds = trainer.check(cfg)
+    except (ml_data.DataError, trainer.BudgetError) as exc:
+        return error_response([(exc.msgid, exc.params)])
+    try:
+        frames, loss, end = checked_upload(body, cfg['epochs'], len(ds.X_plot))
+    except (KeyError, TypeError, ValueError):
+        abort(400)
+    run = save_run(g.user.id, cfg, end, {'meta': trainer.meta(cfg, ds), 'frames': frames, 'loss': loss})
+    return jsonify({'run': run.to_row()}), 201
+
+
+def checked_upload(body, epochs, n_plot):
+    """The uploaded frames, loss history and end, in the trainer's shapes; raises on anything else."""
+    def number(v, optional=False):
+        if v is None and optional:
+            return None
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise ValueError(v)
+        return v
+
+    def step(v):
+        if isinstance(v, bool) or not isinstance(v, int) or not 0 <= v <= epochs:
+            raise ValueError(v)
+        return v
+
+    frames = [{'step': step(f['step']), 'pred': [number(v) for v in f['pred']],
+               'train': number(f['train'], True), 'val': number(f['val'], True)} for f in body['frames']]
+    if not 1 <= len(frames) <= trainer.MAX_FRAMES + 2 or any(len(f['pred']) != n_plot for f in frames):
+        raise ValueError('frames')
+    loss = {'steps': [step(v) for v in body['loss']['steps']],
+            'train': [number(v, True) for v in body['loss']['train']],
+            'val': [number(v, True) for v in body['loss']['val']]}
+    if not 1 <= len(loss['steps']) == len(loss['train']) == len(loss['val']) <= epochs:
+        raise ValueError('loss')
+    e = body['end']
+    if e['status'] not in ('done', 'timeout', 'diverged'):
+        raise ValueError(e['status'])
+    end = {'status': e['status'], 'steps': step(e['steps']), 'final_train': number(e['final_train'], True),
+           'final_val': number(e['final_val'], True), 'duration': number(e['duration'])}
+    return frames, loss, end
 
 
 def visible_user_id():

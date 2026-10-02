@@ -1,6 +1,7 @@
 // Playground page: settings on the left (① → ④), output on the right.
 import { t } from './i18n.js';
 import { api } from './api.js';
+import { trainRun } from './train.js';
 import { Settings } from './settings.js';
 import { OutputPanel } from './output.js';
 import { mountCsvInput, mountLayersEditor } from './widgets.js';
@@ -129,7 +130,7 @@ async function train() {
   trainBtn.textContent = t('■ Stop');
   const run = output.startLive(cfg);
   try {
-    await api.train(cfg, ev => output.liveEvent(run, ev), controller.signal);
+    await trainRun(cfg, ev => output.liveEvent(run, ev), controller.signal);
     if (run.live) output.stopLive(run, t('The connection closed before the run was saved.'));
   } catch (err) {
     if (err.name === 'AbortError') output.stopLive(run, t('Stopped (not saved)'));

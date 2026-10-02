@@ -1,4 +1,5 @@
-// Server calls. POST /api/train streams one JSON event per line (see app/ml/trainer.py).
+// Server calls. POST /api/train streams one JSON event per line (see app/ml/trainer.py);
+// train.js decides whether a run trains there or in the browser.
 import { t } from './i18n.js';
 
 export class ApiError extends Error {
@@ -28,6 +29,8 @@ export const api = {
   run: id => getJSON(`/api/runs/${id}`),
   deleteRun: id => getJSON(`/api/runs/${id}`, { method: 'DELETE' }),
   preview: cfg => getJSON('/api/preview', post(cfg)),
+  prepare: (cfg, signal) => getJSON('/api/prepare', { ...post(cfg), signal }),
+  saveRun: run => getJSON('/api/runs', post(run)),
 
   async train(cfg, onEvent, signal) {
     const res = await check(await fetch('/api/train', { ...post(cfg), signal }));

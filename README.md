@@ -33,6 +33,14 @@ uv run flask run --debug                                   # http://127.0.0.1:50
 The class list is a CSV with `학번,이름` (or `student_id,name`) columns. The database is SQLite at
 `instance/playground.db`; set `DATABASE_URL` to use PostgreSQL or MySQL instead.
 
+**Where runs train.** Linear regression and neural network runs train in the student's browser
+(`app/static/js/nn.js` in a Web Worker): the server only builds the data (`POST /api/prepare`) and
+saves the finished run (`POST /api/runs`), so a class training at once costs the server almost
+nothing. The numbers differ from a server run with the same seed (other random weights and batch
+order), the behaviour does not. Runs that plain JavaScript would be much slower at (big networks
+with big batches, which torch finishes in under a second) and the tree models train on the server
+(`POST /api/train`); `trains_in_browser()` in `app/ml/options.py` decides.
+
 For a classroom server (about 30 students at once), run **one** server process with enough threads
 for every open training stream, for example
 `uv run --with gunicorn gunicorn -w 1 --threads 40 -b 0.0.0.0:5050 "app:create_app()"`.
@@ -73,7 +81,8 @@ for `/login`; optionally Cloudflare Access (e-mail one-time code) on `/teacher*`
 
 In the container (8-CPU VM, 6 trainings at once) 30 students pressing Train together all finished within
 6 s; the largest SGD run (3 × 32 neurons) takes about 43 s while others train, so `deploy.env` sets
-`TRAINING_TIME_LIMIT_S=60`. One run sends 0.1–1.6 MB (2 inputs is the most).
+`TRAINING_TIME_LIMIT_S=60` (measured before most runs moved to the browser; the browser uses the
+same limit). One run sends 0.1–1.6 MB (2 inputs is the most).
 
 Mac: System Settings → Energy → prevent automatic sleep and start up after a power failure.
 Update with `git pull && docker compose up -d --build`. Back up with `scripts/backup.sh`
@@ -86,7 +95,8 @@ Update with `git pull && docker compose up -d --build`. Back up with `scripts/ba
 | A setting (default, range, choices) | `app/ml/options.py` — the single list of settings and limits |
 | Its input on screen | the step template in `app/templates/steps/` (`data`, `model`, `loss`, `optim`) — inputs are bound by `name` |
 | Preset functions | `PRESETS_1D` / `PRESETS_2D` in `app/ml/data.py` |
-| Training (models, optimizers, losses) | `app/ml/trainer.py` — a plain generator of events, no Flask |
+| Training (models, optimizers, losses) | `app/ml/trainer.py` — a plain generator of events, no Flask; linear and neural network runs also in `app/static/js/nn.js` (the browser), keep both in step |
+| Which runs train in the browser | `trains_in_browser()` in `app/ml/options.py` |
 | Summaries in cards, history, badges, video title | `app/static/js/describe.js` |
 | Plot drawing (screen and video) | `app/static/js/plot.js` |
 | Player (play / pause / slider) | `app/static/js/player.js` |
@@ -115,4 +125,5 @@ so that `pybabel extract` finds it.
 
 ```bash
 uv run pytest
+node --test tests/js          # the browser trainer (app/static/js/nn.js)
 ```
