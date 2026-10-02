@@ -80,7 +80,8 @@ so it already does; a domain moved from elsewhere needs every DNS record copied 
 DKIM included, or e-mail stops). Then Zero Trust → Networks →
 Tunnels → Create (cloudflared) → copy the token into `tunnel.env` → Public hostname
 `ml.solsam.app` → service `http://web:8000`. Also: SSL/TLS → Always Use HTTPS; a rate-limiting rule
-for `/login`; optionally Cloudflare Access (e-mail one-time code) on `/teacher*`.
+for `POST /login` (300 requests / 10 s per IP, block 10 s: a whole school shares one IP, so it only
+catches floods, never a class logging in); optionally Cloudflare Access (e-mail one-time code) on `/teacher*`.
 
 In the container (8-CPU VM, 6 trainings at once) 30 students pressing Train together all finished within
 6 s; the largest SGD run (3 × 32 neurons) takes about 43 s while others train, so `deploy.env` sets
