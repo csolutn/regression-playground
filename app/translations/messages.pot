@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 20:46+0900\n"
+"POT-Creation-Date: 2026-10-02 21:41+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -70,9 +70,6 @@ msgid "All data"
 msgstr ""
 
 msgid "All data (batch)"
-msgstr ""
-
-msgid "As a guest, runs train in this browser and are not saved: they are gone when you reload the page. Tree models are for logged-in users."
 msgstr ""
 
 msgid "As a guest, your runs are not saved on the server and some features (tree models and large neural networks) are not available."
@@ -827,6 +824,9 @@ msgid "Wrong password. If you forgot it, ask your teacher to reset it."
 msgstr ""
 
 msgid "Yellow cells changed from the run before. Click a row to show it."
+msgstr ""
+
+msgid "You are using it as a guest. The training history is not saved and is gone when you reload the page."
 msgstr ""
 
 msgid "average"
