@@ -59,6 +59,8 @@
       {% endif %}
     </header>
     <div class="table-wrap"><table data-role="history" class="history"></table></div>
+    {# the newest runs come first, a page at a time #}
+    <div class="history-more"><button type="button" class="btn btn-ghost btn-sm" data-role="history-more" hidden></button></div>
     {# opened by the filter icons next to "Time" and "① Data" in the table head #}
     <div data-role="filter-pop" class="filter-pop" role="dialog" hidden></div>
   </article>

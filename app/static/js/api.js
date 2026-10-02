@@ -25,7 +25,14 @@ async function getJSON(url, opts = {}) {
 const post = body => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 export const api = {
-  runs: userId => getJSON('/api/runs' + (userId ? `?user=${userId}` : '')),
+  // { runs, older, total }: the newest page below run `before`, or every run with all
+  runs: (userId, { before, all } = {}) => {
+    const q = new URLSearchParams();
+    if (userId) q.set('user', userId);
+    if (before) q.set('before', before);
+    if (all) q.set('all', 1);
+    return getJSON('/api/runs' + (q.size ? `?${q}` : ''));
+  },
   run: id => getJSON(`/api/runs/${id}`),
   deleteRun: id => getJSON(`/api/runs/${id}`, { method: 'DELETE' }),
   preview: cfg => getJSON('/api/preview', post(cfg)),

@@ -15,7 +15,7 @@ export class OutputPanel {
       title: $('result-title'), sub: $('result-sub'), status: $('result-status'), diff: $('result-diff'),
       busy: $('viz-busy'), busyText: $('busy-text'), bar: root.querySelector('[data-role="progress"] > div'),
       mp4: $('mp4'), dialog: $('mp4-dialog'),
-      count: $('history-count'), csv: $('csv'),
+      count: $('history-count'), csv: $('csv'), more: $('history-more'),
     };
     this.login = root.dataset.login || '';
     this.userId = userId;
@@ -29,7 +29,9 @@ export class OutputPanel {
       onView: row => this.view(row),
       onLoad: async row => onLoadSettings?.(await this.fetchRun(row)),
       onDelete: row => this.remove(row),
+      onNeedAll: () => this.loadOlder(true),
     });
+    this.loading = null;                      // the running loadOlder()
     this.el.mp4.addEventListener('click', () => this.openMp4Dialog());
     this.setupMp4Dialog();
     this.setupHistoryTools();
@@ -41,12 +43,32 @@ export class OutputPanel {
   async init() {
     if (this.guest) return;
     try {
-      const rows = await api.runs(this.userId);
-      this.history.setRows(rows);
-      if (rows[0]) await this.view(rows[0]);
+      const page = await api.runs(this.userId);
+      this.history.setRows(page.runs, page);
+      if (page.runs[0]) await this.view(page.runs[0]);
     } catch (err) {
       this.toast?.(err.message, 'error');
     }
+  }
+
+  // the next page of older runs, or all of them (the filters and the CSV need every run)
+  async loadOlder(all = false) {
+    while (this.loading) await this.loading;
+    const { older, rows } = this.history;
+    if (!older) return;
+    this.loading = (async () => {
+      this.el.more.disabled = true;
+      try {
+        const page = await api.runs(this.userId, { before: (rows.at(-1)?.id ?? older.id + 1), all });
+        this.history.addOlder(page.runs, page.older, page.total);
+      } catch (err) {
+        this.toast?.(err.message, 'error');
+      } finally {
+        this.el.more.disabled = false;
+        this.loading = null;
+      }
+    })();
+    await this.loading;
   }
 
   async fetchRun(row) {
@@ -87,12 +109,17 @@ export class OutputPanel {
   // ---------- history: filter count and CSV (the filters themselves are in the table head) ----------
 
   setupHistoryTools() {
-    const { count, csv } = this.el;
+    const { count, csv, more } = this.el;
     this.history.onRender = (shown, total) => {
       count.textContent = this.history.filtered ? t('{n} of {total} runs', { n: shown, total }) : '';
       csv.disabled = shown === 0;
+      more.hidden = !this.history.older;
+      const loaded = { n: this.history.rows.length, total: this.history.total };
+      more.textContent = t('Load more ({n} of {total})', loaded);
     };
-    csv.addEventListener('click', () => {
+    more.addEventListener('click', () => this.loadOlder());
+    csv.addEventListener('click', async () => {
+      await this.loadOlder(true);
       const { from: a, to: b } = this.history.filter;
       const span = a || b ? `_${a || 'start'}_${b || localDate(new Date())}` : '';
       const blob = new Blob([this.history.toCsv()], { type: 'text/csv;charset=utf-8' });

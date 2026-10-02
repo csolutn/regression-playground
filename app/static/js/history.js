@@ -1,6 +1,8 @@
 // History table: newest run on top; a cell is highlighted when it differs from the run before it.
 // Filter icons next to "Time" (a date range) and "① Data" (one of the data sets used so far) limit the
 // rows shown; ★ marks the lowest validation loss of each data set; the shown rows can be saved as CSV.
+// The server sends the newest runs a page at a time: `older` is the run just below the loaded ones
+// (null once everything is loaded), `total` the count of all runs.
 import { t } from './i18n.js';
 import { fmtLoss } from './plot.js';
 import { dataKey, dataLabel, dataSummary, lossSummary, modelSummary, optimSummary } from './describe.js';
@@ -19,12 +21,14 @@ const LANG = document.documentElement.lang || undefined;
 const STATUS = () => ({ timeout: t('time limit'), diverged: t('diverged') });
 
 export class History {
-  constructor(table, { readonly = false, popup, onView, onLoad, onDelete }) {
+  constructor(table, { readonly = false, popup, onView, onLoad, onDelete, onNeedAll }) {
     this.table = table;
     this.readonly = readonly;
     this.popup = popup;
-    this.handlers = { onView, onLoad, onDelete };
+    this.handlers = { onView, onLoad, onDelete, onNeedAll };    // onNeedAll: loads every run (before a filter)
     this.rows = [];
+    this.older = null;
+    this.total = 0;
     this.activeId = null;
     this.filter = { from: '', to: '', data: '' };      // local dates 'YYYY-MM-DD' and a dataKey; '' = no limit
     this.onRender = null;
@@ -32,13 +36,22 @@ export class History {
     this.setupPopup();
   }
 
-  setRows(rows) { this.rows = rows; this.render(); }
-  add(row) { this.rows.unshift(row); this.render(); }
-  remove(id) { this.rows = this.rows.filter(r => r.id !== id); this.render(); }
+  setRows(rows, { older = null, total = rows.length } = {}) { this.rows = rows; this.older = older; this.total = total; this.render(); }
+  addOlder(rows, older, total) { this.rows.push(...rows); this.older = older; this.total = total; this.render(); }
+  add(row) { this.rows.unshift(row); this.total++; this.render(); }
+  remove(id) {
+    const n = this.rows.length;
+    this.rows = this.rows.filter(r => r.id !== id);
+    this.total -= n - this.rows.length;
+    this.render();
+  }
   setActive(id) { this.activeId = id; this.render(); }
   setFilter(filter) { this.filter = { ...this.filter, ...filter }; this.render(); }
   // "before" is always the run just before, even when the filter hides it
-  previous(row) { return this.rows[this.rows.indexOf(row) + 1] || null; }
+  previous(row) {
+    const i = this.rows.indexOf(row);
+    return i < 0 ? null : this.rows[i + 1] || this.older;
+  }
 
   get filtered() { return !!(this.filter.from || this.filter.to || this.filter.data); }
   get visible() {
@@ -73,7 +86,12 @@ export class History {
 
   onClick(e) {
     const icon = e.target.closest('button[data-filter]');
-    if (icon) { this.openPopup(icon.dataset.filter, icon); return; }
+    if (icon) {
+      const kind = icon.dataset.filter;       // loading the rest redraws the table, so find the icon again
+      Promise.resolve(this.handlers.onNeedAll?.())
+        .then(() => this.openPopup(kind, this.table.querySelector(`button[data-filter="${kind}"]`)));
+      return;
+    }
     const btn = e.target.closest('button[data-act]');
     const tr = e.target.closest('tr[data-id]');
     if (!tr) return;

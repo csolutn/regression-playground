@@ -77,10 +77,29 @@ def test_train_stream_saves_history(client):
     saved = events[-1]
     assert saved['type'] == 'saved' and saved['run']['seq'] == 1
     train(client, learning_rate=0.1)
-    rows = client.get('/api/runs').get_json()
+    rows = client.get('/api/runs').get_json()['runs']
     assert [r['seq'] for r in rows] == [2, 1]
     detail = client.get(f"/api/runs/{rows[0]['id']}").get_json()
     assert detail['frames'] and detail['loss']['steps'] and detail['config']['learning_rate'] == 0.1
+
+
+def test_history_comes_a_page_at_a_time(app, client):
+    from app.api import HISTORY_PAGE, save_run
+    login(client)
+    with app.app_context():
+        for i in range(HISTORY_PAGE * 2 + 5):
+            cfg = {'model': 'linear', 'data_source': 'csv', 'csv_text': 'x,y\n1,2\n', 'epochs': i}
+            save_run(1, cfg, {'status': 'done', 'final_train': 1.0, 'final_val': 1.0, 'steps': 1, 'duration': 1.0}, {})
+    first = client.get('/api/runs').get_json()
+    assert [r['seq'] for r in first['runs']] == list(range(65, 35, -1))
+    assert first['older']['seq'] == 35 and first['total'] == 65
+    assert 'csv_text' not in first['runs'][0]['config'] and first['runs'][0]['config']['epochs'] == 64
+    second = client.get(f"/api/runs?before={first['runs'][-1]['id']}").get_json()
+    assert [r['seq'] for r in second['runs']] == list(range(35, 5, -1)) and second['older']['seq'] == 5
+    rest = client.get(f"/api/runs?before={second['runs'][-1]['id']}&all=1").get_json()
+    assert [r['seq'] for r in rest['runs']] == [5, 4, 3, 2, 1] and rest['older'] is None
+    everything = client.get('/api/runs?all=1').get_json()
+    assert len(everything['runs']) == 65 and everything['older'] is None
 
 
 def test_bad_settings_return_translated_errors(client):
@@ -109,7 +128,7 @@ def test_teacher_pages(client):
     client.post('/logout')
     assert login(client, 'teacher', '선생님', 'teachpw', confirm=False).status_code == 302
     assert '김하늘' in client.get('/teacher/').get_data(as_text=True)
-    rows = client.get('/api/runs?user=1').get_json()
+    rows = client.get('/api/runs?user=1').get_json()['runs']
     assert len(rows) == 1
     assert client.get('/teacher/students/1').status_code == 200
     csv = client.get('/teacher/runs.csv').get_data(as_text=True)

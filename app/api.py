@@ -18,6 +18,7 @@ import time
 
 from flask import Blueprint, Response, abort, current_app, g, jsonify, request, stream_with_context
 from flask_babel import gettext
+from sqlalchemy.orm import defer
 
 from .auth import login_required, user_or_guest_required
 from .extensions import db
@@ -30,6 +31,7 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 _pool = None
 _pool_lock = threading.Lock()
 QUEUE_POLL_S = 3       # a 'queued' line this often keeps the browser informed and notices one that left
+HISTORY_PAGE = 30      # runs per history page; the filters and the CSV load the rest
 
 
 def training_pool():
@@ -238,8 +240,22 @@ def get_run(run_id):
 @bp.get('/runs')
 @login_required
 def list_runs():
-    runs = db.session.scalars(db.select(Run).filter_by(user_id=visible_user_id()).order_by(Run.id.desc()))
-    return jsonify([r.to_row() for r in runs])
+    """Newest first, HISTORY_PAGE runs (?all=1: every run) below ?before=<id>: {'runs', 'older', 'total'}.
+
+    'older' is the run just below the page (the table compares a run with the one before it), or None
+    at the end. SQLite drops the CSV text, up to 1 MB per run, before the rows reach Python.
+    """
+    uid, everything = visible_user_id(), request.args.get('all', type=int)
+    query = (db.select(Run, db.func.json_remove(Run.config_json, '$.csv_text'))
+             .options(defer(Run.config_json)).filter(Run.user_id == uid).order_by(Run.id.desc()))
+    if before := request.args.get('before', type=int):
+        query = query.filter(Run.id < before)
+    if not everything:
+        query = query.limit(HISTORY_PAGE + 1)
+    rows = [run.to_row(json.loads(cfg)) for run, cfg in db.session.execute(query)]
+    older = rows.pop() if not everything and len(rows) > HISTORY_PAGE else None
+    total = db.session.scalar(db.select(db.func.count(Run.id)).filter_by(user_id=uid))
+    return jsonify({'runs': rows, 'older': older, 'total': total})
 
 
 @bp.get('/runs/<int:run_id>')

@@ -72,9 +72,9 @@ class Run(db.Model):
     def get_payload(self):
         return json.loads(gzip.decompress(self.payload))
 
-    def to_row(self):
-        """Summary for the history table (the CSV text itself is left out)."""
-        cfg = self.config
+    def to_row(self, cfg=None):
+        """Summary for the history table (the CSV text itself is left out); ``cfg``: the settings, if read already."""
+        cfg = self.config if cfg is None else cfg
         cfg.pop('csv_text', None)
         return {
             'id': self.id, 'seq': self.seq, 'created_at': self.created_at.isoformat() + 'Z',

@@ -52,3 +52,18 @@ test('the data and date filters limit the rows; a deleted data set clears its fi
   h.remove(b.id);
   assert.equal(h.filter.data, '');
 });
+
+test('the last loaded row is compared with the run just below the page', () => {
+  const older = row({ learning_rate: 0.1 }, 0.5);
+  const page = [row({}, 0.4), row({}, 0.3)].reverse();
+  const el = { innerHTML: '', addEventListener() {} };
+  const h = new History(el, {});
+  h.setRows(page, { older, total: 3 });
+  assert.equal(h.previous(page[1]), older);
+  assert.equal((el.innerHTML.match(/class="changed"/g) || []).length, 1);
+  assert.ok(!el.innerHTML.includes(`data-id="${older.id}"`));    // shown only after it is loaded
+  h.addOlder([older], null, 3);
+  assert.equal(h.previous(older), null);
+  h.remove(page[0].id);
+  assert.equal(h.total, 2);
+});
