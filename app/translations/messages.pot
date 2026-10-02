@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 20:35+0900\n"
+"POT-Creation-Date: 2026-10-02 20:46+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -358,6 +358,9 @@ msgid "Loaded the settings of run #{n}."
 msgstr ""
 
 msgid "Log in"
+msgstr ""
+
+msgid "Log in to train tree models."
 msgstr ""
 
 msgid "Log in with your student number and name."
@@ -721,10 +724,10 @@ msgstr ""
 msgid "This browser cannot record video. Try the latest Chrome, Edge or Safari."
 msgstr ""
 
-msgid "This is your first login. The password you type now becomes your password."
+msgid "This feature is not available to guests."
 msgstr ""
 
-msgid "This run is too big for the browser. Make the network or the epochs smaller, or log in to train it on the server."
+msgid "This is your first login. The password you type now becomes your password."
 msgstr ""
 
 msgid "Time"
@@ -765,9 +768,6 @@ msgid "Tree models do not draw a smooth curve: they cut x into boxes and predict
 msgstr ""
 
 msgid "Tree models do not use gradient descent. They learn by splitting the data into boxes."
-msgstr ""
-
-msgid "Tree models train on the server: log in to use them."
 msgstr ""
 
 msgid "Trees"
@@ -818,6 +818,9 @@ msgid "Waiting for a free slot…"
 msgstr ""
 
 msgid "Widths"
+msgstr ""
+
+msgid "With a smaller network or fewer epochs it trains in the browser."
 msgstr ""
 
 msgid "Wrong password. If you forgot it, ask your teacher to reset it."

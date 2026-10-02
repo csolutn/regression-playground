@@ -9,11 +9,12 @@ import { isTree } from './describe.js';
 let guestSeq = 0;
 
 export async function trainRun(cfg, onEvent, signal, { guest = false } = {}) {
-  if (guest && isTree(cfg)) throw new Error(t('Tree models train on the server: log in to use them.'));
+  const notForGuests = hint => new Error(`${t('This feature is not available to guests.')} ${hint}`);
+  if (guest && isTree(cfg)) throw notForGuests(t('Log in to train tree models.'));
   if (!isTree(cfg)) {
     const prep = await api.prepare(cfg, signal);
     if (prep.browser) return trainHere(cfg, prep, onEvent, signal, guest);
-    if (guest) throw new Error(t('This run is too big for the browser. Make the network or the epochs smaller, or log in to train it on the server.'));
+    if (guest) throw notForGuests(t('With a smaller network or fewer epochs it trains in the browser.'));
   }
   return api.train(cfg, onEvent, signal);
 }

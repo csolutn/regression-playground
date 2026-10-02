@@ -7,7 +7,7 @@ the browser and live only in that page, and server training is for logged-in use
 """
 from functools import wraps
 
-from flask import Blueprint, abort, flash, g, make_response, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, flash, g, jsonify, make_response, redirect, render_template, request, session, url_for
 from flask_babel import gettext as _
 
 from .extensions import db
@@ -30,6 +30,8 @@ def login_required(view):
     def wrapped(*args, **kwargs):
         if g.user is None:
             if request.path.startswith('/api/'):
+                if g.guest:            # a message, not 401 (the page would send the guest to the login form)
+                    return jsonify({'errors': [_('This feature is not available to guests.')]}), 403
                 abort(401)
             return redirect(url_for('auth.login', next=request.path))
         return view(*args, **kwargs)

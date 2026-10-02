@@ -52,7 +52,8 @@ def test_guest_uses_the_browser_only_and_nothing_is_saved(client):
     prep = client.post('/api/prepare', json={'epochs': 20, 'model': 'linear'})
     assert prep.status_code == 200 and prep.get_json()['browser'] is True
     for method, path in [('post', '/api/train'), ('post', '/api/runs'), ('get', '/api/runs'), ('get', '/api/runs/1')]:
-        assert getattr(client, method)(path, json={}).status_code == 401, path
+        r = getattr(client, method)(path, json={})
+        assert r.status_code == 403 and r.get_json()['errors'] == ['게스트로 이용할 수 없는 기능입니다.'], path
     assert client.get('/teacher/').status_code == 302
 
 

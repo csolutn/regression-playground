@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 20:35+0900\n"
+"POT-Creation-Date: 2026-10-02 20:46+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -360,6 +360,9 @@ msgstr "#{n} 실험의 설정을 불러왔습니다."
 
 msgid "Log in"
 msgstr "로그인"
+
+msgid "Log in to train tree models."
+msgstr "트리 모델은 로그인하면 이용할 수 있습니다."
 
 msgid "Log in with your student number and name."
 msgstr "학번과 이름으로 로그인하세요."
@@ -722,11 +725,11 @@ msgstr "이 브라우저는 WebM만 녹화할 수 있어 WebM으로 저장했습
 msgid "This browser cannot record video. Try the latest Chrome, Edge or Safari."
 msgstr "이 브라우저는 영상을 만들 수 없습니다. 최신 Chrome, Edge, Safari를 사용하세요."
 
+msgid "This feature is not available to guests."
+msgstr "게스트로 이용할 수 없는 기능입니다."
+
 msgid "This is your first login. The password you type now becomes your password."
 msgstr "첫 로그인입니다. 지금 입력한 비밀번호가 앞으로의 비밀번호가 됩니다."
-
-msgid "This run is too big for the browser. Make the network or the epochs smaller, or log in to train it on the server."
-msgstr "브라우저에서 학습하기에는 너무 큰 설정입니다. 신경망이나 에포크를 줄이거나, 로그인해서 서버에서 학습하세요."
 
 msgid "Time"
 msgstr "시각"
@@ -767,9 +770,6 @@ msgstr "트리 모델은 매끄러운 곡선 대신 x를 여러 칸으로 나누
 
 msgid "Tree models do not use gradient descent. They learn by splitting the data into boxes."
 msgstr "트리 모델은 경사하강법을 쓰지 않고, 데이터를 여러 칸으로 나누며 학습합니다."
-
-msgid "Tree models train on the server: log in to use them."
-msgstr "트리 모델은 서버에서 학습하므로 로그인해야 쓸 수 있습니다."
 
 msgid "Trees"
 msgstr "트리 개수"
@@ -820,6 +820,9 @@ msgstr "차례를 기다리는 중…"
 
 msgid "Widths"
 msgstr "구조"
+
+msgid "With a smaller network or fewer epochs it trains in the browser."
+msgstr "신경망이나 에포크를 줄이면 브라우저에서 학습할 수 있습니다."
 
 msgid "Wrong password. If you forgot it, ask your teacher to reset it."
 msgstr "비밀번호가 틀렸습니다. 잊었다면 선생님께 초기화를 요청하세요."
