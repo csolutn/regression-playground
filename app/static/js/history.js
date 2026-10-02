@@ -140,7 +140,7 @@ export class History {
       const prev = this.previous(r);
       const cells = SETTING_COLUMNS.map(c => {
         const now = c.get(r.config), before = prev ? c.get(prev.config) : now;
-        if (now === before) return `<td>${esc(now)}</td>`;
+        if (now === before || this.sort) return `<td>${esc(now)}</td>`;     // sorted, the row above is not the run before
         const title = esc(t('Before: {v}', { v: before }));
         return `<td class="changed" title="${title}">${esc(now)}</td>`;
       }).join('');

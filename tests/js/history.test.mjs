@@ -83,3 +83,14 @@ test('sorting by validation loss: lowest first, highest first, then newest first
   assert.equal(h.visible.length, 4);
   assert.equal(h.previous(rows[0]), rows[1]);          // "changed from the run before" stays by time
 });
+
+test('sorted, no cell is highlighted: the row above is not the run before', () => {
+  const rows = [row({}, 0.5), row({ learning_rate: 0.1 }, 0.2)].reverse();
+  const { h, el } = table(rows);
+  const changed = () => (el.innerHTML.match(/class="changed"/g) || []).length;
+  assert.equal(changed(), 1);
+  h.setSort('asc');
+  assert.equal(changed(), 0);
+  h.setSort('');
+  assert.equal(changed(), 1);
+});
