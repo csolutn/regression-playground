@@ -38,7 +38,11 @@ def create_app(config=None):
 
     @app.get('/static/<path:filename>')
     def static_unversioned(filename):
-        """Pages opened before a deploy may still ask for the old URLs; serve them without caching."""
+        """Pages opened before a deploy still ask for unversioned or older-version URLs (a module they
+        import later, the training worker): serve today's file, without caching."""
+        head, _, rest = filename.partition('/')
+        if rest and len(head) == 10 and all(c in '0123456789abcdef' for c in head):
+            filename = rest
         return send_from_directory(app.static_folder, filename, max_age=0)
     if not (app.debug or app.testing) and app.config['SECRET_KEY'] in ('dev', 'change-me', ''):
         raise RuntimeError('Set SECRET_KEY to a long random value (see deploy.env.example).')

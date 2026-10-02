@@ -139,3 +139,5 @@ def test_static_urls_carry_a_version_and_are_cached(app, client, tmp_path):
     assert r.status_code == 200 and 'max-age=31536000' in r.headers['Cache-Control']
     r = client.get('/static/js/playground.js')                 # an old page asking for the unversioned URL
     assert r.status_code == 200 and 'no-cache' in r.headers['Cache-Control']
+    r = client.get('/static/0123456789/js/train-worker.js')    # a page from an older deploy
+    assert r.status_code == 200 and 'no-cache' in r.headers['Cache-Control']
