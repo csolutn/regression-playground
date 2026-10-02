@@ -2,8 +2,9 @@
 // The server only sends numbers (frames); every image is drawn here.
 // While a run is training only its data is drawn (the output panel shows a progress bar over it):
 // frames arrive much faster than they are played back, which looks like instant convergence.
-import { DEFAULT_VIEW, drawLoss, drawPrediction, fitCanvas, fmtLoss, screenTheme } from './plot.js';
+import { DEFAULT_VIEW, drawLandscape, drawLoss, drawPrediction, fitCanvas, fmtLoss, screenTheme } from './plot.js';
 import { stepLabel } from './describe.js';
+import { hasLandscape, landscape } from './landscape.js';
 
 const RUN_MS = 16_000;               // a whole run takes about this long at 1×
 const MAX_FRAME_MS = 267;           // runs with few frames (e.g. a shallow tree) don't flash by
@@ -29,6 +30,8 @@ export class Player {
     this.trainText = $('train-text');
     this.valText = $('val-text');
     this.loss = { open: $('loss-open'), dialog: $('loss-dialog'), canvas: $('loss-canvas'), log: $('loss-log') };
+    this.land = { open: $('land-open'), dialog: $('land-dialog'), canvas: $('land-canvas'), log: $('land-log') };
+    this.landView = { ...DEFAULT_VIEW };
     this.run = null;
     this.idx = 0;
     this.follow = false;          // live training: keep showing the newest frame
@@ -40,11 +43,12 @@ export class Player {
     this.nextBtn.addEventListener('click', () => this.seek(this.idx + 1));
     this.slider.addEventListener('input', () => this.seek(+this.slider.value));
     document.addEventListener('keydown', e => this.onKey(e));
-    this.enableLossPopup($('loss-close'));
-    new ResizeObserver(() => this.render()).observe(this.canvas);
-    new ResizeObserver(() => this.render()).observe(this.loss.canvas);
+    this.enablePopup(this.loss, $('loss-close'));
+    this.enablePopup(this.land, $('land-close'));
+    for (const c of [this.canvas, this.loss.canvas, this.land.canvas]) new ResizeObserver(() => this.render()).observe(c);
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.render());
-    this.enableRotate();
+    this.enableRotate(this.canvas, this.view, () => this.run?.meta?.n_inputs === 2);
+    this.enableRotate(this.land.canvas, this.landView, () => true);
     this.sync();
   }
 
@@ -123,6 +127,8 @@ export class Player {
     this.slider.value = this.idx;
     for (const el of [this.slider, this.playBtn, this.prevBtn, this.nextBtn]) el.disabled = n < 2;
     this.loss.open.disabled = !this.run?.meta || !!this.run.preview || !!this.run.live;
+    this.land.open.hidden = !this.hasLandscape;
+    if (this.land.open.hidden && this.land.dialog.open) this.land.dialog.close();
     this.playBtn.classList.toggle('is-playing', !!this.timer);
     this.playBtn.setAttribute('aria-pressed', String(!!this.timer));
     this.empty.hidden = !!this.run?.meta;
@@ -152,7 +158,25 @@ export class Player {
       const preview = !!(this.run.preview || this.run.live);     // data before / while training: points only
       drawPrediction(ctx, { x: 0, y: 0, w, h }, this.run, this.idx, th, s, { view: this.view, dataOnly: preview, badges: !preview });
       if (this.loss.dialog.open) this.renderLoss(th);
+      if (this.land.dialog.open) this.renderLandscape(th);
     });
+  }
+
+  // the loss landscape of the run shown (one-input linear regression only), computed when first opened
+  get hasLandscape() { return !!this.run && !this.run.preview && !this.run.live && hasLandscape(this.run); }
+  get landscape() {
+    if (!this.hasLandscape) return null;
+    this.run.landscape ||= landscape(this.run);
+    return this.run.landscape;
+  }
+
+  renderLandscape(th) {
+    const { ctx, w, h } = fitCanvas(this.land.canvas);
+    ctx.fillStyle = th.bg;
+    ctx.fillRect(0, 0, w, h);
+    const L = this.landscape;
+    if (L) drawLandscape(ctx, { x: 0, y: 0, w, h }, L, this.idx, this.run, th, Math.max(0.8, Math.min(1.1, w / 700)),
+      { view: this.landView, log: this.land.log.checked });
   }
 
   // loss curve up to the current frame, so it moves with the animation
@@ -164,9 +188,8 @@ export class Player {
     if (f) drawLoss(ctx, { x: 0, y: 0, w, h }, this.run, f.step, th, Math.max(0.8, Math.min(1.1, w / 700)), { log: this.loss.log.checked });
   }
 
-  // "Show loss graph" opens a popup; ✕, Esc, a click outside or the link again closes it
-  enableLossPopup(closeBtn) {
-    const { open, dialog, log } = this.loss;
+  // "Show loss graph" / "Show loss landscape" open a popup; ✕, Esc, a click outside or the link again closes it
+  enablePopup({ open, dialog, log }, closeBtn) {
     const close = () => dialog.close();
     open.addEventListener('click', () => (dialog.open ? close() : (dialog.showModal(), this.render())));
     closeBtn.addEventListener('click', close);
@@ -174,22 +197,22 @@ export class Player {
     log.addEventListener('change', () => this.render());
   }
 
-  // drag to rotate the 3D surface (2 input variables)
-  enableRotate() {
+  // drag to rotate a 3D plot (the 2-input surface, the loss landscape)
+  enableRotate(canvas, view, enabled) {
     let start = null;
-    this.canvas.addEventListener('pointerdown', e => {
-      if (this.run?.meta?.n_inputs !== 2) return;
-      start = { x: e.clientX, y: e.clientY, ...this.view };
-      this.canvas.setPointerCapture(e.pointerId);
+    canvas.addEventListener('pointerdown', e => {
+      if (!enabled()) return;
+      start = { x: e.clientX, y: e.clientY, ...view };
+      canvas.setPointerCapture(e.pointerId);
     });
-    this.canvas.addEventListener('pointermove', e => {
+    canvas.addEventListener('pointermove', e => {
       if (!start) return;
-      this.view.az = start.az + (e.clientX - start.x) * 0.01;
-      this.view.el = Math.max(0.05, Math.min(1.45, start.el + (e.clientY - start.y) * 0.01));
+      view.az = start.az + (e.clientX - start.x) * 0.01;
+      view.el = Math.max(0.05, Math.min(1.45, start.el + (e.clientY - start.y) * 0.01));
       this.render();
     });
     const end = () => { start = null; };
-    this.canvas.addEventListener('pointerup', end);
-    this.canvas.addEventListener('pointercancel', end);
+    canvas.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
   }
 }

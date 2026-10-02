@@ -336,6 +336,102 @@ function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred) {
   return P;
 }
 
+// ---------- loss landscape of one-input linear regression (landscape.js computes L) ----------
+
+// Surface = training loss of every (w, b); line = the path of the run, solid up to frame `idx`
+export function drawLandscape(ctx, r, L, idx, run, th, s = 1, opts = {}) {
+  const view = opts.view || DEFAULT_VIEW, log = !!opts.log;
+  const tr = v => (log ? Math.log10(Math.max(v, 1e-12)) : v);
+  const { ws, bs, z } = L, n1 = ws.length, n2 = bs.length;
+  const zlo = tr(L.zMin), zhi = tr(L.zMax) + 1e-12;
+  const P = { x: r.x + 4 * s, y: r.y + 4 * s, w: r.w - 8 * s, h: r.h - 8 * s };
+  panel(ctx, P, th, s);
+
+  const u = v => (v - ws[0]) / (ws[n1 - 1] - ws[0]) * 2 - 1;
+  const v_ = v => (v - bs[0]) / (bs[n2 - 1] - bs[0]) * 2 - 1;
+  const h = v => ((tr(v) - zlo) / (zhi - zlo) * 2 - 1) * 0.72;
+  const ca = Math.cos(view.az), sa = Math.sin(view.az), ce = Math.cos(view.el), se = Math.sin(view.el);
+  const scale = Math.min(P.w / 3.4, P.h / 3.0);
+  const cx = P.x + P.w / 2, cy = P.y + P.h * 0.5;
+  const project = (a, b, c) => {
+    const xr = a * ca - b * sa, yr = a * sa + b * ca;
+    return [cx + xr * scale, cy - (yr * se + c * ce) * scale, -yr * ce + c * se];
+  };
+
+  // floor and back edge of the box
+  ctx.strokeStyle = th.frame; ctx.lineWidth = 1.2 * s;
+  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+  const floor = corners.map(([a, b]) => project(a, b, -0.72));
+  ctx.beginPath(); floor.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.stroke();
+  const back = floor.reduce((best, p, i) => (p[2] < floor[best][2] ? i : best), 0);
+  const [tx, ty] = project(...corners[back], 0.72);
+  ctx.beginPath(); ctx.moveTo(floor[back][0], floor[back][1]); ctx.lineTo(tx, ty); ctx.stroke();
+
+  // the surface, far to near
+  const quads = [];
+  for (let j = 0; j < n2 - 1; j++) for (let i = 0; i < n1 - 1; i++) {
+    const zs = [z[j * n1 + i], z[j * n1 + i + 1], z[(j + 1) * n1 + i + 1], z[(j + 1) * n1 + i]];
+    const pts = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([a, b], k) => project(u(ws[a]), v_(bs[b]), h(zs[k])));
+    const zm = (tr(zs[0]) + tr(zs[1]) + tr(zs[2]) + tr(zs[3])) / 4;
+    quads.push({ d: (pts[0][2] + pts[1][2] + pts[2][2] + pts[3][2]) / 4, pts, color: coolwarm((zm - zlo) / (zhi - zlo)) });
+  }
+  quads.sort((a, b) => a.d - b.d);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+  ctx.lineWidth = 0.6 * s;
+  for (const q of quads) {
+    ctx.fillStyle = ctx.strokeStyle = q.color;
+    ctx.beginPath(); q.pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath();
+    ctx.globalAlpha = 0.82; ctx.fill(); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // the path on top: solid up to the current frame, faint after it
+  const pts = L.path.map(p => ({ ...p, xy: project(u(p.w), v_(p.b), h(p.loss)) }));
+  let cur = 0;
+  while (cur + 1 < pts.length && pts[cur + 1].frame <= idx) cur++;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const line = (from, to, alpha, width) => {
+    if (to <= from) return;
+    ctx.globalAlpha = alpha; ctx.strokeStyle = th.pred; ctx.lineWidth = width * s;
+    ctx.beginPath(); for (let k = from; k <= to; k++) (k === from ? ctx.moveTo : ctx.lineTo).call(ctx, pts[k].xy[0], pts[k].xy[1]);
+    ctx.stroke();
+  };
+  line(cur, pts.length - 1, 0.25, 2);
+  line(0, cur, 1, 2.6);
+  ctx.globalAlpha = 1;
+  const dot = (p, rad, fill, stroke) => {
+    ctx.beginPath(); ctx.arc(p.xy[0], p.xy[1], rad * s, 0, 7);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2 * s; ctx.stroke(); }
+  };
+  dot(pts[0], 5, th.bg, th.pred);                         // start
+  const now = pts[cur];
+  const [fx, fy] = project(u(now.w), v_(now.b), -0.72);   // drop line to the floor, for depth
+  ctx.strokeStyle = th.pred; ctx.lineWidth = 1.2 * s; ctx.setLineDash([4 * s, 4 * s]);
+  ctx.beginPath(); ctx.moveTo(now.xy[0], now.xy[1]); ctx.lineTo(fx, fy); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(fx, fy, 2.5 * s, 0, 7); ctx.fillStyle = th.pred; ctx.fill();
+  dot(now, 7, th.pred, th.bg);
+  ctx.restore();
+
+  // axis names at the middle of the two front floor edges
+  ctx.fillStyle = th.muted; ctx.font = font(13 * s); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const lab = (a, b, text) => { const [x, y] = project(a, b, -0.72); ctx.fillText(text, x, y + 14 * s); };
+  lab(0, ca > 0 ? -1.12 : 1.12, t('Slope w'));
+  lab(sa > 0 ? 1.12 : -1.12, 0, t('Intercept b'));
+
+  const total = run.meta.total_steps;
+  badge(ctx, [
+    `${stepLabel(run.meta.model)} ${now.step.toLocaleString()}/${total.toLocaleString()}`,
+    `ŷ = ${fmt(now.w)}·x ${now.b < 0 ? '−' : '+'} ${fmt(Math.abs(now.b))}`,
+    `${t('Training loss')} ${fmtLoss(now.loss)}${log ? ' (log)' : ''}`,
+  ], P.x + 10 * s, P.y + 10 * s, 'left', th, s, FONT, 13);
+  legend(ctx, [
+    { color: coolwarm(0.8), width: 6, label: t('Loss of every line') },
+    { color: th.pred, width: 2.6, label: t('Path of this run') },
+  ], P.x + P.w - 10 * s, P.y + P.h - 10 * s, 'right', th, s);
+}
+
 // ---------- ③ loss curve (MP4 only) ----------
 
 // Loss history drawn up to step `upto` (the current frame), on axes fixed for the whole run

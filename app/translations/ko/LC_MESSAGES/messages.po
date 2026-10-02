@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 18:47+0900\n"
+"POT-Creation-Date: 2026-10-02 19:17+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -193,6 +193,9 @@ msgstr "전체 학습 이력 내려받기 (CSV)"
 msgid "Each hidden layer needs 1 to {max} neurons."
 msgstr "은닉층마다 뉴런은 1~{max}개여야 합니다."
 
+msgid "Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate."
+msgstr "곡면의 각 점은 직선 ŷ = w·x + b 하나의 학습 손실입니다. 드래그하면 돌려 볼 수 있습니다."
+
 msgid "Enter a student number and a name."
 msgstr "학번과 이름을 입력하세요."
 
@@ -318,6 +321,9 @@ msgstr "입력 범위 (최소)"
 msgid "Input variables"
 msgstr "입력 변수"
 
+msgid "Intercept b"
+msgstr "절편 b"
+
 #, python-brace-format
 msgid "Invalid value for {field}."
 msgstr "{field} 값이 올바르지 않습니다."
@@ -364,6 +370,12 @@ msgstr "손실함수"
 
 msgid "Loss graph"
 msgstr "손실 그래프"
+
+msgid "Loss landscape"
+msgstr "손실 지형"
+
+msgid "Loss of every line"
+msgstr "모든 직선의 손실"
 
 msgid "Loss on a log scale"
 msgstr "손실을 로그 눈금으로"
@@ -479,6 +491,9 @@ msgstr "비밀번호 확인"
 msgid "Password reset for %(name)s. The next login sets a new one."
 msgstr "%(name)s 학생의 비밀번호를 초기화했습니다. 다음 로그인 때 새 비밀번호를 등록합니다."
 
+msgid "Path of this run"
+msgstr "이번 학습이 지나온 길"
+
 msgid "Penalty for one error (ŷ − y). The chosen loss is highlighted."
 msgstr "오차(ŷ − y) 하나에 매기는 벌점. 선택한 손실이 강조됩니다."
 
@@ -584,8 +599,14 @@ msgstr "학습에 쓰지 않고 따로 두었다가, 처음 보는 데이터로 
 msgid "Show loss graph"
 msgstr "손실 그래프 보기"
 
+msgid "Show loss landscape"
+msgstr "손실 지형 보기"
+
 msgid "Show this run"
 msgstr "이 실험 보기"
+
+msgid "Slope w"
+msgstr "기울기 w"
 
 msgid "Speed"
 msgstr "속도"

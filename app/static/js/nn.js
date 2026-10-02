@@ -47,7 +47,7 @@ const ACTIVATIONS = {
 };
 
 // loss value of one error e = pred − true, and its derivative (both averaged over the batch by the caller)
-function lossFns(cfg) {
+export function lossFns(cfg) {
   const d = cfg.huber_delta;
   return {
     mse:   { f: e => e * e,        df: e => 2 * e },

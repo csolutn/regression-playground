@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-02 18:47+0900\n"
+"POT-Creation-Date: 2026-10-02 19:17+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -192,6 +192,9 @@ msgstr ""
 msgid "Each hidden layer needs 1 to {max} neurons."
 msgstr ""
 
+msgid "Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate."
+msgstr ""
+
 msgid "Enter a student number and a name."
 msgstr ""
 
@@ -317,6 +320,9 @@ msgstr ""
 msgid "Input variables"
 msgstr ""
 
+msgid "Intercept b"
+msgstr ""
+
 #, python-brace-format
 msgid "Invalid value for {field}."
 msgstr ""
@@ -362,6 +368,12 @@ msgid "Loss function"
 msgstr ""
 
 msgid "Loss graph"
+msgstr ""
+
+msgid "Loss landscape"
+msgstr ""
+
+msgid "Loss of every line"
 msgstr ""
 
 msgid "Loss on a log scale"
@@ -478,6 +490,9 @@ msgstr ""
 msgid "Password reset for %(name)s. The next login sets a new one."
 msgstr ""
 
+msgid "Path of this run"
+msgstr ""
+
 msgid "Penalty for one error (ŷ − y). The chosen loss is highlighted."
 msgstr ""
 
@@ -583,7 +598,13 @@ msgstr ""
 msgid "Show loss graph"
 msgstr ""
 
+msgid "Show loss landscape"
+msgstr ""
+
 msgid "Show this run"
+msgstr ""
+
+msgid "Slope w"
 msgstr ""
 
 msgid "Speed"

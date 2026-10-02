@@ -27,6 +27,7 @@
       <span><span class="dot dot-train"></span>{{ _('Training loss') }} <b data-role="train-text">—</b></span>
       <span><span class="dot dot-val"></span>{{ _('Validation loss') }} <b data-role="val-text">—</b></span>
       <button type="button" class="link-btn" data-role="loss-open" aria-haspopup="dialog">{{ _('Show loss graph') }}</button>
+      <button type="button" class="link-btn" data-role="land-open" aria-haspopup="dialog" hidden>{{ _('Show loss landscape') }}</button>
     </div>
 
     <div class="player-bar">
@@ -64,6 +65,17 @@
       <button type="button" class="btn btn-icon btn-ghost" data-role="loss-close" aria-label="{{ _('Close') }}">✕</button>
     </header>
     <canvas data-role="loss-canvas" class="loss-canvas" aria-label="{{ _('Loss graph') }}"></canvas>
+  </dialog>
+
+  {# one-input linear regression only: ŷ = w·x + b has two weights, so its whole loss landscape can be drawn #}
+  <dialog data-role="land-dialog" class="dialog dialog-wide" aria-labelledby="land-dialog-title">
+    <header class="dialog-head">
+      <h3 id="land-dialog-title">{{ _('Loss landscape') }}</h3>
+      <label class="check"><input type="checkbox" data-role="land-log"> <span>{{ _('Log scale') }}</span></label>
+      <button type="button" class="btn btn-icon btn-ghost" data-role="land-close" aria-label="{{ _('Close') }}">✕</button>
+    </header>
+    <canvas data-role="land-canvas" class="land-canvas" aria-label="{{ _('Loss landscape') }}"></canvas>
+    <p class="hint">{{ _('Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate.') }}</p>
   </dialog>
 
   <dialog data-role="mp4-dialog" class="dialog">

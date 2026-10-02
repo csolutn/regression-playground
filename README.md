@@ -101,6 +101,7 @@ the untagged images left by earlier builds; tagged ones such as a rollback image
 | Which runs train in the browser | `trains_in_browser()` in `app/ml/options.py` |
 | Summaries in cards, history, badges, video title | `app/static/js/describe.js` |
 | Plot drawing (screen and video) | `app/static/js/plot.js` |
+| Loss landscape (one-input linear regression only) | `app/static/js/landscape.js`, `drawLandscape` in `plot.js` |
 | Player (play / pause / slider) | `app/static/js/player.js` |
 | Video layout and size | `app/static/js/recorder.js` (`W`, `H` at the top) |
 | History columns, change highlighting, filters (date, data) and ★ | `app/static/js/history.js`; what counts as the same data: `dataKey` in `describe.js` |

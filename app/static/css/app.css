@@ -332,6 +332,8 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .dialog-head h3 { margin: 0 auto 0 0; }
 .dialog-head .check { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .loss-canvas { display: block; width: 100%; height: min(400px, 60vh); }
+.land-canvas { display: block; width: 100%; height: min(520px, 62vh); touch-action: none; cursor: grab; }
+.land-canvas:active { cursor: grabbing; }
 .link-btn { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .link-btn:disabled { color: var(--muted); cursor: default; text-decoration: none; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
