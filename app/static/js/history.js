@@ -1,8 +1,11 @@
 // History table: newest run on top; a cell is highlighted when it differs from the run before it.
-// A date filter limits the rows shown, and the shown rows can be saved as CSV.
+// Filter icons next to "Time" (a date range) and "① Data" (one of the data sets used so far) limit the
+// rows shown; ★ marks the lowest validation loss of each data set; the shown rows can be saved as CSV.
 import { t } from './i18n.js';
 import { fmtLoss } from './plot.js';
-import { dataSummary, lossSummary, modelSummary, optimSummary } from './describe.js';
+import { dataKey, dataLabel, dataSummary, lossSummary, modelSummary, optimSummary } from './describe.js';
+
+const FUNNEL = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M2 3h12l-4.5 5.5V13l-3 1.5V8.5z" fill="currentColor"/></svg>';
 
 // The four setting columns follow the pipeline ① → ④; `get` turns a run's settings into text.
 export const SETTING_COLUMNS = [
@@ -16,15 +19,17 @@ const LANG = document.documentElement.lang || undefined;
 const STATUS = () => ({ timeout: t('time limit'), diverged: t('diverged') });
 
 export class History {
-  constructor(table, { readonly = false, onView, onLoad, onDelete }) {
+  constructor(table, { readonly = false, popup, onView, onLoad, onDelete }) {
     this.table = table;
     this.readonly = readonly;
+    this.popup = popup;
     this.handlers = { onView, onLoad, onDelete };
     this.rows = [];
     this.activeId = null;
-    this.filter = { from: '', to: '' };      // local dates 'YYYY-MM-DD', '' = open
+    this.filter = { from: '', to: '', data: '' };      // local dates 'YYYY-MM-DD' and a dataKey; '' = no limit
     this.onRender = null;
     table.addEventListener('click', e => this.onClick(e));
+    this.setupPopup();
   }
 
   setRows(rows) { this.rows = rows; this.render(); }
@@ -35,10 +40,24 @@ export class History {
   // "before" is always the run just before, even when the filter hides it
   previous(row) { return this.rows[this.rows.indexOf(row) + 1] || null; }
 
-  get filtered() { return !!(this.filter.from || this.filter.to); }
+  get filtered() { return !!(this.filter.from || this.filter.to || this.filter.data); }
   get visible() {
-    const { from, to } = this.filter;
-    return this.rows.filter(r => { const d = localDate(r.created_at); return (!from || d >= from) && (!to || d <= to); });
+    const { from, to, data } = this.filter;
+    return this.rows.filter(r => {
+      const d = localDate(r.created_at);
+      return (!from || d >= from) && (!to || d <= to) && (!data || dataKey(r.config) === data);
+    });
+  }
+
+  // data (formulas / CSV files) used so far, most recent first: dataKey → { label, count }
+  dataSets() {
+    const sets = new Map();
+    for (const r of this.rows) {
+      const key = dataKey(r.config);
+      if (sets.has(key)) sets.get(key).count++;
+      else sets.set(key, { label: dataLabel(r.config), count: 1 });
+    }
+    return sets;
   }
 
   // the shown rows as CSV (UTF-8 with BOM so Excel reads Korean)
@@ -53,6 +72,8 @@ export class History {
   }
 
   onClick(e) {
+    const icon = e.target.closest('button[data-filter]');
+    if (icon) { this.openPopup(icon.dataset.filter, icon); return; }
     const btn = e.target.closest('button[data-act]');
     const tr = e.target.closest('tr[data-id]');
     if (!tr) return;
@@ -63,14 +84,23 @@ export class History {
   }
 
   render() {
+    if (this.filter.data && !this.dataSets().has(this.filter.data)) this.filter.data = '';   // its runs were deleted
     const rows = this.visible;
-    const best = rows.filter(r => r.final_val != null).reduce((b, r) => (!b || r.final_val < b.final_val ? r : b), null);
+    const bestOf = new Map();                   // dataKey → the shown run with the lowest validation loss
+    for (const r of rows) {
+      if (r.final_val == null) continue;
+      const key = dataKey(r.config), b = bestOf.get(key);
+      if (!b || r.final_val < b.final_val) bestOf.set(key, r);
+    }
+    const best = new Set(bestOf.values());
+    const icon = (kind, on, label) =>
+      `<button type="button" class="th-filter${on ? ' on' : ''}" data-filter="${kind}" title="${esc(label)}" aria-label="${esc(label)}" aria-haspopup="dialog">${FUNNEL}</button>`;
     const head = `<thead><tr>
-      <th>#</th><th>${t('Time')}</th>
-      ${SETTING_COLUMNS.map(c => `<th>${c.label()}</th>`).join('')}
+      <th>#</th><th>${t('Time')} ${icon('time', this.filter.from || this.filter.to, t('Filter by date'))}</th>
+      ${SETTING_COLUMNS.map(c => `<th>${c.label()}${c.key === 'data' ? ' ' + icon('data', this.filter.data, t('Filter by data')) : ''}</th>`).join('')}
       <th class="num">${t('Train loss')}</th><th class="num">${t('Validation loss')}</th><th class="num">${t('Seconds')}</th><th></th>
     </tr></thead>`;
-    const L = { view: esc(t('Show this run')), load: esc(t('Load these settings')), del: esc(t('Delete')), best: esc(t('Lowest validation loss')) };
+    const L = { view: esc(t('Show this run')), load: esc(t('Load these settings')), del: esc(t('Delete')), best: esc(t('Lowest validation loss for this data')) };
     const body = rows.map(r => {
       const prev = this.previous(r);
       const cells = SETTING_COLUMNS.map(c => {
@@ -88,7 +118,7 @@ export class History {
         <td class="time" title="${time.toLocaleString(LANG)}">${time.toLocaleString(LANG, short)}</td>
         ${cells}
         <td class="num">${fmtLoss(r.final_train)}</td>
-        <td class="num ${r === best ? 'best' : ''}">${fmtLoss(r.final_val)}${r === best ? ` <span class="star" title="${L.best}">★</span>` : ''}${status ? ` <span class="pill pill-warn">${status}</span>` : ''}</td>
+        <td class="num ${best.has(r) ? 'best' : ''}">${fmtLoss(r.final_val)}${best.has(r) ? ` <span class="star" title="${L.best}">★</span>` : ''}${status ? ` <span class="pill pill-warn">${status}</span>` : ''}</td>
         <td class="num">${r.duration.toFixed(1)}</td>
         <td class="actions">
           <button type="button" class="btn btn-icon btn-ghost" data-act="view" title="${L.view}">▶</button>
@@ -96,11 +126,74 @@ export class History {
           <button type="button" class="btn btn-icon btn-ghost" data-act="del" title="${L.del}">🗑</button>`}
         </td></tr>`;
     }).join('');
-    const none = this.rows.length ? t('No runs in this period.') : t('No runs yet.');
+    const none = this.rows.length ? t('No runs match the filter.') : t('No runs yet.');
     const empty = `<tbody><tr><td colspan="10" class="empty">${none}</td></tr></tbody>`;
     this.table.innerHTML = head + (rows.length ? `<tbody>${body}</tbody>` : empty);
     this.onRender?.(rows.length, this.rows.length);
   }
+
+  // ---------- filter popup under the icon; a click outside or Esc closes it ----------
+
+  setupPopup() {
+    const pop = this.popup;
+    if (!pop) return;
+    document.addEventListener('pointerdown', e => {
+      if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('button[data-filter]')) this.closePopup();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) this.closePopup(); });
+    pop.addEventListener('change', e => {
+      const f = e.target.dataset.f;
+      if (!f) return;
+      this.setFilter({ [f]: e.target.value });
+      if (f === 'data') { this.closePopup(); return; }
+      pop.querySelector('[data-f=to]').min = this.filter.from;      // keep from ≤ to
+      pop.querySelector('[data-f=from]').max = this.filter.to;
+    });
+    pop.addEventListener('click', e => {
+      const act = e.target.closest('button[data-pop]')?.dataset.pop;
+      if (act === 'today') { const d = localDate(new Date()); this.setFilter({ from: d, to: d }); this.closePopup(); }
+      if (act === 'all-dates') { this.setFilter({ from: '', to: '' }); this.closePopup(); }
+    });
+  }
+
+  openPopup(kind, anchor) {
+    const pop = this.popup;
+    if (!pop) return;
+    if (!pop.hidden && pop.dataset.kind === kind) { this.closePopup(); return; }
+    pop.dataset.kind = kind;
+    if (kind === 'time') this.fillTimePopup();
+    else {
+      const sets = this.dataSets();
+      const title = esc(t('Filter by data')), all = esc(t('All data'));
+      const opts = [...sets].map(([key, s]) =>
+        `<option value="${esc(key)}" ${key === this.filter.data ? 'selected' : ''}>${esc(s.label)} (${s.count})</option>`);
+      pop.innerHTML = `<label class="filter-pop-title">${title}</label>
+        <select data-f="data"><option value="">${all} (${this.rows.length})</option>${opts.join('')}</select>`;
+    }
+    pop.hidden = false;
+    // below the icon, inside the card (the popup's offset parent)
+    const box = pop.offsetParent.getBoundingClientRect(), a = anchor.getBoundingClientRect();
+    pop.style.top = `${a.bottom - box.top + 6}px`;
+    pop.style.left = `${Math.max(8, Math.min(a.left - box.left - 8, box.width - pop.offsetWidth - 8))}px`;
+    pop.querySelector('input, select')?.focus();
+  }
+
+  fillTimePopup() {
+    const { from, to } = this.filter;
+    const L = { title: esc(t('Filter by date')), from: esc(t('From date')), to: esc(t('To date')), today: esc(t('Today')), all: esc(t('All')) };
+    this.popup.innerHTML = `<label class="filter-pop-title">${L.title}</label>
+      <div class="filter-pop-row">
+        <input type="date" data-f="from" value="${from}" max="${to}" aria-label="${L.from}">
+        <span class="muted">–</span>
+        <input type="date" data-f="to" value="${to}" min="${from}" aria-label="${L.to}">
+      </div>
+      <div class="filter-pop-row">
+        <button type="button" class="btn btn-ghost btn-sm" data-pop="today">${L.today}</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-pop="all-dates">${L.all}</button>
+      </div>`;
+  }
+
+  closePopup() { this.popup.hidden = true; }
 }
 
 // What changed from the previous run, and how the validation loss moved

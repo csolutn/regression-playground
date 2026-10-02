@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 20:46+0900\n"
+"POT-Creation-Date: 2026-10-02 18:47+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -66,6 +66,9 @@ msgstr "고급 설정 · 다른 예측 모델"
 
 msgid "All"
 msgstr "전체"
+
+msgid "All data"
+msgstr "모든 데이터"
 
 msgid "All data (batch)"
 msgstr "전체 데이터 (BGD)"
@@ -207,6 +210,12 @@ msgstr "δ보다 작은 오차는 제곱, 큰 오차는 그대로(선형) 셉니
 
 msgid "Fewer neurons"
 msgstr "뉴런 줄이기"
+
+msgid "Filter by data"
+msgstr "데이터로 거르기"
+
+msgid "Filter by date"
+msgstr "날짜로 거르기"
 
 msgid "First login: type the same password again to register it."
 msgstr "첫 로그인입니다. 같은 비밀번호를 한 번 더 입력하면 등록됩니다."
@@ -362,8 +371,8 @@ msgstr "손실을 로그 눈금으로"
 msgid "Losses are measured on standardized y, so runs with different data can be compared."
 msgstr "손실은 표준화한 y 기준으로 계산하므로 데이터가 달라도 비교할 수 있습니다."
 
-msgid "Lowest validation loss"
-msgstr "가장 낮은 검증 손실"
+msgid "Lowest validation loss for this data"
+msgstr "이 데이터에서 검증 손실이 가장 낮음"
 
 msgid "Max depth"
 msgstr "최대 깊이"
@@ -411,8 +420,8 @@ msgstr "아직 파일 없음"
 msgid "No result yet."
 msgstr "아직 결과가 없습니다."
 
-msgid "No runs in this period."
-msgstr "이 기간에는 실행 기록이 없습니다."
+msgid "No runs match the filter."
+msgstr "조건에 맞는 실행이 없습니다."
 
 msgid "No runs yet."
 msgstr "아직 실험이 없습니다."

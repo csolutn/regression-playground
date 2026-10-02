@@ -101,7 +101,7 @@ Update with `git pull && docker compose up -d --build`. Back up with `scripts/ba
 | Plot drawing (screen and video) | `app/static/js/plot.js` |
 | Player (play / pause / slider) | `app/static/js/player.js` |
 | Video layout and size | `app/static/js/recorder.js` (`W`, `H` at the top) |
-| History columns and change highlighting | `app/static/js/history.js` |
+| History columns, change highlighting, filters (date, data) and ★ | `app/static/js/history.js`; what counts as the same data: `dataKey` in `describe.js` |
 | App name | `APP_NAME` in `app/config.py` |
 | Teacher named on the login page (lost password) | `TEACHER_NAME` in `app/config.py` (or the `TEACHER_NAME` env) |
 | Database tables | `app/models.py` |

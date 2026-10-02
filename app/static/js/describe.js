@@ -55,6 +55,18 @@ export function dataSummary(cfg) {
   return `y = ${prettyFormula(formula(cfg))} · ${points} · ${t('noise')} ${cfg.noise_std}`;
 }
 
+// The history groups runs by what they learn: the same formula (whatever the points, noise or seed),
+// or the same CSV file and columns. dataLabel names the group in the data filter.
+export function dataKey(cfg) {
+  if (cfg.data_source === 'csv') return JSON.stringify(['csv', cfg.csv_name, cfg.csv_features, cfg.csv_target]);
+  return JSON.stringify(['fn', cfg.n_inputs, formula(cfg)]);
+}
+
+export function dataLabel(cfg) {
+  if (cfg.data_source === 'csv') return `${t('CSV')} ${cfg.csv_name || ''} · ${targetLabel(cfg)}`;
+  return `y = ${prettyFormula(formula(cfg))}`;
+}
+
 export function modelSummary(cfg) {
   if (cfg.model === 'linear') return `${modelName('linear')} [${structure(cfg).join(', ')}]`;
   if (cfg.model === 'neural_net') return `${modelName('neural_net')} [${structure(cfg).join(', ')}] · ${activationName(cfg.activation)}`;

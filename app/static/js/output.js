@@ -15,7 +15,7 @@ export class OutputPanel {
       title: $('result-title'), sub: $('result-sub'), status: $('result-status'), diff: $('result-diff'),
       busy: $('viz-busy'), busyText: $('busy-text'), bar: root.querySelector('[data-role="progress"] > div'),
       mp4: $('mp4'), dialog: $('mp4-dialog'),
-      from: $('date-from'), to: $('date-to'), count: $('history-count'), csv: $('csv'),
+      count: $('history-count'), csv: $('csv'),
     };
     this.login = root.dataset.login || '';
     this.userId = userId;
@@ -24,13 +24,14 @@ export class OutputPanel {
     this.player = new Player(root);
     this.history = new History($('history'), {
       readonly,
+      popup: $('filter-pop'),
       onView: row => this.view(row),
       onLoad: async row => onLoadSettings?.(await this.fetchRun(row)),
       onDelete: row => this.remove(row),
     });
     this.el.mp4.addEventListener('click', () => this.openMp4Dialog());
     this.setupMp4Dialog();
-    this.setupHistoryTools($);
+    this.setupHistoryTools();
     this.showHeader(null);
   }
 
@@ -81,16 +82,10 @@ export class OutputPanel {
     }
   }
 
-  // ---------- history: date filter and CSV ----------
+  // ---------- history: filter count and CSV (the filters themselves are in the table head) ----------
 
-  setupHistoryTools($) {
-    const { from, to, count, csv } = this.el;
-    const apply = () => this.history.setFilter({ from: from.value, to: to.value });
-    const set = (a, b) => { from.value = a; to.value = b; apply(); };
-    from.addEventListener('change', () => { to.min = from.value; apply(); });
-    to.addEventListener('change', () => { from.max = to.value; apply(); });
-    $('date-today').addEventListener('click', () => { const d = localDate(new Date()); set(d, d); });
-    $('date-all').addEventListener('click', () => set('', ''));
+  setupHistoryTools() {
+    const { count, csv } = this.el;
     this.history.onRender = (shown, total) => {
       count.textContent = this.history.filtered ? t('{n} of {total} runs', { n: shown, total }) : '';
       csv.disabled = shown === 0;

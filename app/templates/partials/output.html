@@ -48,16 +48,13 @@
       <h2>{{ _('History') }}</h2>
       <span class="muted">{{ _('Yellow cells changed from the run before. Click a row to show it.') }}</span>
       <div class="history-tools">
-        <input type="date" data-role="date-from" aria-label="{{ _('From date') }}">
-        <span class="muted">–</span>
-        <input type="date" data-role="date-to" aria-label="{{ _('To date') }}">
-        <button type="button" class="btn btn-ghost btn-sm" data-role="date-today">{{ _('Today') }}</button>
-        <button type="button" class="btn btn-ghost btn-sm" data-role="date-all">{{ _('All') }}</button>
         <span class="muted" data-role="history-count"></span>
         <button type="button" class="btn btn-ghost btn-sm" data-role="csv">{{ _('Save CSV') }}</button>
       </div>
     </header>
     <div class="table-wrap"><table data-role="history" class="history"></table></div>
+    {# opened by the filter icons next to "Time" and "① Data" in the table head #}
+    <div data-role="filter-pop" class="filter-pop" role="dialog" hidden></div>
   </article>
 
   <dialog data-role="loss-dialog" class="dialog dialog-wide" aria-labelledby="loss-dialog-title">

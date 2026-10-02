@@ -102,7 +102,7 @@ def test_teacher_pages(client):
 def test_history_tools_name_the_csv_after_the_student(client):
     login(client)
     page = client.get('/').get_data(as_text=True)
-    assert 'data-login="20101"' in page and 'data-role="date-from"' in page and 'data-role="csv"' in page
+    assert 'data-login="20101"' in page and 'data-role="filter-pop"' in page and 'data-role="csv"' in page
     client.post('/logout')
     login(client, 'teacher', '선생님', 'teachpw', confirm=False)
     assert 'data-login="20101"' in client.get('/teacher/students/1').get_data(as_text=True)

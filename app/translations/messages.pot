@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 20:46+0900\n"
+"POT-Creation-Date: 2026-10-02 18:47+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -64,6 +64,9 @@ msgid "Advanced · other models"
 msgstr ""
 
 msgid "All"
+msgstr ""
+
+msgid "All data"
 msgstr ""
 
 msgid "All data (batch)"
@@ -205,6 +208,12 @@ msgid "Errors smaller than δ are squared; bigger ones count linearly."
 msgstr ""
 
 msgid "Fewer neurons"
+msgstr ""
+
+msgid "Filter by data"
+msgstr ""
+
+msgid "Filter by date"
 msgstr ""
 
 msgid "First login: type the same password again to register it."
@@ -361,7 +370,7 @@ msgstr ""
 msgid "Losses are measured on standardized y, so runs with different data can be compared."
 msgstr ""
 
-msgid "Lowest validation loss"
+msgid "Lowest validation loss for this data"
 msgstr ""
 
 msgid "Max depth"
@@ -410,7 +419,7 @@ msgstr ""
 msgid "No result yet."
 msgstr ""
 
-msgid "No runs in this period."
+msgid "No runs match the filter."
 msgstr ""
 
 msgid "No runs yet."
