@@ -8,6 +8,13 @@ import { t } from './i18n.js';
 import { fmtLoss } from './plot.js';
 import { dataKey, dataLabel, dataSummary, lossSummary, modelSummary, optimSummary } from './describe.js';
 
+// the row buttons, drawn the same size (the ▶ ⟲ 🗑 characters came out in three sizes)
+const svg = body => `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+const ICONS = {
+  view: svg('<path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/>'),
+  load: svg('<path d="M2.8 3.2v3.3h3.3"/><path d="M3.2 6.3A5.2 5.2 0 1 1 3 9.6"/>'),
+  del: svg('<path d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.7 9.5h6.6L12 4M6.6 6.5v4.5M9.4 6.5v4.5"/>'),
+};
 const FUNNEL = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M2 3h12l-4.5 5.5V13l-3 1.5V8.5z" fill="currentColor"/></svg>';
 
 // The four setting columns follow the pipeline ① → ④; `get` turns a run's settings into text.
@@ -156,9 +163,9 @@ export class History {
         <td class="num ${best.has(r) ? 'best' : ''}">${fmtLoss(r.final_val)}${best.has(r) ? ` <span class="star" title="${L.best}">★</span>` : ''}${status ? ` <span class="pill pill-warn">${status}</span>` : ''}</td>
         <td class="num">${r.duration.toFixed(1)}</td>
         <td class="actions">
-          <button type="button" class="btn btn-icon btn-ghost" data-act="view" title="${L.view}">▶</button>
-          ${this.readonly ? '' : `<button type="button" class="btn btn-icon btn-ghost" data-act="load" title="${L.load}">⟲</button>
-          <button type="button" class="btn btn-icon btn-ghost" data-act="del" title="${L.del}">🗑</button>`}
+          <button type="button" class="btn btn-icon btn-ghost" data-act="view" title="${L.view}" aria-label="${L.view}">${ICONS.view}</button>
+          ${this.readonly ? '' : `<button type="button" class="btn btn-icon btn-ghost" data-act="load" title="${L.load}" aria-label="${L.load}">${ICONS.load}</button>
+          <button type="button" class="btn btn-icon btn-ghost" data-act="del" title="${L.del}" aria-label="${L.del}">${ICONS.del}</button>`}
         </td></tr>`;
     }).join('');
     const none = this.rows.length ? t('No runs match the filter.') : t('No runs yet.');
