@@ -3,7 +3,7 @@
 A web GUI for exploring supervised regression. Students set up the four steps of the
 learning loop, press **Train**, and watch the prediction change in the browser.
 
-**Demo: <https://ml.solsam.app>** — choose "Use as a guest" below the login form; no account needed.
+**Demo: <https://yhat.solsam.app>** — choose "Use as a guest" below the login form; no account needed.
 
 ```
 ① Training data  →  ② Predictor  →  ③ Loss function        →  ④ Optimization
@@ -64,7 +64,7 @@ every fifth student running the largest allowed SGD run, the others still starte
 ## Deploy (Mac mini + Cloudflare Tunnel)
 
 The app runs in Docker inside a Colima VM with fixed CPU and memory, so a busy class cannot slow
-down the rest of the Mac. Students reach it at `https://ml.solsam.app` through a Cloudflare Tunnel:
+down the rest of the Mac. Students reach it at `https://yhat.solsam.app` through a Cloudflare Tunnel:
 the Mac opens no ports (only `127.0.0.1:18001` for the teacher on the Mac itself).
 
 ```bash
@@ -81,7 +81,7 @@ Cloudflare: the `solsam.app` zone must use Cloudflare's nameservers (bought at C
 so it already does; a domain moved from elsewhere needs every DNS record copied first, MX / SPF /
 DKIM included, or e-mail stops). Then Zero Trust → Networks →
 Tunnels → Create (cloudflared) → copy the token into `tunnel.env` → Public hostname
-`ml.solsam.app` → service `http://web:8000`. Also: SSL/TLS → Always Use HTTPS; a rate-limiting rule
+`yhat.solsam.app` → service `http://web:8000`. Also: SSL/TLS → Always Use HTTPS; a rate-limiting rule
 for `POST /login` (300 requests / 10 s per IP, block 10 s: a whole school shares one IP, so it only
 catches floods, never a class logging in); optionally Cloudflare Access (e-mail one-time code) on `/teacher*`.
 
