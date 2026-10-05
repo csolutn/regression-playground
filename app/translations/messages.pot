@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 13:46+0900\n"
+"POT-Creation-Date: 2026-10-05 14:47+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -486,6 +486,9 @@ msgstr ""
 msgid "Noise"
 msgstr ""
 
+msgid "Not saved"
+msgstr ""
+
 msgid "Not trained yet"
 msgstr ""
 
@@ -573,6 +576,9 @@ msgid "Random forest"
 msgstr ""
 
 msgid "Random seed"
+msgstr ""
+
+msgid "Rebuilding the training…"
 msgstr ""
 
 msgid "Remove layer"
@@ -758,6 +764,9 @@ msgstr ""
 msgid "The student number and name do not match the class list. Ask your teacher."
 msgstr ""
 
+msgid "The training code has changed since this run: its replay may differ from what it showed then."
+msgstr ""
+
 msgid "The two passwords are different."
 msgstr ""
 
@@ -793,6 +802,9 @@ msgid "Train"
 msgstr ""
 
 msgid "Train loss"
+msgstr ""
+
+msgid "Trained again in this browser: the numbers differ a little from the saved ones."
 msgstr ""
 
 msgid "Training data"

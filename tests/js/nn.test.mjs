@@ -77,3 +77,14 @@ test('two inputs: predictions on the 30 × 30 grid, x1 along each row', () => {
   assert.equal(pred.length, 900);
   assert.ok(Math.abs(pred[29] - 14) < 0.1 && Math.abs(pred[30] - -15) < 0.1, `${pred[29]} ${pred[30]}`);
 });
+
+test('trained again from its settings, a run makes the same numbers, also stopped at an earlier epoch (a replay)', () => {
+  const cfg = { epochs: 300 }, noTime = evs => evs.filter(e => e.type !== 'end');   // only 'end' has the duration
+  const a = run(cfg), b = run(cfg), short = run({ ...cfg, epochs: 120 });
+  assert.deepEqual(noTime(a), noTime(b));
+  const frames = evs => evs.filter(e => e.type === 'frame');
+  assert.deepEqual(frames(short), frames(a).slice(0, 121));                         // epochs 0 … 120
+  const losses = (evs, k) => evs.filter(e => e.type === 'loss').flatMap(e => e[k]);
+  assert.deepEqual(losses(short, 'train'), losses(a, 'train').slice(0, 120));
+  assert.equal(short.at(-1).final_val, losses(a, 'val')[119]);                     // what the history row shows
+});

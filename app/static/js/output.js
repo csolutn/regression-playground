@@ -4,6 +4,8 @@ import { t } from './i18n.js';
 import { api } from './api.js';
 import { Player } from './player.js';
 import { History, localDate } from './history.js';
+import { replayRun } from './train.js';
+import { TRAINER_VERSION } from './nn.js';
 import { exportVideo, saveBlob } from './recorder.js';
 import { dataSummary, lossSummary, modelSummary, optimSummary, videoTitle } from './describe.js';
 
@@ -20,13 +22,14 @@ export class OutputPanel {
     this.userId = userId;
     this.guest = guest;                       // runs live only in this page (train.js makes their rows)
     this.toast = toast;
-    this.cache = new Map();                   // run id → full run (frames etc.)
+    this.cache = new Map();                   // run id → full run (frames etc.), for the rest of the visit
+    this.replaying = null;                    // the AbortController of the run being trained again (view)
     this.player = new Player(root);
     this.history = new History($('history'), {
       readonly,
       popup: $('filter-pop'),
       onView: row => this.view(row),
-      onLoad: async row => onLoadSettings?.(await this.fetchRun(row)),
+      onLoad: async row => onLoadSettings?.(await this.fetchSettings(row)),
       onDelete: row => this.remove(row),
       onNeedAll: () => this.loadOlder(true),
     });
@@ -70,23 +73,53 @@ export class OutputPanel {
     await this.loading;
   }
 
-  async fetchRun(row) {
+  // A run with all it needs to be shown: a server run as stored, a browser run trained again from its
+  // settings (only its results are stored), with a progress bar over the plot meanwhile
+  async fetchRun(row, signal) {
     if (!this.cache.has(row.id)) {
       const d = await api.run(row.id);
-      this.cache.set(row.id, { row: d.run, config: d.config, meta: d.meta, frames: d.frames, loss: d.loss, params: d.params });
+      this.cache.set(row.id, d.replay ? await this.replay(d, signal)
+        : { row: d.run, config: d.config, meta: d.meta, frames: d.frames, loss: d.loss, params: d.params });
     }
     return this.cache.get(row.id);
   }
 
+  // just its settings and row, to load them: no need to train it again
+  async fetchSettings(row) {
+    if (this.cache.has(row.id)) return this.cache.get(row.id);
+    const d = await api.run(row.id);
+    return { row: d.run, config: d.config };
+  }
+
+  // A browser run trained again with the same settings and seed on the same data, which makes the same
+  // numbers in the same browser. note: why its replay may differ from what it showed when it was trained.
+  async replay(d, signal) {
+    const meta = await api.preview(d.config), label = t('Rebuilding the training…');
+    const progress = p => this.setProgress(p, `${label} ${Math.round(p * 100)}%`);
+    progress(0);
+    const made = await replayRun(d.config, meta, d.run.steps, progress, signal);
+    const saved = d.run.final_val, now = made.end.final_val;
+    const differs = saved != null && now != null && Math.abs(now - saved) > 1e-3 * Math.abs(saved);
+    const note = d.replay.trainer !== TRAINER_VERSION || d.replay.data_changed
+      ? t('The training code has changed since this run: its replay may differ from what it showed then.')
+      : differs ? t('Trained again in this browser: the numbers differ a little from the saved ones.') : null;
+    return { row: d.run, config: d.config, meta, frames: made.frames, loss: made.loss, params: made.params, note };
+  }
+
   async view(row) {
     if (this.run?.live) { this.toast?.(t('Wait until training finishes.'), 'info'); return; }
+    this.replaying?.abort();                  // another row was clicked while one was being trained again
+    const ac = this.replaying = new AbortController();
     try {
-      const run = await this.fetchRun(row);
+      const run = await this.fetchRun(row, ac.signal);
       this.player.setRun(run);
       this.history.setActive(row.id);
       this.showHeader(run);
+      if (run.note && !run.noted) { run.noted = true; this.toast?.(run.note, 'info'); }
     } catch (err) {
-      this.toast?.(err.message, 'error');
+      if (err.name !== 'AbortError') this.toast?.(err.message, 'error');
+    } finally {
+      if (this.replaying === ac) { this.replaying = null; this.setProgress(null); }
     }
   }
 
@@ -139,6 +172,7 @@ export class OutputPanel {
   // ---------- live training ----------
 
   startLive(config) {
+    this.replaying?.abort();
     const run = { live: true, config, meta: null, frames: [], loss: { steps: [], train: [], val: [] }, row: null };
     this.player.setRun(run, { live: true });
     this.history.setActive(null);
@@ -164,21 +198,25 @@ export class OutputPanel {
       for (const k of ['steps', 'train', 'val']) run.loss[k].push(...ev[k]);
     } else if (ev.type === 'params') {
       run.params = { init: ev.init, final: ev.final, contrib: ev.contrib, path_epochs: ev.path_epochs, paths: ev.paths };
-    } else if (ev.type === 'end') {
+    } else if (ev.type === 'end') {          // done: shown at once, while it is saved ('saved' brings its row)
       run.end = ev;
-    } else if (ev.type === 'error') {
-      this.stopLive(run, t('Error'));
-      this.toast?.(ev.message, 'error');
-    } else if (ev.type === 'saved') {
       run.live = false;
-      run.row = ev.run;
-      this.cache.set(ev.run.id, run);
-      this.history.add(ev.run);
-      this.history.setActive(ev.run.id);
       this.player.endLive();
       this.setProgress(null);
       this.showHeader(run);
-      this.player.playFromStart();          // the run is done: replay it from epoch 0 at the chosen speed
+      this.player.playFromStart();          // replay it from epoch 0 at the chosen speed
+    } else if (ev.type === 'error') {
+      if (!run.end) this.stopLive(run, t('Error'));
+      else if (this.run === run) this.showHeader(run, t('Not saved'));   // trained, but saving it failed
+      this.toast?.(ev.message, 'error');
+    } else if (ev.type === 'saved') {
+      run.row = ev.run;
+      this.cache.set(ev.run.id, run);
+      this.history.add(ev.run);
+      if (this.run === run) {               // still shown (no other run started meanwhile)
+        this.history.setActive(ev.run.id);
+        this.showHeader(run);
+      }
     }
   }
 
@@ -223,7 +261,7 @@ export class OutputPanel {
 
     const st = message ? ['warn', message]
       : run.live ? ['live', t('Training…')]
-      : { timeout: ['warn', t('Stopped at the time limit')], diverged: ['warn', t('Diverged: the loss became infinite. Try a smaller learning rate.')] }[run.row?.status]
+      : { timeout: ['warn', t('Stopped at the time limit')], diverged: ['warn', t('Diverged: the loss became infinite. Try a smaller learning rate.')] }[(run.row || run.end)?.status]
       || ['ok', t('Done')];
     status.className = `pill pill-${st[0]}`;
     status.textContent = st[1];

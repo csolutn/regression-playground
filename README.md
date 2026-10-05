@@ -39,8 +39,10 @@ The class list is a CSV with `학번,이름` (or `student_id,name`) columns. The
 
 **Where runs train.** Linear regression and neural network runs train in the student's browser
 (`app/static/js/nn.js` in a Web Worker): the server only builds the data (`POST /api/prepare`) and
-saves the finished run (`POST /api/runs`), so a class training at once costs the server almost
-nothing. The numbers differ from a server run with the same seed (other random weights and batch
+saves the finished run's results (`POST /api/runs`, a few kB), so a class training at once costs the
+server almost nothing. The animation, loss curve and loss landscape are not stored: when a saved run is
+shown again, the browser trains it again from its settings and seed, which gives the same numbers
+(`TRAINER_VERSION` in `nn.js` and `DATA_VERSION` in `app/ml/data.py` flag runs saved before a change). The numbers differ from a server run with the same seed (other random weights and batch
 order), the behaviour does not. Runs that plain JavaScript would be much slower at (big networks
 with big batches, which torch finishes in under a second) and the tree models train on the server
 (`POST /api/train`); `trains_in_browser()` in `app/ml/options.py` decides.
@@ -88,7 +90,7 @@ catches floods, never a class logging in); optionally Cloudflare Access (e-mail 
 In the container (8-CPU VM, 6 trainings at once) 30 students pressing Train together all finished within
 6 s; the largest SGD run (3 × 32 neurons) takes about 43 s while others train, so `deploy.env` sets
 `TRAINING_TIME_LIMIT_S=60` (measured before most runs moved to the browser; the browser uses the
-same limit). One run sends 0.1–1.6 MB (2 inputs is the most).
+same limit). A server run streams 0.1–1.6 MB (2 inputs is the most); a browser run uploads a few kB.
 
 Mac: System Settings → Energy → prevent automatic sleep and start up after a power failure.
 Update with `git pull && docker compose up -d --build && docker image prune -f` (the last part deletes

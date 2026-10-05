@@ -30,6 +30,7 @@ PRESETS_2D = {
 
 PLOT_POINTS_1D = 200   # points on the prediction curve
 PLOT_GRID_2D = 30      # grid × grid points on the prediction surface
+DATA_VERSION = 1       # raise it when the data a config builds changes: browser runs are replayed from their settings
 
 
 class DataError(ValueError):

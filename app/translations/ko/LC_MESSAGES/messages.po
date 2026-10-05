@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 13:46+0900\n"
+"POT-Creation-Date: 2026-10-05 14:47+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -487,6 +487,9 @@ msgstr "아직 학생이 없습니다. 위에서 명단을 불러오세요."
 msgid "Noise"
 msgstr "노이즈"
 
+msgid "Not saved"
+msgstr "저장되지 않음"
+
 msgid "Not trained yet"
 msgstr "학습 전"
 
@@ -575,6 +578,9 @@ msgstr "랜덤포레스트"
 
 msgid "Random seed"
 msgstr "랜덤 시드"
+
+msgid "Rebuilding the training…"
+msgstr "학습 과정을 다시 만드는 중…"
 
 msgid "Remove layer"
 msgstr "층 삭제"
@@ -759,6 +765,9 @@ msgstr "모델이 그릴 수 있는 그래프 ŷ = f(x)의 모양입니다."
 msgid "The student number and name do not match the class list. Ask your teacher."
 msgstr "학번과 이름이 명단과 맞지 않습니다. 선생님께 문의하세요."
 
+msgid "The training code has changed since this run: its replay may differ from what it showed then."
+msgstr "이 실험 뒤로 학습 코드가 바뀌어, 다시 만든 과정이 그때 본 것과 다를 수 있습니다."
+
 msgid "The two passwords are different."
 msgstr "두 비밀번호가 다릅니다."
 
@@ -795,6 +804,9 @@ msgstr "학습"
 
 msgid "Train loss"
 msgstr "학습 손실"
+
+msgid "Trained again in this browser: the numbers differ a little from the saved ones."
+msgstr "이 브라우저에서 다시 학습해 저장된 값과 숫자가 조금 다릅니다."
 
 msgid "Training data"
 msgstr "훈련 데이터"

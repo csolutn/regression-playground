@@ -2,7 +2,8 @@
 
 Linear and neural network runs usually train in the browser: POST /api/prepare returns the data
 (the trainer's meta) and whether the browser should train it (options.trains_in_browser); the
-browser then saves the run with POST /api/runs.
+browser then saves the run's results with POST /api/runs, and trains it again from its settings
+whenever it is shown (POST /api/preview gives the data).
 
 POST /api/train trains on the server instead (tree models, and the runs the browser would be
 slow at). It streams NDJSON events from app.ml.trainer (see its docstring), then saves the run
@@ -161,14 +162,15 @@ def save_run(user_id, cfg, end, stored):
     return run
 
 
-MAX_UPLOAD_BYTES = 8 * 1024 * 1024     # 300 frames of a 30 × 30 surface are about 2 MB
-MAX_PATH_POINTS = 1000                 # the frames plus the early checkpoints (about 70 at most)
+MAX_UPLOAD_BYTES = 2 * 1024 * 1024     # the settings, with a CSV of up to 1 MB (options.MAX_CSV_BYTES)
 
 
 @bp.post('/runs')
 @login_required
 def upload_run():
-    """Save a run trained in the browser: {config, frames, loss, end, params?}. The server rebuilds the data itself."""
+    """Save a run trained in the browser: {config, end, trainer}, its results only. The animation, loss curve and
+    loss landscape are not stored: the browser trains the run again from its settings (and seed) to show it,
+    with the same trainer (version `trainer`, nn.js TRAINER_VERSION) on the same data (ml_data.DATA_VERSION)."""
     request.max_content_length = MAX_UPLOAD_BYTES
     if not request.is_json:
         abort(415)
@@ -181,22 +183,22 @@ def upload_run():
     if cfg['model'] not in options.GRADIENT_MODELS:
         abort(400)
     try:
-        ds = trainer.check(cfg)
+        trainer.check(cfg)
     except (ml_data.DataError, trainer.BudgetError) as exc:
         return error_response([(exc.msgid, exc.params)])
     try:
-        frames, loss, end, params = checked_upload(body, cfg['epochs'], len(ds.X_plot), trainer.n_params(cfg))
+        end = checked_end(body['end'], cfg['epochs'])
+        version = body['trainer']
+        if isinstance(version, bool) or not isinstance(version, int):
+            raise ValueError(version)
     except (KeyError, TypeError, ValueError):
         abort(400)
-    stored = {'meta': trainer.meta(cfg, ds), 'frames': frames, 'loss': loss}
-    if params:
-        stored['params'] = params
-    run = save_run(g.user.id, cfg, end, stored)
+    run = save_run(g.user.id, cfg, end, {'replay': {'trainer': version, 'data': ml_data.DATA_VERSION}})
     return jsonify({'run': run.to_row()}), 201
 
 
-def checked_upload(body, epochs, n_plot, n_params):
-    """The uploaded frames, loss history, end and weights (or None), in the trainer's shapes; raises on anything else."""
+def checked_end(e, epochs):
+    """The uploaded end of a run, in the trainer's shape; raises on anything else."""
     def number(v, optional=False):
         if v is None and optional:
             return None
@@ -204,45 +206,13 @@ def checked_upload(body, epochs, n_plot, n_params):
             raise ValueError(v)
         return v
 
-    def step(v):
-        if isinstance(v, bool) or not isinstance(v, int) or not 0 <= v <= epochs:
-            raise ValueError(v)
-        return v
-
-    def index(v):
-        if isinstance(v, bool) or not isinstance(v, int) or not 0 <= v < n_params:
-            raise ValueError(v)
-        return v
-
-    frames = [{'step': step(f['step']), 'pred': [number(v) for v in f['pred']],
-               'train': number(f['train'], True), 'val': number(f['val'], True)} for f in body['frames']]
-    if not 1 <= len(frames) <= trainer.MAX_FRAMES + 2 or any(len(f['pred']) != n_plot for f in frames):
-        raise ValueError('frames')
-    loss = {'steps': [step(v) for v in body['loss']['steps']],
-            'train': [number(v, True) for v in body['loss']['train']],
-            'val': [number(v, True) for v in body['loss']['val']]}
-    if not 1 <= len(loss['steps']) == len(loss['train']) == len(loss['val']) <= epochs:
-        raise ValueError('loss')
-    e = body['end']
     if e['status'] not in ('done', 'timeout', 'diverged'):
         raise ValueError(e['status'])
-    end = {'status': e['status'], 'steps': step(e['steps']), 'final_train': number(e['final_train'], True),
-           'final_val': number(e['final_val'], True), 'duration': number(e['duration'])}
-    params = None
-    if body.get('params') is not None:      # older pages and diverged runs send none
-        p = body['params']
-        params = {k: [number(v) for v in p[k]] for k in ('init', 'final', 'contrib')}
-        if any(len(v) != n_params for v in params.values()):
-            raise ValueError('params')
-        times = params['path_epochs'] = [number(v) for v in p['path_epochs']]
-        if not len(frames) <= len(times) <= MAX_PATH_POINTS or any(not 0 <= v <= epochs for v in times) or times != sorted(times):
-            raise ValueError('path_epochs')
-        params['paths'] = [{'index': index(q['index']), 'values': [number(v) for v in q['values']],
-                            'lowered': [number(v) for v in q['lowered']]} for q in p['paths']]
-        if len(params['paths']) > trainer.TOP_WEIGHTS or any(
-                len(q['values']) != len(times) or len(q['lowered']) != len(times) for q in params['paths']):
-            raise ValueError('paths')
-    return frames, loss, end, params
+    steps = e['steps']
+    if isinstance(steps, bool) or not isinstance(steps, int) or not 0 <= steps <= epochs:
+        raise ValueError(steps)
+    return {'status': e['status'], 'steps': steps, 'final_train': number(e['final_train'], True),
+            'final_val': number(e['final_val'], True), 'duration': number(e['duration'])}
 
 
 def visible_user_id():
@@ -286,9 +256,14 @@ def list_runs():
 @bp.get('/runs/<int:run_id>')
 @login_required
 def run_detail(run_id):
-    """Everything needed to replay the animation, plus the full settings (with CSV text)."""
+    """The full settings (with CSV text) and what the animation needs: the stored meta, frames, loss history
+    and weights of a server run, or for a browser run {'replay': {'trainer', 'data', 'data_changed'}}, to train
+    it again in the browser (data_changed: the data its settings build is not the same any more)."""
     run = get_run(run_id)
-    return jsonify({'run': run.to_row(), 'config': run.config, **run.get_payload()})
+    payload = run.get_payload()
+    if 'replay' in payload:
+        payload['replay']['data_changed'] = payload['replay']['data'] != ml_data.DATA_VERSION
+    return jsonify({'run': run.to_row(), 'config': run.config, **payload})
 
 
 @bp.delete('/runs/<int:run_id>')

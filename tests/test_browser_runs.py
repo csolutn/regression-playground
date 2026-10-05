@@ -3,7 +3,8 @@ import json
 
 from conftest import login
 
-from app.ml import options, trainer
+from app.ml import data as ml_data
+from app.ml import options
 
 HEAVY_BGD = {'hidden_layers': [32] * 6, 'data_size': 2000, 'epochs': 1500, 'optimizer': 'bgd'}
 HEAVY_SGD = {'hidden_layers': [32] * 3, 'data_size': 500, 'epochs': 1000, 'optimizer': 'sgd'}
@@ -14,16 +15,11 @@ def post(client, url, body):
 
 
 def upload_for(over):
-    """What the browser uploads, made here with the server's own trainer (same shapes)."""
+    """What the browser uploads: the settings, the end of the run, and its trainer's version."""
     cfg, errors = options.validate(over)
     assert not errors
-    events = list(trainer.train(cfg))
-    loss = {k: [v for e in events if e['type'] == 'loss' for v in e[k]] for k in ('steps', 'train', 'val')}
-    frames = [{k: e[k] for k in ('step', 'pred', 'train', 'val')} for e in events if e['type'] == 'frame']
-    end = {k: v for k, v in events[-1].items() if k != 'type'}
-    params = next(({k: e[k] for k in ('init', 'final', 'contrib', 'path_epochs', 'paths')}
-                   for e in events if e['type'] == 'params'), None)
-    return {'config': cfg, 'frames': frames, 'loss': loss, 'end': end, 'params': params}
+    end = {'type': 'end', 'status': 'done', 'steps': cfg['epochs'], 'final_train': 0.0123, 'final_val': 0.0234, 'duration': 0.4}
+    return {'config': cfg, 'end': end, 'trainer': 1}
 
 
 def test_slow_big_batch_runs_stay_on_the_server():
@@ -46,25 +42,24 @@ def test_prepare(client):
     assert post(client, '/api/prepare', {'epochs': 0}).status_code == 400          # invalid settings
 
 
-def test_upload_saves_a_browser_run(client):
+def test_upload_saves_only_the_results(client):
+    """The animation is not stored: the browser trains the run again from its settings to show it."""
     login(client)
-    upload = upload_for({'n_inputs': 2, 'epochs': 20})
+    upload = upload_for({'n_inputs': 2, 'epochs': 20, 'seed': 7})
     r = post(client, '/api/runs', upload)
     assert r.status_code == 201 and r.get_json()['run']['seq'] == 1
     detail = client.get(f"/api/runs/{r.get_json()['run']['id']}").get_json()
-    assert detail['meta']['n_inputs'] == 2 and len(detail['frames']) == len(upload['frames'])
-    assert detail['run']['final_val'] == upload['end']['final_val']
-    assert detail['params'] == upload['params'] and len(detail['params']['final']) == 2 * 4 + 4 + 4 + 1
+    assert detail['run']['final_val'] == 0.0234 and detail['run']['steps'] == 20
+    assert detail['config']['seed'] == 7 and detail['config']['n_inputs'] == 2      # all it takes to train it again
+    assert detail['replay'] == {'trainer': 1, 'data': ml_data.DATA_VERSION, 'data_changed': False}
+    assert 'frames' not in detail and 'params' not in detail
 
 
-def test_upload_without_weights(client):
-    """A page from before weights were saved, or a diverged run: saved without a loss landscape."""
+def test_replay_notices_changed_data(app, client, monkeypatch):
     login(client)
-    upload = upload_for({'epochs': 20})
-    upload.pop('params')
-    r = post(client, '/api/runs', upload)
-    assert r.status_code == 201
-    assert 'params' not in client.get(f"/api/runs/{r.get_json()['run']['id']}").get_json()
+    run_id = post(client, '/api/runs', upload_for({'epochs': 20})).get_json()['run']['id']
+    monkeypatch.setattr(ml_data, 'DATA_VERSION', ml_data.DATA_VERSION + 1)
+    assert client.get(f'/api/runs/{run_id}').get_json()['replay']['data_changed'] is True
 
 
 def test_upload_rejects_bad_runs(client):
@@ -76,23 +71,14 @@ def test_upload_rejects_bad_runs(client):
         body = json.loads(json.dumps(good))
         change(body)
         return post(client, '/api/runs', body).status_code
-    assert bad(lambda b: b['frames'][0]['pred'].pop()) == 400                     # wrong number of points
-    assert bad(lambda b: b['frames'][0]['pred'].__setitem__(0, 'x')) == 400
     assert bad(lambda b: b['end'].__setitem__('status', 'great')) == 400
-    assert bad(lambda b: b['loss']['val'].pop()) == 400
     assert bad(lambda b: b['end'].__setitem__('steps', 21)) == 400               # more epochs than set
+    assert bad(lambda b: b['end'].__setitem__('final_val', float('nan'))) == 400  # json.dumps writes NaN
+    assert bad(lambda b: b['end'].pop('duration')) == 400
     assert bad(lambda b: b['config'].__setitem__('model', 'decision_tree')) == 400
-    assert bad(lambda b: b.pop('frames')) == 400
-    assert bad(lambda b: b['frames'][0].__setitem__('val', float('nan'))) == 400  # json.dumps writes NaN
-    assert bad(lambda b: b['params']['final'].pop()) == 400                       # wrong number of weights
-    assert bad(lambda b: b['params']['contrib'].__setitem__(0, None)) == 400
-    assert bad(lambda b: b['params'].pop('init')) == 400
-    assert bad(lambda b: b['params']['paths'][0]['values'].pop()) == 400              # not one value per point
-    assert bad(lambda b: b['params']['path_epochs'].reverse()) == 400                 # not in order
-    assert bad(lambda b: b['params']['path_epochs'].__setitem__(-1, 21)) == 400       # more epochs than set
-    assert bad(lambda b: b['params']['paths'][0]['lowered'].pop()) == 400
-    assert bad(lambda b: b['params']['paths'][0].__setitem__('index', 999)) == 400
-    assert bad(lambda b: b['params']['paths'].append(b['params']['paths'][0])) == 400   # more than TOP_WEIGHTS
+    assert bad(lambda b: b.pop('end')) == 400
+    assert bad(lambda b: b.pop('trainer')) == 400
+    assert bad(lambda b: b.__setitem__('trainer', '1')) == 400
     assert client.post('/api/runs', data='x', content_type='text/plain').status_code == 415
 
 

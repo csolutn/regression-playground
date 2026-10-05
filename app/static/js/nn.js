@@ -7,6 +7,7 @@
 // so the numbers differ from the server's while the behaviour is the same.
 // Runs in a Web Worker (train-worker.js); plain module, so `node --test` can run it too.
 
+export const TRAINER_VERSION = 1;  // raise it when train() makes other numbers: saved runs are replayed from their settings
 export const MAX_FRAMES = 300;      // one frame per epoch up to this many, then every k-th
 export const LOSS_EVENTS = 100;     // about this many loss events per run
 export const CHECKPOINT_GROWTH = 1.2;   // weight contributions: checkpoints after steps 1, 2, 3, 4, 5, 6, 8, 10, …, and every epoch

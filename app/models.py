@@ -67,7 +67,8 @@ class Run(db.Model):
         return json.loads(self.config_json)
 
     def set_payload(self, obj):
-        self.payload = gzip.compress(json.dumps(obj, separators=(',', ':')).encode())
+        # level 6, not gzip's 9: a 2-input run's frames take 0.06 s instead of 0.5 s, for 8 % more bytes
+        self.payload = gzip.compress(json.dumps(obj, separators=(',', ':')).encode(), compresslevel=6)
 
     def get_payload(self):
         return json.loads(gzip.decompress(self.payload))
