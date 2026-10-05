@@ -638,8 +638,6 @@ msgstr ""
 msgid "Slope w"
 msgstr ""
 
-msgid "Sol C."
-msgstr ""
 
 msgid "Sort by validation loss"
 msgstr ""
