@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 09:26+0900\n"
+"POT-Creation-Date: 2026-10-05 12:54+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -157,6 +157,9 @@ msgid "Could not make the video: {msg}"
 msgstr ""
 
 msgid "Custom formula…"
+msgstr ""
+
+msgid "Dashed: the landscape at the end, cut along that parameter with every other one where training ended. It is steeper than the solid line because the other parameters had adapted to the end; the two meet there."
 msgstr ""
 
 msgid "Data preview"
@@ -343,6 +346,9 @@ msgid "Invalid value for {field}."
 msgstr ""
 
 msgid "Keeps rolling in the direction it was going"
+msgstr ""
+
+msgid "Landscape at the end"
 msgstr ""
 
 msgid "Landscape at the end (a cut)"
@@ -638,7 +644,6 @@ msgstr ""
 msgid "Slope w"
 msgstr ""
 
-
 msgid "Sort by validation loss"
 msgstr ""
 
@@ -724,7 +729,7 @@ msgstr ""
 msgid "The input range minimum must be smaller than the maximum."
 msgstr ""
 
-msgid "The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. Dashed: the landscape at the end, cut along that parameter with every other one where training ended; the two meet at the end. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data."
+msgid "The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data."
 msgstr ""
 
 msgid "The questions (x) and correct answers (y) the model learns from."

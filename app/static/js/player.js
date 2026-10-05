@@ -31,7 +31,8 @@ export class Player {
     this.loss = { open: $('loss-open'), dialog: $('loss-dialog'), canvas: $('loss-canvas'), log: $('loss-log') };
     this.land = { open: $('land-open'), dialog: $('land-dialog'), canvas: $('land-canvas'), log: $('land-log'),
                   hintSurface: $('land-hint-surface'), hintSlices: $('land-hint-slices'),
-                  play: $('land-play'), slider: $('land-slider'), step: $('land-step') };
+                  play: $('land-play'), slider: $('land-slider'), step: $('land-step'),
+                  cut: $('land-cut'), cutCheck: $('land-cut-check'), cutKey: $('land-cut-key'), cutHint: $('land-cut-hint') };
     this.landView = { ...DEFAULT_VIEW };
     this.run = null;
     this.idx = 0;
@@ -46,6 +47,7 @@ export class Player {
     document.addEventListener('keydown', e => this.onKey(e));
     this.enablePopup(this.loss, $('loss-close'));
     this.enablePopup(this.land, $('land-close'));
+    this.land.cut.addEventListener('change', () => { this.showCutKey(); this.render(); });
     for (const c of [this.canvas, this.loss.canvas, this.land.canvas]) new ResizeObserver(() => this.render()).observe(c);
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.render());
     this.enableRotate(this.canvas, this.view, () => this.run?.meta?.n_inputs === 2);
@@ -134,7 +136,7 @@ export class Player {
     if (!kind && this.land.dialog.open) this.land.dialog.close();
     this.land.canvas.classList.toggle('is-slices', kind === 'slices');
     this.land.hintSurface.hidden = kind !== 'surface';
-    this.land.hintSlices.hidden = kind !== 'slices';
+    this.land.hintSlices.hidden = this.land.cutCheck.hidden = kind !== 'slices';
     for (const btn of [this.playBtn, this.land.play]) {
       btn.classList.toggle('is-playing', !!this.timer);
       btn.setAttribute('aria-pressed', String(!!this.timer));
@@ -177,11 +179,14 @@ export class Player {
     return hasLandscape(this.run) ? 'surface' : hasSlices(this.run) ? 'slices' : null;
   }
 
+  showCutKey() { this.land.cutKey.hidden = this.land.cutHint.hidden = !this.land.cut.checked; }
+
   renderLandscape(th) {
     const { ctx, w, h } = fitCanvas(this.land.canvas);
     ctx.fillStyle = th.bg;
     ctx.fillRect(0, 0, w, h);
-    const kind = this.landKind, s = Math.max(0.8, Math.min(1.1, w / 700)), opts = { view: this.landView, log: this.land.log.checked };
+    const kind = this.landKind, s = Math.max(0.8, Math.min(1.1, w / 700));
+    const opts = { view: this.landView, log: this.land.log.checked, cut: this.land.cut.checked };
     if (kind === 'surface') {
       this.run.landscape ||= landscape(this.run);
       if (this.run.landscape) drawLandscape(ctx, { x: 0, y: 0, w, h }, this.run.landscape, this.idx, this.run, th, s, opts);

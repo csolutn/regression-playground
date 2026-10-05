@@ -435,13 +435,14 @@ export function drawLandscape(ctx, r, L, idx, run, th, s = 1, opts = {}) {
 
 // ---------- loss landscape of other linear and neural network runs (landscape.js computes S) ----------
 
-// The few weights that lowered the loss the most: where they sit in the network, and for each the
-// training loss along it with every other weight where training ended (a dashed slice through the end
-// point, fading away from it), and over it the slope that weight came down (solid: faint for the whole
-// run, full up to frame `idx`, where the point is; open circles: start and end). Runs saved without the
-// paths show an arrow from the start to the end instead.
+// The few weights that lowered the loss the most: where they sit in the network, and for each the slope
+// that weight came down (solid: faint for the whole run, full up to frame `idx`, where the point is; open
+// circles: start and end) and, with opts.cut, the training loss along it with every other weight where
+// training ended (a dashed slice through the end point, fading away from it). Runs saved without the
+// paths show the slice and an arrow from the start to the end instead.
 export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
   const log = !!opts.log, names = run.meta.feature_names, tr = v => (log ? Math.log10(Math.max(v, 1e-12)) : v);
+  const cut = !!opts.cut || !S.slices.some(sl => sl.track);
   const pad = 10 * s, netH = Math.min(170 * s, Math.max(110 * s, r.h * 0.27));
   drawWeightNet(ctx, { x: r.x + pad, y: r.y + 2 * s, w: r.w - 2 * pad, h: netH }, S, names, th, s);
 
@@ -457,7 +458,7 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
   // the slices (steeper: the other weights had adapted to the end) run off the top
   const ok = v => Number.isFinite(v) && (!log || v > 0);
   const came = S.slices.flatMap(sl => (sl.track || []).map(p => p.y)).filter(ok);
-  const all = [...came, ...S.slices.flatMap(sl => sl.ys).filter(ok)];
+  const all = [...came, ...(cut ? S.slices.flatMap(sl => sl.ys).filter(ok) : [])];
   const cap = Number.isFinite(S.start) ? 1.5 * Math.max(S.start, S.loss) : Infinity;   // steep walls run off the top
   const top = came.length ? (log ? 10 ** (tr(Math.max(...came)) + 0.3) : 1.4 * Math.max(...came)) : Math.max(...all);
   let hiT = tr(Math.min(Math.max(top, S.loss), cap)), loT = log ? Math.min(...all.map(tr), tr(S.loss)) : 0;
@@ -499,12 +500,15 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
 
     ctx.save();
     ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
-    const fade = ctx.createLinearGradient(P.x, 0, P.x + P.w, 0);
-    fade.addColorStop(0, withAlpha(color, 0.15)); fade.addColorStop(0.5, color); fade.addColorStop(1, withAlpha(color, 0.15));
-    ctx.strokeStyle = fade; ctx.lineWidth = 2.4 * s; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.setLineDash([6 * s, 4 * s]);
-    polyline(ctx, sl.xs, sl.ys, X, Y);
-    ctx.setLineDash([]);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    if (cut) {
+      const fade = ctx.createLinearGradient(P.x, 0, P.x + P.w, 0);
+      fade.addColorStop(0, withAlpha(color, 0.15)); fade.addColorStop(0.5, color); fade.addColorStop(1, withAlpha(color, 0.15));
+      ctx.strokeStyle = fade; ctx.lineWidth = 2.4 * s;
+      ctx.setLineDash([6 * s, 4 * s]);
+      polyline(ctx, sl.xs, sl.ys, X, Y);
+      ctx.setLineDash([]);
+    }
 
     const startLabel = (x, y) => {           // above the point, or below it at the top of the panel
       const below = y - 20 * s < P.y;

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 09:26+0900\n"
+"POT-Creation-Date: 2026-10-05 12:54+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -159,6 +159,9 @@ msgstr "영상을 만들지 못했습니다: {msg}"
 
 msgid "Custom formula…"
 msgstr "직접 수식 입력…"
+
+msgid "Dashed: the landscape at the end, cut along that parameter with every other one where training ended. It is steeper than the solid line because the other parameters had adapted to the end; the two meet there."
+msgstr "점선은 학습이 끝난 뒤의 지형을 나머지를 모두 끝난 값에 두고 이 값 방향으로 자른 단면입니다. 다른 값들이 이미 끝난 상태에 맞춰져 있어서 실선보다 가파르며, 두 선은 끝 지점에서 만납니다."
 
 msgid "Data preview"
 msgstr "데이터 미리보기"
@@ -345,6 +348,9 @@ msgstr "{field} 값이 올바르지 않습니다."
 
 msgid "Keeps rolling in the direction it was going"
 msgstr "가던 방향으로 관성을 유지"
+
+msgid "Landscape at the end"
+msgstr "끝난 뒤 지형"
 
 msgid "Landscape at the end (a cut)"
 msgstr "학습이 끝난 뒤의 지형(단면)"
@@ -639,7 +645,6 @@ msgstr "지나온 경사"
 msgid "Slope w"
 msgstr "기울기 w"
 
-
 msgid "Sort by validation loss"
 msgstr "검증 손실로 정렬"
 
@@ -725,8 +730,8 @@ msgstr "수식에 쓸 수 없는 것이 있습니다. {vars}, 숫자, + - * / **
 msgid "The input range minimum must be smaller than the maximum."
 msgstr "입력 범위의 최솟값은 최댓값보다 작아야 합니다."
 
-msgid "The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. Dashed: the landscape at the end, cut along that parameter with every other one where training ended; the two meet at the end. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data."
-msgstr "학습하는 동안 학습 손실을 가장 많이 줄인 가중치·편향입니다. 실선은 각 값이 학습 중 실제로 내려온 경사로, 그때그때 발밑의 기울기(접선)를 이어 붙인 것이라 내려온 높이가 곧 이 값이 줄인 손실입니다. 점선은 학습이 끝난 뒤의 지형을 나머지를 모두 끝난 값에 두고 이 값 방향으로 자른 단면이며, 두 선은 끝 지점에서 만납니다. 점은 이 에포크의 위치(빈 원: 처음과 끝)입니다. 값은 표준화한 데이터 기준입니다."
+msgid "The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data."
+msgstr "학습하는 동안 학습 손실을 가장 많이 줄인 가중치·편향입니다. 실선은 각 값이 학습 중 실제로 내려온 경사로, 그때그때 발밑의 기울기(접선)를 이어 붙인 것이라 내려온 높이가 곧 이 값이 줄인 손실입니다. 점은 이 에포크의 위치(빈 원: 처음과 끝)입니다. 값은 표준화한 데이터 기준입니다."
 
 msgid "The questions (x) and correct answers (y) the model learns from."
 msgstr "모델이 배울 문제(x)와 정답(y)입니다."
