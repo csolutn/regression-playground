@@ -2,6 +2,7 @@
 import { t } from './i18n.js';
 import { api } from './api.js';
 import { trainRun } from './train.js';
+import { mountGuestLogin } from './login.js';
 import { Settings } from './settings.js';
 import { OutputPanel } from './output.js';
 import { mountCsvInput, mountLayersEditor } from './widgets.js';
@@ -13,7 +14,8 @@ const OPTIONS = window.OPTIONS;
 const root = document.querySelector('[data-page=playground]');
 const form = document.getElementById('settings');
 const guest = root.dataset.guest === '1';        // no database: runs train in this browser and stay in this page
-const settings = new Settings(form, OPTIONS.defaults, `mlp.settings.v3.${root.dataset.user}`,
+const settingsKey = user => `mlp.settings.v3.${user}`;
+const settings = new Settings(form, OPTIONS.defaults, settingsKey(root.dataset.user),
   guest ? () => sessionStorage : () => localStorage);
 
 // ---------- step cards ① → ④ ----------
@@ -83,6 +85,25 @@ const output = new OutputPanel(document.getElementById('output'), {
     toast(t('Loaded the settings of run #{n}.', { n: run.row.seq }), 'info');
   },
 });
+
+// a guest who logs in keeps the runs (output.saveGuestRuns), the settings and the open step;
+// leaving the page (reload, another language, closing the tab) loses them, so the browser asks first
+if (guest) {
+  window.addEventListener('beforeunload', e => {
+    if (!output.unsavedGuestRuns) return;
+    e.preventDefault();
+    e.returnValue = '';                 // older Safari asks only with this
+  });
+  mountGuestLogin(document.getElementById('login-dialog'), {
+    output, toast,
+    carry: user => {
+      try {
+        localStorage.setItem(settingsKey(user), JSON.stringify(settings.values));
+        localStorage.setItem(`mlp.step.${user}`, localStorage.getItem(STEP_KEY) || 'data');
+      } catch { /* storage blocked: the account's own settings stay */ }
+    },
+  });
+}
 
 // Changing ① training data (or resetting) shows the new data in the output, as points only,
 // before training. The server builds the same data the trainer will use.

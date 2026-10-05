@@ -4,9 +4,11 @@ from conftest import login
 
 
 def test_login_requires_roster_and_sets_password_on_first_login(client):
-    assert 'class list' in login(client, '99999', '없는사람').get_data(as_text=True) or True
+    html = login(client, '99999', '없는사람').get_data(as_text=True)
+    assert '학번과 이름이 명단에 없습니다.' in html and '선생님께 문의' not in html
+    assert 'value="99999"' in html and '<label data-role="confirm" hidden>' in html     # no second password yet
     r = client.post('/login', data={'login_id': '20101', 'name': '김하늘', 'password': 'pass1234'})
-    assert r.status_code == 200 and 'password_confirm' in r.get_data(as_text=True)     # asks to confirm
+    assert r.status_code == 200 and '<label data-role="confirm" >' in r.get_data(as_text=True)     # asks to confirm
     assert login(client).status_code == 302                                              # registers
     client.post('/logout')
     assert login(client, password='wrong', confirm=False).status_code == 200            # wrong password
@@ -62,6 +64,32 @@ def test_logging_in_ends_the_guest_session(client):
     login(client)
     page = client.get('/').get_data(as_text=True)
     assert 'data-guest=""' in page and 'data-login="20101"' in page
+
+
+def test_a_guest_logs_in_from_the_popup_and_keeps_the_runs(client):
+    """The guest's login popup posts JSON to /login; the page then uploads the guest's runs (POST /api/runs)."""
+    client.post('/guest')
+    page = client.get('/').get_data(as_text=True)
+    assert 'id="login-dialog"' in page and page.count('data-role="login-open"') == 2
+    assert page.count('id="pw-help"') == 1 and 'data-role="pw-help-open"' in page and 'name="password_confirm"' in page
+    assert '로그인은 등록된 사용자만 가능합니다.' in page                  # the same (i) as the login page
+    who = {'login_id': '20101', 'name': '김 하늘', 'password': 'pass1234'}
+    r = client.post('/login', json={**who, 'name': '없는사람'})
+    assert r.status_code == 400 and r.get_json()['kind'] == 'error' and not r.get_json()['first_login']
+    r = client.post('/login', json=who)                                  # first login: asks to confirm
+    assert r.status_code == 400 and r.get_json()['first_login'] and r.get_json()['kind'] == 'info'
+    assert client.post('/login', json={**who, 'password_confirm': 'other123'}).status_code == 400
+    assert 'data-guest="1"' in client.get('/').get_data(as_text=True)    # still a guest
+    r = client.post('/login', json={**who, 'password_confirm': 'pass1234'})
+    assert r.status_code == 200 and r.get_json() == {'user': 1}
+    end = {'status': 'done', 'steps': 20, 'final_train': 0.1, 'final_val': 0.2, 'duration': 0.3}
+    assert client.post('/api/runs', json={'config': {'epochs': 20}, 'end': end, 'trainer': 1}).status_code == 201
+    assert [row['seq'] for row in client.get('/api/runs').get_json()['runs']] == [1]
+    assert 'data-guest=""' in client.get('/').get_data(as_text=True)
+    client.post('/logout')
+    client.post('/guest')
+    assert client.post('/login', json={**who, 'password': 'wrong'}).get_json()['first_login'] is False
+    assert client.post('/login', json=who).status_code == 200            # the password is set now
 
 
 def train(client, **cfg):

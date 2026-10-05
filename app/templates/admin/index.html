@@ -20,7 +20,7 @@
     <form method="post" action="{{ url_for('admin.add_student') }}" class="admin-form">
       <h2>{{ _('Add one student') }}</h2>
       <div class="field-row">
-        <label class="field"><span class="label">{{ _('Student number') }}</span><input name="login_id" required></label>
+        <label class="field"><span class="label">{{ _('Student ID') }}</span><input name="login_id" required></label>
         <label class="field"><span class="label">{{ _('Name') }}</span><input name="name" required></label>
       </div>
       <button class="btn btn-primary btn-sm">{{ _('Add') }}</button>
@@ -32,7 +32,7 @@
     <div class="table-wrap">
       <table class="history admin-table">
         <thead><tr>
-          <th>{{ _('Student number') }}</th><th>{{ _('Name') }}</th><th>{{ _('Password') }}</th>
+          <th>{{ _('Student ID') }}</th><th>{{ _('Name') }}</th><th>{{ _('Password') }}</th>
           <th class="num">{{ _('Runs') }}</th><th>{{ _('Last run') }}</th><th>{{ _('Last login') }}</th><th></th>
         </tr></thead>
         <tbody>

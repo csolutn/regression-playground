@@ -4,6 +4,8 @@ Students come from the teacher's roster. The first login sets the password
 (typed twice); after that the same password is required. A teacher can reset it.
 Guests (a public demo) get the playground without the database: their runs train in
 the browser and live only in that page, and server training is for logged-in users.
+A guest logs in from a popup on the playground (POST /login as JSON), and the page then
+saves the runs made as a guest to that account (POST /api/runs) before it reloads.
 """
 from functools import wraps
 
@@ -66,50 +68,77 @@ def normalize_name(name):
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST' and request.is_json:
+        return login_json()
     form = {'login_id': '', 'name': ''}
     first_login, kept_password = False, ''
     if request.method == 'POST':
         form = {'login_id': request.form.get('login_id', '').strip(), 'name': request.form.get('name', '').strip()}
-        password = request.form.get('password', '')
-        user = db.session.scalar(db.select(User).filter_by(login_id=form['login_id']))
-
-        if user is None or normalize_name(user.name) != normalize_name(form['name']):
-            flash(_('The student number and name do not match the class list. Ask your teacher.'), 'error')
-        elif not user.has_password:
-            first_login = True
-            confirm = request.form.get('password_confirm')
-            if confirm is None:
-                kept_password = password    # refilled so only the confirmation needs typing
-                flash(_('First login: type the same password again to register it.'), 'info')
-            elif len(password) < MIN_PASSWORD_LENGTH:
-                flash(_('Use a password of at least %(n)d characters.', n=MIN_PASSWORD_LENGTH), 'error')
-            elif password != confirm:
-                flash(_('The two passwords are different.'), 'error')
-            else:
-                user.set_password(password)
-                return finish_login(user)
-        elif not user.check_password(password):
-            flash(_('Wrong password. If you forgot it, ask your teacher to reset it.'), 'error')
-        else:
+        password, confirm = request.form.get('password', ''), request.form.get('password_confirm')
+        user, (category, message), first_login = check_login(form['login_id'], form['name'], password, confirm)
+        if user:
             return finish_login(user)
+        if first_login and confirm is None:
+            kept_password = password    # refilled so only the confirmation needs typing
+        flash(message, category)
     resp = make_response(render_template('login.html', form=form, first_login=first_login,
                                          kept_password=kept_password))
     resp.headers['Cache-Control'] = 'no-store'     # the page may carry the typed password
     return resp
 
 
+def login_json():
+    """The guest's login popup on the playground (the same POST /login, as JSON, so the page and the
+    guest's runs stay): {'user': id}, or {'message', 'kind' ('error' | 'info'), 'first_login'} (to ask for
+    the password again)."""
+    body = request.get_json(silent=True)
+    body = {k: v for k, v in body.items() if isinstance(v, str)} if isinstance(body, dict) else {}
+    user, (category, message), first_login = check_login(
+        body.get('login_id', '').strip(), body.get('name', '').strip(), body.get('password', ''),
+        body.get('password_confirm'))
+    if not user:
+        return jsonify({'message': message, 'kind': category, 'first_login': first_login}), 400
+    start_session(user)
+    return jsonify({'user': user.id})
+
+
+def check_login(login_id, name, password, confirm):
+    """(user, (None, None), first_login) when they may log in (a first login has set the password),
+    else (None, (flash category, message), first_login). confirm is None until the second password is asked."""
+    user = db.session.scalar(db.select(User).filter_by(login_id=login_id))
+    if user is None or normalize_name(user.name) != normalize_name(name):
+        return None, ('error', _('The student ID and name are not on the class list.')), False
+    if user.has_password:
+        if not user.check_password(password):
+            return None, ('error', _('Wrong password. If you forgot it, ask your teacher to reset it.')), False
+        return user, (None, None), False
+    if confirm is None:
+        return None, ('info', _('First login: type the same password again to register it.')), True
+    if len(password) < MIN_PASSWORD_LENGTH:
+        return None, ('error', _('Use a password of at least %(n)d characters.', n=MIN_PASSWORD_LENGTH)), True
+    if password != confirm:
+        return None, ('error', _('The two passwords are different.')), True
+    user.set_password(password)
+    return user, (None, None), True
+
+
 def finish_login(user):
+    start_session(user)
+    next_url = request.args.get('next', '')
+    if next_url.startswith('/') and not next_url.startswith('//'):
+        return redirect(next_url)
+    return redirect(url_for('admin.index' if user.is_teacher else 'main.index'))
+
+
+def start_session(user):
     user.last_login_at = utcnow()
     db.session.commit()
-    next_url, lang = request.args.get('next', ''), session.get('lang')
+    lang = session.get('lang')
     session.clear()
     session['uid'] = user.id
     if lang:
         session['lang'] = lang
     session.permanent = True
-    if next_url.startswith('/') and not next_url.startswith('//'):
-        return redirect(next_url)
-    return redirect(url_for('admin.index' if user.is_teacher else 'main.index'))
 
 
 @bp.post('/guest')

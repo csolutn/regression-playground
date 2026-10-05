@@ -53,7 +53,9 @@
         <button type="button" class="btn btn-ghost btn-sm" data-role="csv">{{ _('Save CSV') }}</button>
       </div>
       {% if g.guest %}
-        <p class="note guest-note">{{ _('You are using it as a guest. The training history is not saved and is gone when you reload the page.') }}</p>
+        {# "log in" is a link in the sentence: it opens the login popup (partials/login_dialog.html) #}
+        {% set login_link %}<button type="button" class="link-btn" data-role="login-open">{{ _('log in') }}</button>{% endset %}
+        <p class="note guest-note">{{ _('You are using it as a guest. You can %(log_in)s to save the training history.', log_in=login_link) }}</p>
       {% endif %}
     </header>
     <div class="table-wrap"><table data-role="history" class="history"></table></div>

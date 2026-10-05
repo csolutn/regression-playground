@@ -123,6 +123,20 @@ export class OutputPanel {
     }
   }
 
+  // a guest's runs, which leaving the page loses (none once a login has saved them)
+  get unsavedGuestRuns() { return this.guest && !this.guestRunsSaved ? this.history.rows.length : 0; }
+
+  // after a guest logs in: the runs made as a guest saved to the account, oldest first; how many failed
+  async saveGuestRuns() {
+    let failed = 0;
+    for (const row of [...this.history.rows].reverse()) {
+      const { config, end } = this.cache.get(row.id);     // the full settings, with the CSV text
+      try { await api.saveRun({ config, end, trainer: TRAINER_VERSION }); } catch { failed++; }
+    }
+    this.guestRunsSaved = true;               // the page reloads next: no "leave the page?" question
+    return failed;
+  }
+
   async remove(row) {
     if (!confirm(t('Delete run #{n}? This cannot be undone.', { n: row.seq }))) return;
     try {

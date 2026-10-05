@@ -1,0 +1,20 @@
+{# A guest's login on the playground (opened by "Log in" in the top bar and under the history): the page
+   stays, so the runs made as a guest can be saved to the account (login.js) #}
+<dialog class="dialog login-dialog" id="login-dialog" aria-labelledby="login-dialog-title">
+  <form>
+    {# the line beside the title while it fits, else below it #}
+    <div class="login-dialog-head">
+      <h3 id="login-dialog-title">{{ _('Log in') }}</h3>
+      <p class="muted">{{ _('Log in with your student number and name.') }}
+        <button type="button" class="info-btn" data-role="pw-help-open" aria-haspopup="dialog"
+                title="{{ _('About logging in') }}" aria-label="{{ _('About logging in') }}">i</button></p>
+    </div>
+    {% include 'partials/login_fields.html' %}
+    <p class="flash" data-role="login-message" hidden></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-role="login-cancel">{{ _('Cancel') }}</button>
+      <button class="btn btn-primary" data-role="login-submit">{{ _('Log in') }}</button>
+    </div>
+  </form>
+</dialog>
+{% include 'partials/login_help.html' %}

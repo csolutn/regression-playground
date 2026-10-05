@@ -1,0 +1,18 @@
+{# The (i) next to "Log in with your student number and name.": on the login page and in a guest's login popup #}
+<dialog class="dialog" id="pw-help" aria-labelledby="pw-help-title">
+  <form method="dialog">
+    <h3 id="pw-help-title">{{ _('About logging in') }}</h3>
+    <p>{{ _('Only registered users can log in.') }}</p>
+    <p>{{ _('For registered users, the password is set to what you type at your first login.') }}</p>
+    <p>{{ _('As a guest, your runs are not saved on the server and some features (tree models and large neural networks) are not available.') }}</p>
+    <div class="dialog-actions"><button class="btn btn-primary">{{ _('Close') }}</button></div>
+  </form>
+</dialog>
+<script>
+  // "About logging in" popup; Close, Esc or a click outside closes it
+  (() => {
+    const pwHelp = document.getElementById('pw-help');
+    for (const btn of document.querySelectorAll('[data-role=pw-help-open]')) btn.addEventListener('click', () => pwHelp.showModal());
+    pwHelp.addEventListener('click', e => { if (e.target === pwHelp) pwHelp.close(); });
+  })();
+</script>

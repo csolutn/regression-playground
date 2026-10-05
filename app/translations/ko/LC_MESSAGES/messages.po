@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 14:47+0900\n"
+"POT-Creation-Date: 2026-10-05 21:06+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -625,6 +625,9 @@ msgstr "CSV 저장"
 msgid "Save MP4"
 msgstr "MP4 저장"
 
+msgid "Saving the runs you made as a guest…"
+msgstr "게스트로 한 학습 기록을 저장하는 중…"
+
 msgid "Seconds"
 msgstr "시간(초)"
 
@@ -692,11 +695,11 @@ msgstr "중지됨 (저장 안 함)"
 msgid "Stopped at the time limit"
 msgstr "시간 제한으로 중지"
 
+msgid "Student ID"
+msgstr "학번"
+
 msgid "Student added."
 msgstr "학생을 추가했습니다."
-
-msgid "Student number"
-msgstr "학번"
 
 msgid "Student updated."
 msgstr "학생 정보를 수정했습니다."
@@ -762,8 +765,8 @@ msgstr "지금 서버가 바쁩니다. 잠시 후 다시 시도해 주세요."
 msgid "The shape of graph ŷ = f(x) the model can draw."
 msgstr "모델이 그릴 수 있는 그래프 ŷ = f(x)의 모양입니다."
 
-msgid "The student number and name do not match the class list. Ask your teacher."
-msgstr "학번과 이름이 명단과 맞지 않습니다. 선생님께 문의하세요."
+msgid "The student ID and name are not on the class list."
+msgstr "학번과 이름이 명단에 없습니다."
 
 msgid "The training code has changed since this run: its replay may differ from what it showed then."
 msgstr "이 실험 뒤로 학습 코드가 바뀌어, 다시 만든 과정이 그때 본 것과 다를 수 있습니다."
@@ -779,9 +782,6 @@ msgstr "이 브라우저는 영상을 만들 수 없습니다. 최신 Chrome, Ed
 
 msgid "This feature is not available to guests."
 msgstr "게스트로 이용할 수 없는 기능입니다."
-
-msgid "This is your first login. The password you type now becomes your password."
-msgstr "첫 로그인입니다. 지금 입력한 비밀번호가 앞으로의 비밀번호가 됩니다."
 
 msgid "Time"
 msgstr "시각"
@@ -889,8 +889,9 @@ msgstr "신경망이나 에포크를 줄이면 브라우저에서 학습할 수 
 msgid "Wrong password. If you forgot it, ask your teacher to reset it."
 msgstr "비밀번호가 틀렸습니다. 잊었다면 선생님께 초기화를 요청하세요."
 
-msgid "You are using it as a guest. The training history is not saved and is gone when you reload the page."
-msgstr "게스트로 이용 중입니다. 학습이력은 기록되지 않고 새로고침하면 사라집니다."
+#, python-format
+msgid "You are using it as a guest. You can %(log_in)s to save the training history."
+msgstr "게스트로 이용 중입니다. %(log_in)s하여 학습 이력을 저장할 수 있습니다."
 
 msgid "average"
 msgstr "평균"
@@ -919,6 +920,9 @@ msgstr "예) %(example)s"
 
 msgid "full batch"
 msgstr "전체 배치"
+
+msgid "log in"
+msgstr "로그인"
 
 msgid "neurons"
 msgstr "개"
@@ -959,6 +963,10 @@ msgstr "{f}: 직선(또는 평면). 학습할 숫자 {n}개."
 #, python-brace-format
 msgid "{n} epochs"
 msgstr "{n} 에포크"
+
+#, python-brace-format
+msgid "{n} of the runs made as a guest could not be saved."
+msgstr "게스트로 한 학습 기록 중 {n}개를 저장하지 못했습니다."
 
 #, python-brace-format
 msgid "{n} of {total} parameters barely changed the loss"

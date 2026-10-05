@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 14:47+0900\n"
+"POT-Creation-Date: 2026-10-05 21:06+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -624,6 +624,9 @@ msgstr ""
 msgid "Save MP4"
 msgstr ""
 
+msgid "Saving the runs you made as a guest…"
+msgstr ""
+
 msgid "Seconds"
 msgstr ""
 
@@ -691,10 +694,10 @@ msgstr ""
 msgid "Stopped at the time limit"
 msgstr ""
 
-msgid "Student added."
+msgid "Student ID"
 msgstr ""
 
-msgid "Student number"
+msgid "Student added."
 msgstr ""
 
 msgid "Student updated."
@@ -761,7 +764,7 @@ msgstr ""
 msgid "The shape of graph ŷ = f(x) the model can draw."
 msgstr ""
 
-msgid "The student number and name do not match the class list. Ask your teacher."
+msgid "The student ID and name are not on the class list."
 msgstr ""
 
 msgid "The training code has changed since this run: its replay may differ from what it showed then."
@@ -777,9 +780,6 @@ msgid "This browser cannot record video. Try the latest Chrome, Edge or Safari."
 msgstr ""
 
 msgid "This feature is not available to guests."
-msgstr ""
-
-msgid "This is your first login. The password you type now becomes your password."
 msgstr ""
 
 msgid "Time"
@@ -888,7 +888,8 @@ msgstr ""
 msgid "Wrong password. If you forgot it, ask your teacher to reset it."
 msgstr ""
 
-msgid "You are using it as a guest. The training history is not saved and is gone when you reload the page."
+#, python-format
+msgid "You are using it as a guest. You can %(log_in)s to save the training history."
 msgstr ""
 
 msgid "average"
@@ -917,6 +918,9 @@ msgid "e.g. %(example)s"
 msgstr ""
 
 msgid "full batch"
+msgstr ""
+
+msgid "log in"
 msgstr ""
 
 msgid "neurons"
@@ -957,6 +961,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{n} epochs"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} of the runs made as a guest could not be saved."
 msgstr ""
 
 #, python-brace-format

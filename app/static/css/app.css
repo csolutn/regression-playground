@@ -168,7 +168,11 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .login-card { width: min(380px, 100%); display: flex; flex-direction: column; gap: 4px; }
 .login-card h1 { margin-bottom: 4px; }
 .login-card p { margin: 0 0 12px; }
-.login-card .hint { margin: -6px 0 12px; }
+/* the login page and a guest's login popup: each label beside its box */
+.login-fields { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 12px; margin-bottom: 12px; }
+.login-fields label { display: contents; }      /* the labels line up in one column, the boxes in the other */
+.login-fields label[hidden] { display: none; }
+.login-fields span { font-size: 13px; font-weight: 600; }
 .login-card .guest-link { margin: 14px 0 0; text-align: center; }
 .quiet-link { border: 0; padding: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer;
   text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--muted) 45%, transparent); text-underline-offset: 3px; }
@@ -304,7 +308,8 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .btn-play.is-playing .i-play { display: none; }
 .btn-play.is-playing .i-pause { display: inline; }
 
-/* title and hint on the left, count + Save CSV on the right of the same row; the guest note below */
+/* title and hint on the left, count + Save CSV on the right of the same row; the guest note below
+   (on a phone: the title and Save CSV on one row, the hint below them) */
 .history-head { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-bottom: 10px; }
 .history-titles { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
 .history-head span { font-size: 12.5px; }
@@ -364,6 +369,11 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .link-btn { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .link-btn:disabled { color: var(--muted); cursor: default; text-decoration: none; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.login-dialog { width: min(380px, calc(100vw - 32px)); }
+.login-dialog-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-bottom: 12px; }
+.login-dialog-head h3 { margin: 0; }
+.login-dialog-head p.muted { margin: 0; font-size: 13px; }
+.login-dialog .flash { margin: 0; font-size: 13px; }
 
 /* ---------- teacher ---------- */
 .admin { max-width: 1200px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
@@ -388,6 +398,13 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .field-row, .admin-forms, .field-with-plot, .choices-2 { grid-template-columns: 1fr; }
   .topnav .who { display: none; }
   .history-tools { flex-wrap: wrap; }
+  /* the title and Save CSV on one row, the hint and the guest note below */
+  .history-head { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "title tools" "hint hint" "note note"; }
+  .history-titles { display: contents; }
+  .history-titles h2 { grid-area: title; }
+  .history-titles .muted { grid-area: hint; }
+  .history-tools { grid-area: tools; }
+  .guest-note { grid-area: note; }
   .split { grid-template-columns: 1fr; }
   .pane-settings form, .pane-output { padding: 12px; }
   .run-bar .credits { display: none; }

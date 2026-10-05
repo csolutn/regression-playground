@@ -44,6 +44,7 @@
   {# on a phone the credits leave the run bar (it would wrap) for the bottom of the page #}
   <footer class="page-credits">{% include 'partials/credits.html' %}</footer>
 </main>
+{% if g.guest %}{% include 'partials/login_dialog.html' %}{% endif %}
 <script>window.OPTIONS = {{ options|tojson }};</script>
 <script type="module" src="{{ url_for('static', filename='js/playground.js') }}"></script>
 {% endblock %}

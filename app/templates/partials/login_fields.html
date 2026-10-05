@@ -1,0 +1,23 @@
+{# Student ID, name and password, each label beside its box: on the login page and in a guest's login popup.
+   login_form (the typed student ID and name), kept_password and first_login come from the login page;
+   in the popup they are unset and login.js shows the second password at a first login. #}
+{% set typed = login_form or {} %}
+<div class="login-fields">
+  <label>
+    <span>{{ _('Student ID') }}</span>
+    <input name="login_id" value="{{ typed.login_id or '' }}" required autocomplete="username" {{ '' if first_login else 'autofocus' }} placeholder="{{ _('e.g. %(example)s', example='21401') }}">
+  </label>
+  <label>
+    <span>{{ _('Name') }}</span>
+    <input name="name" value="{{ typed.name or '' }}" required autocomplete="name" placeholder="{{ _('e.g. %(example)s', example='김경기') }}">
+  </label>
+  <label>
+    <span>{{ _('Password') }}</span>
+    <input name="password" type="password" value="{{ kept_password or '' }}" required autocomplete="{{ 'new-password' if first_login else 'current-password' }}">
+  </label>
+  {# a first login sets the password: typed twice (hidden and disabled, so not sent, until then) #}
+  <label data-role="confirm" {{ '' if first_login else 'hidden' }}>
+    <span>{{ _('Password again') }}</span>
+    <input name="password_confirm" type="password" required autocomplete="new-password" {{ 'autofocus' if first_login else 'disabled' }}>
+  </label>
+</div>

@@ -37,7 +37,8 @@
           <button class="btn btn-ghost btn-sm">{{ _('Log out') }}</button>
         </form>
       {% elif g.guest and request.endpoint != 'auth.login' %}
-        <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.login') }}">{{ _('Log in') }}</a>
+        {# the playground opens its login popup instead (partials/login_dialog.html) #}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.login') }}" data-role="login-open">{{ _('Log in') }}</a>
       {% endif %}
     </nav>
   </header>

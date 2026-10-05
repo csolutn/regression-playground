@@ -7,44 +7,12 @@
     <p class="muted">{{ _('Log in with your student number and name.') }}
       <button type="button" class="info-btn" data-role="pw-help-open" aria-haspopup="dialog"
               title="{{ _('About logging in') }}" aria-label="{{ _('About logging in') }}">i</button></p>
-    <label class="field">
-      <span>{{ _('Student number') }}</span>
-      <input name="login_id" value="{{ form.login_id }}" required autocomplete="username" {{ '' if first_login else 'autofocus' }} placeholder="{{ _('e.g. %(example)s', example='21401') }}">
-    </label>
-    <label class="field">
-      <span>{{ _('Name') }}</span>
-      <input name="name" value="{{ form.name }}" required autocomplete="name" placeholder="{{ _('e.g. %(example)s', example='김경기') }}">
-    </label>
-    <label class="field">
-      <span>{{ _('Password') }}</span>
-      <input name="password" type="password" value="{{ kept_password }}" required autocomplete="{{ 'new-password' if first_login else 'current-password' }}">
-    </label>
-    {% if first_login %}
-      <label class="field">
-        <span>{{ _('Password again') }}</span>
-        <input name="password_confirm" type="password" required autocomplete="new-password" autofocus>
-      </label>
-      <p class="hint">{{ _('This is your first login. The password you type now becomes your password.') }}</p>
-    {% endif %}
+    {% with login_form = form %}{% include 'partials/login_fields.html' %}{% endwith %}
     <button class="btn btn-primary btn-block">{{ _('Log in') }}</button>
     {# looks like a quiet link; a POST, so another site cannot switch a logged-in student to guest #}
     <p class="guest-link"><button class="quiet-link" formaction="{{ url_for('auth.guest') }}" formnovalidate>{{ _('Use as a guest') }}</button></p>
   </form>
   {% include 'partials/credits.html' %}
 </main>
-<dialog class="dialog" id="pw-help" aria-labelledby="pw-help-title">
-  <form method="dialog">
-    <h3 id="pw-help-title">{{ _('About logging in') }}</h3>
-    <p>{{ _('Only registered users can log in.') }}</p>
-    <p>{{ _('For registered users, the password is set to what you type at your first login.') }}</p>
-    <p>{{ _('As a guest, your runs are not saved on the server and some features (tree models and large neural networks) are not available.') }}</p>
-    <div class="dialog-actions"><button class="btn btn-primary">{{ _('Close') }}</button></div>
-  </form>
-</dialog>
-<script>
-  // "About the password" popup; Close, Esc or a click outside closes it
-  const pwHelp = document.getElementById('pw-help');
-  document.querySelector('[data-role=pw-help-open]').addEventListener('click', () => pwHelp.showModal());
-  pwHelp.addEventListener('click', e => { if (e.target === pwHelp) pwHelp.close(); });
-</script>
+{% include 'partials/login_help.html' %}
 {% endblock %}
