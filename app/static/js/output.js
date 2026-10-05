@@ -3,16 +3,15 @@
 import { t } from './i18n.js';
 import { api } from './api.js';
 import { Player } from './player.js';
-import { History, diffSummary, esc, localDate } from './history.js';
+import { History, localDate } from './history.js';
 import { exportVideo, saveBlob } from './recorder.js';
-import { fmtLoss } from './plot.js';
 import { dataSummary, lossSummary, modelSummary, optimSummary, videoTitle } from './describe.js';
 
 export class OutputPanel {
   constructor(root, { readonly = false, userId = null, guest = false, toast, onLoadSettings } = {}) {
     const $ = role => root.querySelector(`[data-role="${role}"]`);
     this.el = {
-      title: $('result-title'), sub: $('result-sub'), status: $('result-status'), diff: $('result-diff'),
+      title: $('result-title'), sub: $('result-sub'), status: $('result-status'),
       busy: $('viz-busy'), busyText: $('busy-text'), bar: root.querySelector('[data-role="progress"] > div'),
       mp4: $('mp4'), dialog: $('mp4-dialog'),
       count: $('history-count'), csv: $('csv'), more: $('history-more'),
@@ -200,16 +199,15 @@ export class OutputPanel {
     busyText.textContent = text || `${t('Training…')} ${pct}%`;
   }
 
-  // ---------- header: what this run is, and what changed from the one before ----------
+  // ---------- header: what this run is ----------
 
   showHeader(run, message) {
-    const { title, sub, status, diff, mp4 } = this.el;
+    const { title, sub, status, mp4 } = this.el;
     mp4.disabled = !run?.meta || run.live || run.frames.length < 2;
     if (!run) {
       title.textContent = t('Result');
       sub.textContent = t('Set up the experiment on the left and press Train.');
       status.textContent = ''; status.className = '';
-      diff.innerHTML = '';
       return;
     }
     const cfg = run.config;
@@ -218,7 +216,6 @@ export class OutputPanel {
       sub.textContent = dataSummary(cfg);
       status.className = run.error ? 'pill pill-warn' : 'pill';
       status.textContent = run.error ? t('Error') : t('Not trained yet');
-      diff.innerHTML = '';
       return;
     }
     title.textContent = run.row ? `#${run.row.seq} · ${modelSummary(cfg)}` : modelSummary(cfg);
@@ -230,19 +227,6 @@ export class OutputPanel {
       || ['ok', t('Done')];
     status.className = `pill pill-${st[0]}`;
     status.textContent = st[1];
-
-    const prev = run.row ? this.history.previous(this.history.rows.find(r => r.id === run.row.id)) : null;
-    const d = run.row ? diffSummary(run.row, prev) : { changes: [] };
-    if (!prev) { diff.innerHTML = ''; return; }
-    const parts = d.changes.map(c => `<span class="chg"><b>${esc(c.label)}</b> ${esc(c.before)} → <em>${esc(c.now)}</em></span>`);
-    const same = t('Same settings as #{n}', { n: d.prevSeq }), vs = t('vs #{n}:', { n: d.prevSeq }), lossLabel = t('Validation loss');
-    if (!parts.length) parts.push(`<span class="muted">${same}</span>`);
-    if (d.loss) {
-      const better = d.loss.ratio < 0;
-      parts.push(`<span class="loss-delta ${better ? 'better' : 'worse'}">${lossLabel} ${fmtLoss(d.loss.before)} → ${fmtLoss(d.loss.now)}
-        (${better ? '▼' : '▲'} ${Math.abs(d.loss.ratio * 100).toFixed(0)}%)</span>`);
-    }
-    diff.innerHTML = `<span class="muted">${vs}</span> ${parts.join('')}`;
   }
 
   // ---------- MP4 ----------

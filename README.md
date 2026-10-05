@@ -15,7 +15,7 @@ learning loop, press **Train**, and watch the prediction change in the browser.
     gradient boosting are under ② Advanced.
   - ② shows the model structure: the network, or one tree of the chosen depth × the number of trees.
 - Right pane: the newest result on top (animation with play / pause / epoch slider, the loss at that
-  frame, what changed from the previous run), and the history table below it.
+  frame), and the history table below it (cells that changed from the run before are highlighted).
 - **Save MP4**: a 1080×1920 video (title, prediction, loss curve) made in the browser.
   The server sends only numbers, so animation and video cost no server time.
 - Login: student number + name from the teacher's class list. The first login sets the password.

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 13:26+0900\n"
+"POT-Creation-Date: 2026-10-05 13:46+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -604,10 +604,6 @@ msgstr "실험 수"
 msgid "Same seed = same data and same starting weights."
 msgstr "시드가 같으면 데이터와 처음 가중치가 같습니다."
 
-#, python-brace-format
-msgid "Same settings as #{n}"
-msgstr "#{n} 실험과 같은 설정"
-
 msgid "Sample data"
 msgstr "샘플 데이터"
 
@@ -939,10 +935,6 @@ msgstr "이 {k}개가 손실 감소의 {p}"
 
 msgid "time limit"
 msgstr "시간 제한"
-
-#, python-brace-format
-msgid "vs #{n}:"
-msgstr "#{n} 대비:"
 
 #, python-brace-format
 msgid "{field} must be between {min} and {max}."

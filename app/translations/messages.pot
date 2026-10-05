@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 13:26+0900\n"
+"POT-Creation-Date: 2026-10-05 13:46+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -603,10 +603,6 @@ msgstr ""
 msgid "Same seed = same data and same starting weights."
 msgstr ""
 
-#, python-brace-format
-msgid "Same settings as #{n}"
-msgstr ""
-
 msgid "Sample data"
 msgstr ""
 
@@ -937,10 +933,6 @@ msgid "these {k}: {p} of the drop"
 msgstr ""
 
 msgid "time limit"
-msgstr ""
-
-#, python-brace-format
-msgid "vs #{n}:"
 msgstr ""
 
 #, python-brace-format

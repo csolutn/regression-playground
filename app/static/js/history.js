@@ -231,27 +231,6 @@ export class History {
   closePopup() { this.popup.hidden = true; }
 }
 
-// What changed from the previous run, and how the validation loss moved
-export function diffSummary(row, prev) {
-  if (!prev) return { changes: [], loss: null };
-  const changes = SETTING_COLUMNS
-    .map(c => ({ label: c.label(), ...changedParts(c.get(prev.config), c.get(row.config)) }))
-    .filter(c => c.before !== c.now);
-  let loss = null;
-  if (row.final_val != null && prev.final_val != null && prev.final_val > 0) {
-    loss = { before: prev.final_val, now: row.final_val, ratio: row.final_val / prev.final_val - 1 };
-  }
-  return { changes, loss, prevSeq: prev.seq };
-}
-
-// "Adam · lr 0.01 · 300 epochs" vs "Adam · lr 0.1 · 300 epochs" → only "lr 0.01" / "lr 0.1"
-function changedParts(before, now) {
-  const a = before.split(' · '), b = now.split(' · ');
-  if (a.length !== b.length) return { before, now };
-  const idx = a.map((_, i) => i).filter(i => a[i] !== b[i]);
-  return { before: idx.map(i => a[i]).join(' · '), now: idx.map(i => b[i]).join(' · ') };
-}
-
 // 'YYYY-MM-DD' / 'YYYY-MM-DD HH:MM:SS' in the viewer's time zone (dates in the filter are local too)
 export function localDate(when) {
   const d = new Date(when), p = n => String(n).padStart(2, '0');

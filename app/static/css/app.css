@@ -277,14 +277,6 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .result-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .result-titles { min-width: 0; }
 .result-titles p { margin: 2px 0 0; font-size: 12.5px; }
-.diff-line { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12.5px; margin-top: 8px; }
-.diff-line:empty { display: none; }
-.diff-line .chg { background: var(--changed); border-radius: 6px; padding: 1px 8px; }
-.diff-line .chg em { font-style: normal; font-weight: 700; }
-.loss-delta { font-weight: 700; border-radius: 6px; padding: 1px 8px; }
-.loss-delta.better { color: var(--ok); background: var(--ok-soft); }
-.loss-delta.worse { color: var(--danger); background: #fde8e7; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .loss-delta.worse { background: #3b1716; color: #ff9f98; } }
 
 .progress { height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; margin-top: 10px; }
 .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .15s; }

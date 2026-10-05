@@ -187,12 +187,12 @@ export class Player {
   }
 
   // how to read the landscape: a note shown while the pointer is on the (i) next to the title; a click
-  // (or a tap, on a touch screen) keeps it until the (i) or the note is clicked again
+  // (or a tap, on a touch screen) keeps it until the next click anywhere
   enableNote({ info, note }) {
     info.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') this.showNote(true, this.notePinned); });
     info.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !this.notePinned) this.showNote(false); });
     info.addEventListener('click', () => this.showNote(!this.notePinned, !this.notePinned));
-    note.addEventListener('click', () => this.showNote(false));
+    document.addEventListener('pointerdown', e => { if (!note.hidden && !info.contains(e.target)) this.showNote(false); }, true);
   }
 
   showNote(show, pinned = false) {
