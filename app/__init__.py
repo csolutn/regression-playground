@@ -48,8 +48,9 @@ def create_app(config=None):
     @app.get('/favicon.ico')
     @app.get('/apple-touch-icon.png')
     def root_icon():
-        """Browsers and iOS ask for these at the site root, whatever the page links."""
-        return send_from_directory(STATIC_DIR / 'icons', request.path.lstrip('/'), max_age=24 * 3600)
+        """Browsers and iOS ask for these at the site root, whatever the page links: the one PNG
+        (browsers read a PNG served as .ico)."""
+        return send_from_directory(STATIC_DIR / 'icons', 'icon.png', mimetype='image/png', max_age=24 * 3600)
     if not (app.debug or app.testing) and app.config['SECRET_KEY'] in ('dev', 'change-me', ''):
         raise RuntimeError('Set SECRET_KEY to a long random value (see deploy.env.example).')
     if app.config['TRUST_PROXY']:

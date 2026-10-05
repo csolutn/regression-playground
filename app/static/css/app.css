@@ -1,4 +1,4 @@
-/* Machine Learning Playground — one stylesheet, sections follow the page top to bottom. */
+/* ŷ Playground — one stylesheet, sections follow the page top to bottom. */
 
 /* ---------- tokens ---------- */
 :root {
@@ -142,8 +142,10 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
   height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 0 16px; background: var(--surface); border-bottom: 1px solid var(--border);
 }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; color: var(--text); text-decoration: none; white-space: nowrap; }
-.brand-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; background: var(--accent); color: #fff; font-size: 17px; }
+/* Grandstander Bold (OFL, fonts/OFL-Grandstander.txt), cut down to the letters of "ŷ Playground" */
+@font-face { font-family: 'Brand'; font-weight: 700; font-display: swap; src: url(../fonts/grandstander-brand.woff2) format('woff2'); }
+.brand { display: flex; align-items: center; gap: 10px; font-family: 'Brand', var(--font); font-weight: 700; font-size: 19px; color: var(--text); text-decoration: none; white-space: nowrap; }
+.brand-mark { display: block; width: 28px; height: 28px; }
 .topnav { display: flex; align-items: center; gap: 14px; font-size: 13px; }
 .topnav a { text-decoration: none; }
 .who { color: var(--muted); }

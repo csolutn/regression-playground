@@ -1,4 +1,4 @@
-# Machine Learning Playground
+# ŷ Playground
 
 A web GUI for exploring supervised regression. Students set up the four steps of the
 learning loop, press **Train**, and watch the prediction change in the browser.
