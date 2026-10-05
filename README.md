@@ -31,7 +31,7 @@ uv sync
 cp .env.example .env                                       # then set SECRET_KEY
 uv run flask --app app create-teacher                      # asks for ID, name, password
 uv run flask --app app import-roster students.csv          # optional; the teacher page can do this too
-uv run flask run --debug                                   # http://127.0.0.1:5050
+uv run flask run --debug                                   # http://127.0.0.1:15001
 ```
 
 The class list is a CSV with `학번,이름` (or `student_id,name`) columns. The database is SQLite at
