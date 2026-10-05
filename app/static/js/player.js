@@ -2,10 +2,11 @@
 // The server only sends numbers (frames); every image is drawn here.
 // While a run is training only its data is drawn (the output panel shows a progress bar over it):
 // frames arrive much faster than they are played back, which looks like instant convergence.
-import { DEFAULT_VIEW, drawLandscape, drawLoss, drawPrediction, drawSlices, fitCanvas, fmtLoss, screenTheme } from './plot.js';
+import { DEFAULT_VIEW, drawLandscape, drawLoss, drawPrediction, drawSlices, fitCanvas, fmtLoss, screenTheme, slicesLayout } from './plot.js';
 import { stepLabel } from './describe.js';
 import { hasLandscape, hasSlices, landscape, paramSlices, tryWeight } from './landscape.js';
 
+const PHONE = matchMedia('(max-width: 640px)');   // the slices two in a row instead of four
 const RUN_MS = 16_000;               // a whole run takes about this long at 1×
 const MAX_FRAME_MS = 267;           // runs with few frames (e.g. a shallow tree) don't flash by
 const END_HOLD_MS = 1200;           // pause on the last frame before looping
@@ -54,6 +55,7 @@ export class Player {
     this.enableTry(this.land.canvas);
     for (const c of [this.canvas, this.loss.canvas, this.land.canvas]) new ResizeObserver(() => this.render()).observe(c);
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.render());
+    PHONE.addEventListener('change', () => this.render());
     this.enableRotate(this.canvas, this.view, () => this.run?.meta?.n_inputs === 2);
     this.enableRotate(this.land.canvas, this.landView, () => this.landKind === 'surface');
     this.sync();
@@ -142,6 +144,7 @@ export class Player {
     this.land.open.hidden = !kind;
     if (!kind && this.land.dialog.open) this.land.dialog.close();
     this.land.canvas.classList.toggle('is-slices', kind === 'slices');
+    if (kind !== 'slices') this.land.canvas.style.height = '';      // the slices set it from the width
     this.land.noteSurface.hidden = kind !== 'surface';
     this.land.noteSlices.hidden = this.land.key.hidden = kind !== 'slices';
     for (const btn of [this.playBtn, this.land.play]) {
@@ -202,6 +205,12 @@ export class Player {
   }
 
   renderLandscape(th) {
+    if (this.landKind === 'slices') {   // the slices' height follows from the width (squares, 16:10 boxes)
+      this.run.slices ||= paramSlices(this.run);
+      const cw = this.land.canvas.getBoundingClientRect().width, cs = Math.max(0.8, Math.min(1.1, cw / 700));
+      const want = `${Math.round(slicesLayout(cw, cs, this.run.slices.slices.length, PHONE.matches).h)}px`;
+      if (this.land.canvas.style.height !== want) this.land.canvas.style.height = want;
+    }
     const { ctx, w, h } = fitCanvas(this.land.canvas);
     ctx.fillStyle = th.bg;
     ctx.fillRect(0, 0, w, h);
@@ -210,9 +219,8 @@ export class Player {
       this.run.landscape ||= landscape(this.run);
       if (this.run.landscape) drawLandscape(ctx, { x: 0, y: 0, w, h }, this.run.landscape, this.idx, this.run, th, s, { view: this.landView });
     } else if (kind === 'slices') {
-      this.run.slices ||= paramSlices(this.run);
       this.landLayout = drawSlices(ctx, { x: 0, y: 0, w, h }, this.run.slices, this.idx, this.run, th, s,
-        { edit: this.landEdit, view: this.view });       // a two-input surface turned as in the prediction plot
+        { edit: this.landEdit, view: this.view, compact: PHONE.matches });   // a two-input surface turned as in the prediction plot
     }
   }
 
@@ -225,12 +233,16 @@ export class Player {
     if (f) drawLoss(ctx, { x: 0, y: 0, w, h }, this.run, f.step, th, Math.max(0.8, Math.min(1.1, w / 700)), { log: this.loss.log.checked });
   }
 
-  // "Show loss graph" / "Show loss landscape" open a popup; ✕, Esc, a click outside or the link again closes it
+  // "Show loss graph" / "Show loss landscape" open a popup; ✕, Esc, a click outside or the link again closes it.
+  // Outside means pressed and released there: a click pressed inside and released elsewhere inside (say on
+  // the note, which hides as it is pressed) also reaches the dialog itself, and must not close it.
   enablePopup({ open, dialog, log }, closeBtn) {
     const close = () => dialog.close();
+    let pressedOutside = false;
     open.addEventListener('click', () => (dialog.open ? close() : (dialog.showModal(), this.render())));
     closeBtn.addEventListener('click', close);
-    dialog.addEventListener('click', e => { if (e.target === dialog) close(); });
+    dialog.addEventListener('pointerdown', e => { pressedOutside = e.target === dialog; });
+    dialog.addEventListener('click', e => { if (e.target === dialog && pressedOutside) close(); });
     log?.addEventListener('change', () => this.render());
   }
 

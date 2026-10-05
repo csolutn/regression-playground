@@ -444,15 +444,16 @@ export function drawLandscape(ctx, r, L, idx, run, th, s = 1, opts = {}) {
 // start to the end instead. Every slice has a handle at its end point, and the prediction is drawn small
 // beside the network (two inputs: a surface seen as opts.view): at frame `idx`, or with opts.edit (tryWeight
 // in landscape.js), a weight moved by hand, the one that makes.
-// Returns where the panels and the reset button are, for the pointer: { panels: [{ x, y, w, h, x0, x1 }], reset }.
+// Laid out by slicesLayout (opts.compact: a phone). Returns where the panels and the reset button are, for
+// the pointer: { panels: [{ x, y, w, h, x0, x1 }], reset }.
 export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
-  const names = run.meta.feature_names, edit = opts.edit;
+  const names = run.meta.feature_names, edit = opts.edit, compact = !!opts.compact;
   const frame = run.frames[Math.max(0, Math.min(run.frames.length - 1, idx))];
-  const pad = 10 * s, netH = Math.min(185 * s, Math.max(130 * s, r.h * 0.3)), netW = (r.w - 2 * pad) * 0.55;
+  const { pad, gap, boxW, boxH, cols, left, gx, gy, titleH, cw, ch, y0: top0 } = slicesLayout(r.w, s, S.slices.length, compact);
   const layout = { panels: [], reset: null };
-  drawWeightNet(ctx, { x: r.x + pad, y: r.y + 2 * s, w: netW, h: netH }, S, names, th, s);   // the network, and beside it the prediction
-  const R = { x: r.x + pad + netW + 12 * s, y: r.y + 8 * s, w: r.w - 2 * pad - netW - 12 * s, h: netH - 12 * s };
-  layout.reset = drawTriedPrediction(ctx, R, run, S, frame, edit, opts.view || DEFAULT_VIEW, th, s);
+  drawWeightNet(ctx, { x: r.x + pad, y: r.y + 2 * s, w: boxW, h: boxH }, S, names, th, s);   // the network, and beside it the prediction
+  const R = { x: r.x + pad + boxW + gap, y: r.y + 4 * s, w: boxW, h: boxH - 4 * s };
+  layout.reset = drawTriedPrediction(ctx, R, run, S, frame, edit, opts.view || DEFAULT_VIEW, th, s, compact);
 
   // one line of numbers under the network
   const top4 = S.slices.reduce((a, sl) => a + (sl.share ?? 0), 0);
@@ -460,7 +461,7 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
   if (S.total > 0 && S.slices.length < S.n) parts.push(t('these {k}: {p} of the drop', { k: S.slices.length, p: pct(top4) }));
   if (S.idle) parts.push(t('{n} of {total} parameters barely changed the loss', { n: S.idle, total: S.n }));
   ctx.fillStyle = th.muted; ctx.font = font(12 * s); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(parts.join('  ·  '), r.x + r.w / 2, r.y + netH + 12 * s, r.w - 2 * pad);
+  ctx.fillText(parts.join('  ·  '), r.x + r.w / 2, r.y + boxH + 14 * s, r.w - 2 * pad);
 
   // the loss axis is the same in every panel, so the slopes compare; it fits the slopes came down, and
   // the slices (steeper: the other weights had adapted to the end) run off the top
@@ -468,30 +469,22 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
   const cap = Number.isFinite(S.start) ? 1.5 * Math.max(S.start, S.loss) : Infinity;   // steep walls run off the top
   const top = came.length ? 1.4 * Math.max(...came) : Math.max(...S.slices.flatMap(sl => sl.ys).filter(Number.isFinite));
   const hi = Math.min(Math.max(top, S.loss), cap) * 1.06, yTicks = niceTicks(0, hi, 4);
-  const epochNow = frame.step;
-  const cols = S.slices.length > 1 ? 2 : 1, rows = Math.ceil(S.slices.length / cols);
-  const left = 46 * s, gx = 16 * s, gy = 12 * s, titleH = 24 * s, tickH = 20 * s;
-  const y0 = r.y + netH + 28 * s, cw = (r.w - left - pad - (cols - 1) * gx) / cols;
-  const ch = (r.y + r.h - y0 - (rows - 1) * gy) / rows;
+  const epochNow = frame.step, y0 = r.y + top0;
   S.slices.forEach((sl, k) => {
     const color = th.slices[k], cx = r.x + left + (k % cols) * (cw + gx), cy = y0 + Math.floor(k / cols) * (ch + gy);
-    const P = { x: cx, y: cy + titleH, w: cw, h: ch - titleH - tickH };
+    const P = { x: cx, y: cy + titleH, w: cw, h: cw };       // a square
     layout.panels.push({ ...P, x0: sl.xs[0], x1: sl.xs[sl.xs.length - 1] });
 
     numberBadge(ctx, cx + 9 * s, cy + 10 * s, k + 1, color, th, s);
-    ctx.font = font(12 * s); ctx.fillStyle = th.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-    const share = sl.share == null ? '' : t('{p} of the drop', { p: pct(sl.share) });
-    ctx.fillText(share, cx + cw, cy + 10 * s);
-    const shareW = share ? ctx.measureText(share).width + 10 * s : 0;
-    ctx.font = font(12.5 * s, 600); ctx.fillStyle = th.text; ctx.textAlign = 'left';
-    ctx.fillText(paramName(S.sizes, sl.info, names), cx + 23 * s, cy + 10 * s, Math.max(10, cw - 23 * s - shareW));
+    ctx.font = font(12.5 * s, 600); ctx.fillStyle = th.text; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(paramName(S.sizes, sl.info, names), cx + 23 * s, cy + 10 * s, Math.max(10, cw - 23 * s));
 
     panel(ctx, P, th, s);
     const x0 = sl.xs[0], x1 = sl.xs[sl.xs.length - 1];
     const X = v => P.x + ((v - x0) / (x1 - x0)) * P.w;
     const Yt = v => P.y + P.h - (v / hi) * P.h;
     const Y = v => Math.max(P.y - P.h, Math.min(P.y + 2 * P.h, Yt(v)));
-    grid(ctx, P, th, s, niceTicks(x0, x1, cw > 240 * s ? 4 : 3), k % cols ? [] : yTicks, X, Yt);
+    grid(ctx, P, th, s, niceTicks(x0, x1, 3), k % cols ? [] : yTicks, X, Yt);
     if (k % cols) {                       // the right column shares the left one's loss labels
       ctx.strokeStyle = th.grid; ctx.lineWidth = 1 * s; ctx.beginPath();
       for (const v of yTicks) { ctx.moveTo(P.x, Yt(v)); ctx.lineTo(P.x + P.w, Yt(v)); }
@@ -557,6 +550,8 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
       dot(xb, inside(Y(S.loss)));                                // the end point: where this slice was cut
     }
 
+    if (sl.share != null) badge(ctx, [t('{p} of the drop', { p: pct(sl.share) })], P.x + 5 * s, P.y + 5 * s, 'left', th, s, FONT, 10.5);
+
     // the handle: at the end point, or where it was moved to along the slice
     const moved = edit?.k === k, hx = X(moved ? edit.x : sl.final), hy = inside(Y(moved ? edit.loss : S.loss));
     if (moved) {
@@ -570,14 +565,24 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
   return layout;
 }
 
+// Where everything goes, w wide: the network and the prediction side by side, 16:10 like the prediction
+// plot, a line of numbers, then the slices as squares, 4 in a row (2 on a phone); h is the height it needs.
+export function slicesLayout(w, s, n, compact) {
+  const pad = 10 * s, gap = 12 * s, boxW = (w - 2 * pad - gap) / 2, boxH = (boxW * 10) / 16;
+  const cols = Math.max(1, Math.min(n, compact ? 2 : 4)), rows = Math.ceil(n / cols);
+  const left = 46 * s, gx = 16 * s, gy = 12 * s, titleH = 22 * s, tickH = 20 * s, y0 = boxH + 30 * s;
+  const cw = (w - left - pad - (cols - 1) * gx) / cols, ch = titleH + cw + tickH;
+  return { pad, gap, boxW, boxH, cols, rows, left, gx, gy, titleH, cw, ch, y0, h: y0 + rows * ch + (rows - 1) * gy + 4 * s };
+}
+
 // The prediction small, on the same axes as the prediction plot: at this frame, or with a weight moved by
 // hand (edit) the one that makes, in that weight's color over the one at the end (two inputs: just that
 // surface). Returns the reset button's box while moved.
-function drawTriedPrediction(ctx, R, run, S, frame, edit, view, th, s) {
+function drawTriedPrediction(ctx, R, run, S, frame, edit, view, th, s, compact) {
   const m = run.meta, P = R;
   if (m.n_inputs === 2) drawPrediction2D(ctx, P, { ...m, y_true: null }, edit ? edit.pred : frame.pred, th, s, view, true, true);
   else drawTriedLine(ctx, P, m, S, frame, edit, th, s);
-  return drawTriedBadges(ctx, P, m, frame, edit, th, s);
+  return drawTriedBadges(ctx, P, m, frame, edit, th, s, compact);
 }
 
 function drawTriedLine(ctx, P, m, S, frame, edit, th, s) {
@@ -598,12 +603,16 @@ function drawTriedLine(ctx, P, m, S, frame, edit, th, s) {
   ctx.restore();
 }
 
-// which prediction it is, and the reset button while a weight is moved (its box is returned)
-function drawTriedBadges(ctx, P, m, frame, edit, th, s) {
-  const lines = edit ? [`${t('Changed by hand')} · ${t('Training loss')} ${fmtLoss(edit.loss)}`]
-    : [`${stepLabel(m.model)} ${frame.step.toLocaleString()} · ${t('Training loss')} ${fmtLoss(frame.train)}`, t('Drag a handle on a dashed line')];
-  badge(ctx, lines, P.x + 6 * s, P.y + 6 * s, 'left', th, s, FONT, 11);
-  if (!edit) return null;
+// which prediction it is (top left), and at the bottom right how to move a weight or, while one is moved,
+// the reset button (its box is returned). A phone's small plot has no room for the how.
+function drawTriedBadges(ctx, P, m, frame, edit, th, s, compact) {
+  const line = edit ? `${t('Changed by hand')} · ${t('Training loss')} ${fmtLoss(edit.loss)}`
+    : `${stepLabel(m.model)} ${frame.step.toLocaleString()} · ${t('Training loss')} ${fmtLoss(frame.train)}`;
+  badge(ctx, [line], P.x + 6 * s, P.y + 6 * s, 'left', th, s, FONT, compact ? 10 : 11);
+  if (!edit) {
+    if (!compact) badge(ctx, [t('Drag a handle on a dashed line')], P.x + P.w - 6 * s, P.y + P.h - (11 * 1.35 + 16) * s, 'right', th, s, FONT, 11);
+    return null;
+  }
   const label = `↺ ${t('Reset')}`;
   ctx.font = font(11.5 * s, 600);
   const w = ctx.measureText(label).width + 16 * s, h = 22 * s, box = { x: P.x + P.w - w - 6 * s, y: P.y + P.h - h - 6 * s, w, h };

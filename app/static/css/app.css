@@ -270,6 +270,7 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .credits a { display: inline-flex; color: inherit; opacity: .8; text-decoration: none; }
 .credits a:hover { opacity: 1; color: var(--text); }
 .login-wrap .credits { margin-top: 18px; }
+.page-credits { display: none; }
 #train-btn.is-running { background: var(--danger); border-color: var(--danger); }
 
 /* ---------- output ---------- */
@@ -348,7 +349,7 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .loss-canvas { display: block; width: 100%; height: min(400px, 60vh); }
 .land-canvas { display: block; width: 100%; height: min(520px, 62vh); touch-action: none; cursor: grab; }
 .land-canvas:active { cursor: grabbing; }
-.land-canvas.is-slices { height: min(620px, 66vh); touch-action: none; cursor: pointer; }   /* the slices have handles */
+.land-canvas.is-slices { height: 480px; touch-action: none; cursor: pointer; }   /* the slices have handles; player.js sets the height from the width */
 .dialog-title { display: flex; align-items: center; gap: 4px; margin-right: auto; }
 .dialog-title h3 { margin: 0; }
 .info-btn[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
@@ -389,4 +390,6 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .history-tools { flex-wrap: wrap; }
   .split { grid-template-columns: 1fr; }
   .pane-settings form, .pane-output { padding: 12px; }
+  .run-bar .credits { display: none; }
+  .page-credits { display: flex; justify-content: center; padding: 8px 12px 20px; }
 }
