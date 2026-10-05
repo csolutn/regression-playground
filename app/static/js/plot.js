@@ -253,7 +253,7 @@ function coolwarm(u) {
   return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(',')})`;
 }
 
-function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred) {
+function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false) {   // small: no axis names or legend
   const [ax1, ax2] = m.axes, n1 = ax1.length, n2 = ax2.length;
   const [zlo, zhi] = yRange(m);
   const P = { x: r.x + 4 * s, y: r.y + 4 * s, w: r.w - 8 * s, h: r.h - 8 * s };
@@ -324,6 +324,7 @@ function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred) {
   }
   ctx.restore();
 
+  if (small) return P;
   // axis names at the middle of the two front floor edges
   ctx.fillStyle = th.muted; ctx.font = font(13 * s); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const lab = (a, b, text) => { const [x, y] = project(a, b, -0.72); ctx.fillText(text, x, y + 14 * s); };
@@ -415,6 +416,7 @@ export function drawLandscape(ctx, r, L, idx, run, th, s = 1, opts = {}) {
   dot(now, 7, th.pred, th.bg);
   ctx.restore();
 
+  if (small) return P;
   // axis names at the middle of the two front floor edges
   ctx.fillStyle = th.muted; ctx.font = font(13 * s); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const lab = (a, b, text) => { const [x, y] = project(a, b, -0.72); ctx.fillText(text, x, y + 14 * s); };
@@ -435,16 +437,22 @@ export function drawLandscape(ctx, r, L, idx, run, th, s = 1, opts = {}) {
 
 // ---------- loss landscape of other linear and neural network runs (landscape.js computes S) ----------
 
-// The few weights that lowered the loss the most: where they sit in the network, and for each the slope
-// that weight came down (solid: faint for the whole run, full up to frame `idx`, where the point is; open
-// circles: start and end) and, with opts.cut, the training loss along it with every other weight where
-// training ended (a dashed slice through the end point, fading away from it). Runs saved without the
-// paths show the slice and an arrow from the start to the end instead.
+// The few weights that lowered the loss the most: where they sit in the network, and for each the training
+// loss along it with every other weight where training ended (a dashed slice through the end point, fading
+// away from it) and the slope that weight came down (solid: faint for the whole run, full up to frame `idx`,
+// where the point is; open circles: start and end). Runs saved without the paths show an arrow from the
+// start to the end instead. Every slice has a handle at its end point, and the prediction is drawn small
+// beside the network (two inputs: a surface seen as opts.view): at frame `idx`, or with opts.edit (tryWeight
+// in landscape.js), a weight moved by hand, the one that makes.
+// Returns where the panels and the reset button are, for the pointer: { panels: [{ x, y, w, h, x0, x1 }], reset }.
 export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
-  const log = !!opts.log, names = run.meta.feature_names, tr = v => (log ? Math.log10(Math.max(v, 1e-12)) : v);
-  const cut = !!opts.cut || !S.slices.some(sl => sl.track);
-  const pad = 10 * s, netH = Math.min(170 * s, Math.max(110 * s, r.h * 0.27));
-  drawWeightNet(ctx, { x: r.x + pad, y: r.y + 2 * s, w: r.w - 2 * pad, h: netH }, S, names, th, s);
+  const names = run.meta.feature_names, edit = opts.edit;
+  const frame = run.frames[Math.max(0, Math.min(run.frames.length - 1, idx))];
+  const pad = 10 * s, netH = Math.min(185 * s, Math.max(130 * s, r.h * 0.3)), netW = (r.w - 2 * pad) * 0.55;
+  const layout = { panels: [], reset: null };
+  drawWeightNet(ctx, { x: r.x + pad, y: r.y + 2 * s, w: netW, h: netH }, S, names, th, s);   // the network, and beside it the prediction
+  const R = { x: r.x + pad + netW + 12 * s, y: r.y + 8 * s, w: r.w - 2 * pad - netW - 12 * s, h: netH - 12 * s };
+  layout.reset = drawTriedPrediction(ctx, R, run, S, frame, edit, opts.view || DEFAULT_VIEW, th, s);
 
   // one line of numbers under the network
   const top4 = S.slices.reduce((a, sl) => a + (sl.share ?? 0), 0);
@@ -456,20 +464,11 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
 
   // the loss axis is the same in every panel, so the slopes compare; it fits the slopes came down, and
   // the slices (steeper: the other weights had adapted to the end) run off the top
-  const ok = v => Number.isFinite(v) && (!log || v > 0);
-  const came = S.slices.flatMap(sl => (sl.track || []).map(p => p.y)).filter(ok);
-  const all = [...came, ...(cut ? S.slices.flatMap(sl => sl.ys).filter(ok) : [])];
+  const came = S.slices.flatMap(sl => (sl.track || []).map(p => p.y)).filter(Number.isFinite);
   const cap = Number.isFinite(S.start) ? 1.5 * Math.max(S.start, S.loss) : Infinity;   // steep walls run off the top
-  const top = came.length ? (log ? 10 ** (tr(Math.max(...came)) + 0.3) : 1.4 * Math.max(...came)) : Math.max(...all);
-  let hiT = tr(Math.min(Math.max(top, S.loss), cap)), loT = log ? Math.min(...all.map(tr), tr(S.loss)) : 0;
-  const m = (hiT - loT) * 0.06 || 0.1;
-  hiT += m;
-  if (log) loT -= m;
-  let yTicks = niceTicks(loT, hiT, 4);
-  if (log && hiT - loT >= 2) yTicks = yTicks.filter(Number.isInteger);
-  const yLabel = log ? v => fmt(10 ** v) : fmt;
-
-  const epochNow = run.frames[Math.max(0, Math.min(run.frames.length - 1, idx))].step;
+  const top = came.length ? 1.4 * Math.max(...came) : Math.max(...S.slices.flatMap(sl => sl.ys).filter(Number.isFinite));
+  const hi = Math.min(Math.max(top, S.loss), cap) * 1.06, yTicks = niceTicks(0, hi, 4);
+  const epochNow = frame.step;
   const cols = S.slices.length > 1 ? 2 : 1, rows = Math.ceil(S.slices.length / cols);
   const left = 46 * s, gx = 16 * s, gy = 12 * s, titleH = 24 * s, tickH = 20 * s;
   const y0 = r.y + netH + 28 * s, cw = (r.w - left - pad - (cols - 1) * gx) / cols;
@@ -477,6 +476,7 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
   S.slices.forEach((sl, k) => {
     const color = th.slices[k], cx = r.x + left + (k % cols) * (cw + gx), cy = y0 + Math.floor(k / cols) * (ch + gy);
     const P = { x: cx, y: cy + titleH, w: cw, h: ch - titleH - tickH };
+    layout.panels.push({ ...P, x0: sl.xs[0], x1: sl.xs[sl.xs.length - 1] });
 
     numberBadge(ctx, cx + 9 * s, cy + 10 * s, k + 1, color, th, s);
     ctx.font = font(12 * s); ctx.fillStyle = th.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
@@ -489,9 +489,9 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
     panel(ctx, P, th, s);
     const x0 = sl.xs[0], x1 = sl.xs[sl.xs.length - 1];
     const X = v => P.x + ((v - x0) / (x1 - x0)) * P.w;
-    const Yt = v => P.y + P.h - ((v - loT) / (hiT - loT)) * P.h;
-    const Y = v => Math.max(P.y - P.h, Math.min(P.y + 2 * P.h, Yt(tr(v))));
-    grid(ctx, P, th, s, niceTicks(x0, x1, cw > 240 * s ? 4 : 3), k % cols ? [] : yTicks, X, Yt, fmt, yLabel);
+    const Yt = v => P.y + P.h - (v / hi) * P.h;
+    const Y = v => Math.max(P.y - P.h, Math.min(P.y + 2 * P.h, Yt(v)));
+    grid(ctx, P, th, s, niceTicks(x0, x1, cw > 240 * s ? 4 : 3), k % cols ? [] : yTicks, X, Yt);
     if (k % cols) {                       // the right column shares the left one's loss labels
       ctx.strokeStyle = th.grid; ctx.lineWidth = 1 * s; ctx.beginPath();
       for (const v of yTicks) { ctx.moveTo(P.x, Yt(v)); ctx.lineTo(P.x + P.w, Yt(v)); }
@@ -501,14 +501,12 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
     ctx.save();
     ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    if (cut) {
-      const fade = ctx.createLinearGradient(P.x, 0, P.x + P.w, 0);
-      fade.addColorStop(0, withAlpha(color, 0.15)); fade.addColorStop(0.5, color); fade.addColorStop(1, withAlpha(color, 0.15));
-      ctx.strokeStyle = fade; ctx.lineWidth = 2.4 * s;
-      ctx.setLineDash([6 * s, 4 * s]);
-      polyline(ctx, sl.xs, sl.ys, X, Y);
-      ctx.setLineDash([]);
-    }
+    const fade = ctx.createLinearGradient(P.x, 0, P.x + P.w, 0);
+    fade.addColorStop(0, withAlpha(color, 0.15)); fade.addColorStop(0.5, color); fade.addColorStop(1, withAlpha(color, 0.15));
+    ctx.strokeStyle = fade; ctx.lineWidth = 2.4 * s;
+    ctx.setLineDash([6 * s, 4 * s]);
+    polyline(ctx, sl.xs, sl.ys, X, Y);
+    ctx.setLineDash([]);
 
     const startLabel = (x, y) => {           // above the point, or below it at the top of the panel
       const below = y - 20 * s < P.y;
@@ -558,7 +556,62 @@ export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
       ctx.restore();
       dot(xb, inside(Y(S.loss)));                                // the end point: where this slice was cut
     }
+
+    // the handle: at the end point, or where it was moved to along the slice
+    const moved = edit?.k === k, hx = X(moved ? edit.x : sl.final), hy = inside(Y(moved ? edit.loss : S.loss));
+    if (moved) {
+      ctx.strokeStyle = th.muted; ctx.lineWidth = 1 * s; ctx.setLineDash([3 * s, 3 * s]);
+      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx, P.y + P.h); ctx.stroke(); ctx.setLineDash([]);
+    }
+    ctx.beginPath(); ctx.arc(hx, hy, 8 * s, 0, 7);
+    ctx.fillStyle = th.bg; ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 2.5 * s; ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx, hy, 3 * s, 0, 7); ctx.fillStyle = color; ctx.fill();
   });
+  return layout;
+}
+
+// The prediction small, on the same axes as the prediction plot: at this frame, or with a weight moved by
+// hand (edit) the one that makes, in that weight's color over the one at the end (two inputs: just that
+// surface). Returns the reset button's box while moved.
+function drawTriedPrediction(ctx, R, run, S, frame, edit, view, th, s) {
+  const m = run.meta, P = R;
+  if (m.n_inputs === 2) drawPrediction2D(ctx, P, { ...m, y_true: null }, edit ? edit.pred : frame.pred, th, s, view, true, true);
+  else drawTriedLine(ctx, P, m, S, frame, edit, th, s);
+  return drawTriedBadges(ctx, P, m, frame, edit, th, s);
+}
+
+function drawTriedLine(ctx, P, m, S, frame, edit, th, s) {
+  const xs = m.axes[0], [ylo, yhi] = yRange(m), xlo = xs[0], xhi = xs[xs.length - 1];
+  const X = v => P.x + ((v - xlo) / (xhi - xlo || 1)) * P.w, Y = v => P.y + P.h - ((v - ylo) / (yhi - ylo)) * P.h;
+  panel(ctx, P, th, s);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+  ctx.globalAlpha = 0.45; ctx.fillStyle = th.train;
+  m.x_train[0].forEach((x, i) => { ctx.beginPath(); ctx.arc(X(x), Y(m.y_train[i]), 1.8 * s, 0, 7); ctx.fill(); });
+  ctx.globalAlpha = 1; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (edit) {
+    ctx.strokeStyle = th.muted; ctx.lineWidth = 1.4 * s; polyline(ctx, xs, S.finalPred, X, Y);
+    ctx.strokeStyle = th.slices[edit.k]; ctx.lineWidth = 2.8 * s; polyline(ctx, xs, edit.pred, X, Y);
+  } else {
+    ctx.strokeStyle = th.pred; ctx.lineWidth = 2.4 * s; polyline(ctx, xs, frame.pred, X, Y);
+  }
+  ctx.restore();
+}
+
+// which prediction it is, and the reset button while a weight is moved (its box is returned)
+function drawTriedBadges(ctx, P, m, frame, edit, th, s) {
+  const lines = edit ? [`${t('Changed by hand')} · ${t('Training loss')} ${fmtLoss(edit.loss)}`]
+    : [`${stepLabel(m.model)} ${frame.step.toLocaleString()} · ${t('Training loss')} ${fmtLoss(frame.train)}`, t('Drag a handle on a dashed line')];
+  badge(ctx, lines, P.x + 6 * s, P.y + 6 * s, 'left', th, s, FONT, 11);
+  if (!edit) return null;
+  const label = `↺ ${t('Reset')}`;
+  ctx.font = font(11.5 * s, 600);
+  const w = ctx.measureText(label).width + 16 * s, h = 22 * s, box = { x: P.x + P.w - w - 6 * s, y: P.y + P.h - h - 6 * s, w, h };
+  ctx.fillStyle = th.badge; ctx.strokeStyle = th.frame; ctx.lineWidth = 1.2 * s;
+  roundRect(ctx, box.x, box.y, w, h, 5 * s); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = th.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, box.x + w / 2, box.y + h / 2 + 0.5 * s);
+  return box;
 }
 
 const pct = v => `${Math.round(v * 100)}%`;

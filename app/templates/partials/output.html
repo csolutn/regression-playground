@@ -77,12 +77,24 @@
      other linear and neural network runs: slices along the weights that lowered the loss the most #}
   <dialog data-role="land-dialog" class="dialog dialog-wide" aria-labelledby="land-dialog-title">
     <header class="dialog-head">
-      <h3 id="land-dialog-title">{{ _('Loss landscape') }}</h3>
-      {# slices only: the landscape at the end, off at first so the slopes came down stand alone #}
-      <label class="check" data-role="land-cut-check" hidden><input type="checkbox" data-role="land-cut"> <span>{{ _('Landscape at the end') }}</span></label>
-      <label class="check"><input type="checkbox" data-role="land-log"> <span>{{ _('Log scale') }}</span></label>
+      <div class="dialog-title">
+        <h3 id="land-dialog-title">{{ _('Loss landscape') }}</h3>
+        <button type="button" class="info-btn" data-role="land-info" aria-expanded="false" aria-controls="land-note" title="{{ _('How to read it') }}">i</button>
+      </div>
       <button type="button" class="btn btn-icon btn-ghost" data-role="land-close" aria-label="{{ _('Close') }}">✕</button>
     </header>
+    {# how to read it: a note that the (i) shows and hides, over the top of the canvas #}
+    <div class="land-note" id="land-note" data-role="land-note" hidden>
+      <p data-role="land-note-surface">{{ _('Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate.') }}</p>
+      <ul data-role="land-note-slices">
+        <li>{{ _('The 4 parameters that lowered the training loss the most while training.') }}</li>
+        <li>{{ _('Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up. How far it came down is the loss that parameter lowered.') }}</li>
+        <li>{{ _('Dashed: the landscape at the end, cut along that parameter with every other one where training ended. Steeper than the solid line, because the others had adapted to the end; the two meet there.') }}</li>
+        <li>{{ _('Dot: where it was at this epoch. Open circles: start and end.') }}</li>
+        <li>{{ _('Drag a handle (or click a graph): the small plot shows the prediction with that one parameter changed, and its loss. An experiment on the end state, not a moment of training.') }}</li>
+        <li>{{ _('Values are for the standardized data.') }}</li>
+      </ul>
+    </div>
     <canvas data-role="land-canvas" class="land-canvas" aria-label="{{ _('Loss landscape') }}"></canvas>
     {# the same frame as the player behind the dialog #}
     <div class="player-bar">
@@ -92,12 +104,7 @@
       <input type="range" data-role="land-slider" min="0" max="0" value="0" aria-label="{{ _('Epoch') }}">
       <span class="readout-step" data-role="land-step">—</span>
     </div>
-    <p class="hint" data-role="land-hint-surface">{{ _('Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate.') }}</p>
-    <div class="hint" data-role="land-hint-slices" hidden>
-      <p class="land-key"><span class="key"></span>{{ _('Slope it came down') }}<span data-role="land-cut-key" hidden> <span class="key key-dashed"></span>{{ _('Landscape at the end (a cut)') }}</span></p>
-      <p>{{ _('The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data.') }}</p>
-      <p data-role="land-cut-hint" hidden>{{ _('Dashed: the landscape at the end, cut along that parameter with every other one where training ended. It is steeper than the solid line because the other parameters had adapted to the end; the two meet there.') }}</p>
-    </div>
+    <p class="hint land-key" data-role="land-key" hidden><span class="key"></span>{{ _('Slope it came down') }} <span class="key key-dashed"></span>{{ _('Landscape at the end (a cut)') }}</p>
   </dialog>
 
   <dialog data-role="mp4-dialog" class="dialog">

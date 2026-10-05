@@ -13,7 +13,7 @@
 // the slope a weight came down: at every frame and, early on, more often (path_epochs) its value, and as
 // height the end loss plus what it still lowered the loss by after then. It meets the slice at the end
 // point, touching it there.
-import { TOP_WEIGHTS, lossFns, structure, trainingLoss } from './nn.js';
+import { TOP_WEIGHTS, lossFns, prediction, structure, trainingLoss } from './nn.js';
 
 const GRID = 41;            // surface resolution (GRID × GRID losses)
 export const SLICES = TOP_WEIGHTS;   // slices drawn: the weights with the largest contributions
@@ -91,7 +91,8 @@ export function paramInfo(sizes, i) {
 
 // { sizes, loss (at the end), start (loss before training), total (sum of contributions), idle (weights
 //   that barely changed the loss), n, slices: [{ index, info, init, final, contrib, share, xs, ys,
-//   track: [{ x, y, epoch }], the slope it came down (null without a path) }] }
+//   track: [{ x, y, epoch }], the slope it came down (null without a path) }],
+//   and to change a weight by hand (tryWeight): final, lossAt, predictAt, finalPred }
 // Each slice spans the end value ± 1.25 × how far training moved it (at least ± 0.5), and the whole path.
 export function paramSlices(run) {
   const { init, final, contrib, paths = [], path_epochs: epochs } = run.params;
@@ -113,6 +114,17 @@ export function paramSlices(run) {
              track: path ? path.values.map((x, k) => ({ x, y: loss + path.lowered.at(-1) - path.lowered[k], epoch: epochs[k] }))
                : null };
   });
+  const predictAt = prediction(run.config, run.meta);
   return { sizes, slices, loss, start: run.frames[0].train, total, n: contrib.length,
-           idle: contrib.filter(c => Math.abs(c) <= 1e-6 * absTotal).length };
+           idle: contrib.filter(c => Math.abs(c) <= 1e-6 * absTotal).length,
+           final: Float64Array.from(final), lossAt, predictAt, finalPred: predictAt(final) };
+}
+
+// Slice k's weight set to x by hand (kept within the slice), every other weight where training ended:
+// { k, x, loss, pred } – a point on that slice, and the prediction it makes. Not a moment of the run.
+export function tryWeight(S, k, x) {
+  const sl = S.slices[k], theta = S.final.slice();
+  x = Math.max(sl.xs[0], Math.min(sl.xs[sl.xs.length - 1], x));
+  theta[sl.index] = x;
+  return { k, x, loss: S.lossAt(theta), pred: S.predictAt(theta) };
 }

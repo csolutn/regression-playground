@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 12:54+0900\n"
+"POT-Creation-Date: 2026-10-05 13:26+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,6 +126,9 @@ msgstr ""
 msgid "Car speed → braking distance"
 msgstr ""
 
+msgid "Changed by hand"
+msgstr ""
+
 msgid "Choose a CSV file."
 msgstr ""
 
@@ -159,7 +162,7 @@ msgstr ""
 msgid "Custom formula…"
 msgstr ""
 
-msgid "Dashed: the landscape at the end, cut along that parameter with every other one where training ended. It is steeper than the solid line because the other parameters had adapted to the end; the two meet there."
+msgid "Dashed: the landscape at the end, cut along that parameter with every other one where training ended. Steeper than the solid line, because the others had adapted to the end; the two meet there."
 msgstr ""
 
 msgid "Data preview"
@@ -195,7 +198,16 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
+msgid "Dot: where it was at this epoch. Open circles: start and end."
+msgstr ""
+
 msgid "Download all runs (CSV)"
+msgstr ""
+
+msgid "Drag a handle (or click a graph): the small plot shows the prediction with that one parameter changed, and its loss. An experiment on the end state, not a moment of training."
+msgstr ""
+
+msgid "Drag a handle on a dashed line"
 msgstr ""
 
 msgid "E-mail"
@@ -311,6 +323,9 @@ msgstr ""
 msgid "How the graph is corrected to make the loss smaller."
 msgstr ""
 
+msgid "How to read it"
+msgstr ""
+
 msgid "Huber δ"
 msgstr ""
 
@@ -346,9 +361,6 @@ msgid "Invalid value for {field}."
 msgstr ""
 
 msgid "Keeps rolling in the direction it was going"
-msgstr ""
-
-msgid "Landscape at the end"
 msgstr ""
 
 msgid "Landscape at the end (a cut)"
@@ -566,6 +578,9 @@ msgstr ""
 msgid "Remove layer"
 msgstr ""
 
+msgid "Reset"
+msgstr ""
+
 msgid "Reset all settings to the defaults?"
 msgstr ""
 
@@ -644,6 +659,9 @@ msgstr ""
 msgid "Slope w"
 msgstr ""
 
+msgid "Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up. How far it came down is the loss that parameter lowered."
+msgstr ""
+
 msgid "Sort by validation loss"
 msgstr ""
 
@@ -692,6 +710,9 @@ msgstr ""
 msgid "Temperature → ice cream sales"
 msgstr ""
 
+msgid "The 4 parameters that lowered the training loss the most while training."
+msgstr ""
+
 msgid "The CSV file could not be read."
 msgstr ""
 
@@ -727,9 +748,6 @@ msgid "The formula uses something that is not allowed. Use {vars}, numbers, + - 
 msgstr ""
 
 msgid "The input range minimum must be smaller than the maximum."
-msgstr ""
-
-msgid "The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data."
 msgstr ""
 
 msgid "The questions (x) and correct answers (y) the model learns from."
@@ -838,6 +856,9 @@ msgid "Validation loss"
 msgstr ""
 
 msgid "Validation ratio"
+msgstr ""
+
+msgid "Values are for the standardized data."
 msgstr ""
 
 msgid "Wait until training finishes."

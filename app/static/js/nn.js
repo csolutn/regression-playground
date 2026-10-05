@@ -235,19 +235,33 @@ export function prepareData(meta) {
   };
 }
 
-// The training loss (on standardized y, as train() reports it) of the network with the given weights,
-// flat in train()'s order [W0, b0, W1, b1, …]: lossAt(flat) → number
-export function trainingLoss(cfg, meta) {
-  const { Xt, yt } = prepareData(meta), n = yt.length, loss = lossFns(cfg);
+// A network that takes its weights flat, in train()'s order [W0, b0, W1, b1, …]
+function flatNetwork(cfg) {
   const net = new Network(structure(cfg), cfg.activation, () => 0.5);
-  return flat => {
+  net.load = flat => {
     let o = 0;
     for (const p of net.params) { for (let i = 0; i < p.length; i++) p[i] = flat[o + i]; o += p.length; }
-    const pred = net.forward(Xt, n);
+    return net;
+  };
+  return net;
+}
+
+// The training loss (on standardized y, as train() reports it) of the network with the given flat
+// weights: lossAt(flat) → number
+export function trainingLoss(cfg, meta) {
+  const { Xt, yt } = prepareData(meta), n = yt.length, loss = lossFns(cfg), net = flatNetwork(cfg);
+  return flat => {
+    const pred = net.load(flat).forward(Xt, n);
     let s = 0;
     for (let i = 0; i < n; i++) s += loss.f(pred[i] - yt[i]);
     return s / n;
   };
+}
+
+// Its prediction on the plot inputs, in the data's units (as a frame's pred): predictAt(flat) → [ŷ…]
+export function prediction(cfg, meta) {
+  const data = prepareData(meta), net = flatNetwork(cfg);
+  return flat => Array.from(net.load(flat).forward(data.Xp, data.nPlot).subarray(0, data.nPlot), data.unscaleY);
 }
 
 // ---------- the training loop ----------

@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { train, trainingLoss } from '../../app/static/js/nn.js';
-import { SLICES, hasLandscape, hasSlices, landscape, paramInfo, paramSlices } from '../../app/static/js/landscape.js';
+import { SLICES, hasLandscape, hasSlices, landscape, paramInfo, paramSlices, tryWeight } from '../../app/static/js/landscape.js';
 
 const CFG = { n_inputs: 1, model: 'linear', hidden_layers: [], activation: 'relu', loss: 'mse', huber_delta: 1,
   optimizer: 'bgd', learning_rate: 0.1, epochs: 60, batch_method: 'bgd', batch_size: 32, seed: 3 };
@@ -174,4 +174,28 @@ test('a diverged run saves no weights', () => {
   const events = [...train({ ...CFG, ...NET, optimizer: 'sgd', batch_method: 'sgd', learning_rate: 50, epochs: 50 }, meta())];
   assert.equal(events.at(-1).status, 'diverged');
   assert.ok(!events.some(e => e.type === 'params'));
+});
+
+// ---------- a weight moved by hand ----------
+
+test('the prediction from the end weights is the last frame, with one input or two (a surface)', () => {
+  for (const r of [run(NET), run({ ...NET, n_inputs: 2 }, meta2())]) {
+    const S = paramSlices(r), last = r.frames.at(-1).pred;
+    assert.equal(S.finalPred.length, last.length);
+    S.finalPred.forEach((v, i) => assert.ok(Math.abs(v - last[i]) <= 1e-3 * Math.max(1, Math.abs(v)), `${i}: ${v} vs ${last[i]}`));
+  }
+});
+
+test('moving a weight by hand: a point on its slice, and the prediction it makes', () => {
+  const r = run(NET), S = paramSlices(r);
+  S.slices.forEach((sl, k) => {
+    const j = 10, tried = tryWeight(S, k, sl.xs[j]);
+    assert.ok(Math.abs(tried.loss - sl.ys[j]) < 1e-12, 'on the dashed slice');
+    assert.equal(tried.pred.length, S.finalPred.length);
+    assert.equal(tryWeight(S, k, sl.xs.at(-1) + 100).x, sl.xs.at(-1), 'kept within the slice');
+  });
+  // the output bias (the last weight) moves the whole prediction up or down by the same amount
+  const bias = S.n - 1, onBias = { ...S, slices: [{ index: bias, xs: [-10, 10] }] };
+  const shifts = tryWeight(onBias, 0, S.final[bias] + 0.5).pred.map((v, i) => v - S.finalPred[i]);
+  assert.ok(shifts.every(d => Math.abs(d - shifts[0]) < 1e-9) && shifts[0] > 0, `${shifts[0]}`);
 });

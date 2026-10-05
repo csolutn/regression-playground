@@ -356,9 +356,16 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .loss-canvas { display: block; width: 100%; height: min(400px, 60vh); }
 .land-canvas { display: block; width: 100%; height: min(520px, 62vh); touch-action: none; cursor: grab; }
 .land-canvas:active { cursor: grabbing; }
-.land-canvas.is-slices { height: min(620px, 66vh); touch-action: auto; cursor: default; }
-.hint > p { margin: 0; }
-.hint > .land-key { margin-bottom: 4px; }
+.land-canvas.is-slices { height: min(620px, 66vh); touch-action: none; cursor: pointer; }   /* the slices have handles */
+.dialog-title { display: flex; align-items: center; gap: 4px; margin-right: auto; }
+.dialog-title h3 { margin: 0; }
+.info-btn[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+/* a memo over the top of the canvas, shown and hidden by the (i) next to the title */
+.land-note { position: absolute; z-index: 2; top: 56px; left: 20px; max-width: min(460px, calc(100% - 40px)); padding: 10px 14px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--changed); color: var(--text); box-shadow: 0 4px 14px rgba(0, 0, 0, .12); font-size: 12.5px; line-height: 1.5; }
+.land-note p, .land-note ul { margin: 0; }
+.land-note ul { padding-left: 18px; }
+.land-note li + li { margin-top: 3px; }
 .land-key .key { display: inline-block; width: 22px; margin: 0 6px 0 0; vertical-align: middle; border-top: 2.5px solid var(--muted); }
 .land-key .key-dashed { margin-left: 14px; border-top-style: dashed; }
 .link-btn { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
