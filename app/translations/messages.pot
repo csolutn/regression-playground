@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 00:26+0900\n"
+"POT-Creation-Date: 2026-10-05 09:26+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,6 +83,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Before: {v}"
+msgstr ""
+
+#, python-brace-format
+msgid "Bias of {node}"
 msgstr ""
 
 msgid "Boosting learning rate"
@@ -339,6 +343,9 @@ msgid "Invalid value for {field}."
 msgstr ""
 
 msgid "Keeps rolling in the direction it was going"
+msgstr ""
+
+msgid "Landscape at the end (a cut)"
 msgstr ""
 
 msgid "Last login"
@@ -625,6 +632,9 @@ msgstr ""
 msgid "Show this run"
 msgstr ""
 
+msgid "Slope it came down"
+msgstr ""
+
 msgid "Slope w"
 msgstr ""
 
@@ -714,6 +724,9 @@ msgid "The formula uses something that is not allowed. Use {vars}, numbers, + - 
 msgstr ""
 
 msgid "The input range minimum must be smaller than the maximum."
+msgstr ""
+
+msgid "The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. Dashed: the landscape at the end, cut along that parameter with every other one where training ended; the two meet at the end. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data."
 msgstr ""
 
 msgid "The questions (x) and correct answers (y) the model learns from."
@@ -830,6 +843,10 @@ msgstr ""
 msgid "Waiting for a free slot…"
 msgstr ""
 
+#, python-brace-format
+msgid "Weight {from} → {to}"
+msgstr ""
+
 msgid "Widths"
 msgstr ""
 
@@ -885,7 +902,14 @@ msgstr ""
 msgid "set"
 msgstr ""
 
+msgid "start"
+msgstr ""
+
 msgid "sum in order"
+msgstr ""
+
+#, python-brace-format
+msgid "these {k}: {p} of the drop"
 msgstr ""
 
 msgid "time limit"
@@ -908,6 +932,10 @@ msgid "{n} epochs"
 msgstr ""
 
 #, python-brace-format
+msgid "{n} of {total} parameters barely changed the loss"
+msgstr ""
+
+#, python-brace-format
 msgid "{n} of {total} runs"
 msgstr ""
 
@@ -925,6 +953,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{n} weights and biases to learn. Each hidden neuron bends the line with {act}."
+msgstr ""
+
+#, python-brace-format
+msgid "{p} of the drop"
 msgstr ""
 
 msgid "① Data"

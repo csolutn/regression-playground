@@ -9,9 +9,10 @@ export const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 const SERIES = {
   train: '#e4574e', val: '#f2a33a', pred: '#3b7ddd', truth: '#6b7280',
 };
+const SLICES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'];   // the four weights of the loss landscape
 export const LIGHT = {
   ...SERIES, bg: '#ffffff', panel: '#fbfcfd', grid: '#e3e8ef', frame: '#cfd6df',
-  text: '#111827', muted: '#5b6472', badge: 'rgba(255,255,255,.92)',
+  text: '#111827', muted: '#5b6472', badge: 'rgba(255,255,255,.92)', slices: SLICES,
 };
 
 export function screenTheme() {
@@ -20,7 +21,7 @@ export function screenTheme() {
   return {
     ...SERIES, bg: v('--surface', LIGHT.bg), panel: v('--plot-panel', LIGHT.panel), grid: v('--plot-grid', LIGHT.grid),
     frame: v('--plot-frame', LIGHT.frame), text: v('--text', LIGHT.text), muted: v('--muted', LIGHT.muted),
-    badge: v('--plot-badge', LIGHT.badge),
+    badge: v('--plot-badge', LIGHT.badge), slices: SLICES.map((c, i) => v(`--slice-${i + 1}`, c)),
   };
 }
 
@@ -430,6 +431,240 @@ export function drawLandscape(ctx, r, L, idx, run, th, s = 1, opts = {}) {
     { color: coolwarm(0.8), width: 6, label: t('Loss of every line') },
     { color: th.pred, width: 2.6, label: t('Path of this run') },
   ], P.x + P.w - 10 * s, P.y + P.h - 10 * s, 'right', th, s);
+}
+
+// ---------- loss landscape of other linear and neural network runs (landscape.js computes S) ----------
+
+// The few weights that lowered the loss the most: where they sit in the network, and for each the
+// training loss along it with every other weight where training ended (a dashed slice through the end
+// point, fading away from it), and over it the slope that weight came down (solid: faint for the whole
+// run, full up to frame `idx`, where the point is; open circles: start and end). Runs saved without the
+// paths show an arrow from the start to the end instead.
+export function drawSlices(ctx, r, S, idx, run, th, s = 1, opts = {}) {
+  const log = !!opts.log, names = run.meta.feature_names, tr = v => (log ? Math.log10(Math.max(v, 1e-12)) : v);
+  const pad = 10 * s, netH = Math.min(170 * s, Math.max(110 * s, r.h * 0.27));
+  drawWeightNet(ctx, { x: r.x + pad, y: r.y + 2 * s, w: r.w - 2 * pad, h: netH }, S, names, th, s);
+
+  // one line of numbers under the network
+  const top4 = S.slices.reduce((a, sl) => a + (sl.share ?? 0), 0);
+  const parts = [`${t('Training loss')} ${fmtLoss(S.start)} → ${fmtLoss(S.loss)}`];
+  if (S.total > 0 && S.slices.length < S.n) parts.push(t('these {k}: {p} of the drop', { k: S.slices.length, p: pct(top4) }));
+  if (S.idle) parts.push(t('{n} of {total} parameters barely changed the loss', { n: S.idle, total: S.n }));
+  ctx.fillStyle = th.muted; ctx.font = font(12 * s); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(parts.join('  ·  '), r.x + r.w / 2, r.y + netH + 12 * s, r.w - 2 * pad);
+
+  // the loss axis is the same in every panel, so the slopes compare; it fits the slopes came down, and
+  // the slices (steeper: the other weights had adapted to the end) run off the top
+  const ok = v => Number.isFinite(v) && (!log || v > 0);
+  const came = S.slices.flatMap(sl => (sl.track || []).map(p => p.y)).filter(ok);
+  const all = [...came, ...S.slices.flatMap(sl => sl.ys).filter(ok)];
+  const cap = Number.isFinite(S.start) ? 1.5 * Math.max(S.start, S.loss) : Infinity;   // steep walls run off the top
+  const top = came.length ? (log ? 10 ** (tr(Math.max(...came)) + 0.3) : 1.4 * Math.max(...came)) : Math.max(...all);
+  let hiT = tr(Math.min(Math.max(top, S.loss), cap)), loT = log ? Math.min(...all.map(tr), tr(S.loss)) : 0;
+  const m = (hiT - loT) * 0.06 || 0.1;
+  hiT += m;
+  if (log) loT -= m;
+  let yTicks = niceTicks(loT, hiT, 4);
+  if (log && hiT - loT >= 2) yTicks = yTicks.filter(Number.isInteger);
+  const yLabel = log ? v => fmt(10 ** v) : fmt;
+
+  const epochNow = run.frames[Math.max(0, Math.min(run.frames.length - 1, idx))].step;
+  const cols = S.slices.length > 1 ? 2 : 1, rows = Math.ceil(S.slices.length / cols);
+  const left = 46 * s, gx = 16 * s, gy = 12 * s, titleH = 24 * s, tickH = 20 * s;
+  const y0 = r.y + netH + 28 * s, cw = (r.w - left - pad - (cols - 1) * gx) / cols;
+  const ch = (r.y + r.h - y0 - (rows - 1) * gy) / rows;
+  S.slices.forEach((sl, k) => {
+    const color = th.slices[k], cx = r.x + left + (k % cols) * (cw + gx), cy = y0 + Math.floor(k / cols) * (ch + gy);
+    const P = { x: cx, y: cy + titleH, w: cw, h: ch - titleH - tickH };
+
+    numberBadge(ctx, cx + 9 * s, cy + 10 * s, k + 1, color, th, s);
+    ctx.font = font(12 * s); ctx.fillStyle = th.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const share = sl.share == null ? '' : t('{p} of the drop', { p: pct(sl.share) });
+    ctx.fillText(share, cx + cw, cy + 10 * s);
+    const shareW = share ? ctx.measureText(share).width + 10 * s : 0;
+    ctx.font = font(12.5 * s, 600); ctx.fillStyle = th.text; ctx.textAlign = 'left';
+    ctx.fillText(paramName(S.sizes, sl.info, names), cx + 23 * s, cy + 10 * s, Math.max(10, cw - 23 * s - shareW));
+
+    panel(ctx, P, th, s);
+    const x0 = sl.xs[0], x1 = sl.xs[sl.xs.length - 1];
+    const X = v => P.x + ((v - x0) / (x1 - x0)) * P.w;
+    const Yt = v => P.y + P.h - ((v - loT) / (hiT - loT)) * P.h;
+    const Y = v => Math.max(P.y - P.h, Math.min(P.y + 2 * P.h, Yt(tr(v))));
+    grid(ctx, P, th, s, niceTicks(x0, x1, cw > 240 * s ? 4 : 3), k % cols ? [] : yTicks, X, Yt, fmt, yLabel);
+    if (k % cols) {                       // the right column shares the left one's loss labels
+      ctx.strokeStyle = th.grid; ctx.lineWidth = 1 * s; ctx.beginPath();
+      for (const v of yTicks) { ctx.moveTo(P.x, Yt(v)); ctx.lineTo(P.x + P.w, Yt(v)); }
+      ctx.stroke();
+    }
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+    const fade = ctx.createLinearGradient(P.x, 0, P.x + P.w, 0);
+    fade.addColorStop(0, withAlpha(color, 0.15)); fade.addColorStop(0.5, color); fade.addColorStop(1, withAlpha(color, 0.15));
+    ctx.strokeStyle = fade; ctx.lineWidth = 2.4 * s; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.setLineDash([6 * s, 4 * s]);
+    polyline(ctx, sl.xs, sl.ys, X, Y);
+    ctx.setLineDash([]);
+
+    const startLabel = (x, y) => {           // above the point, or below it at the top of the panel
+      const below = y - 20 * s < P.y;
+      ctx.fillStyle = th.muted; ctx.font = font(10.5 * s); ctx.textBaseline = below ? 'top' : 'bottom';
+      ctx.textAlign = x < P.x + 24 * s ? 'left' : x > P.x + P.w - 24 * s ? 'right' : 'center';
+      ctx.fillText(t('start'), x, below ? y + 7 * s : y - 6 * s);
+    };
+    const ring = (x, y) => {
+      ctx.beginPath(); ctx.arc(x, y, 4 * s, 0, 7);
+      ctx.fillStyle = th.panel; ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 1.8 * s; ctx.stroke();
+    };
+    const dot = (x, y) => {
+      ctx.beginPath(); ctx.arc(x, y, 6 * s, 0, 7);
+      ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = th.bg; ctx.lineWidth = 2 * s; ctx.stroke();
+    };
+    const inside = y => Math.max(P.y, Math.min(P.y + P.h, y));    // a point off the top stays on the edge
+
+    if (sl.track) {
+      let now = 0;                       // the last point at or before the frame's epoch
+      while (now + 1 < sl.track.length && sl.track[now + 1].epoch <= epochNow) now++;
+      const line = (to, width, stroke) => {
+        ctx.strokeStyle = stroke; ctx.lineWidth = width * s;
+        ctx.beginPath();
+        for (let k = 0; k <= to; k++) (k ? ctx.lineTo : ctx.moveTo).call(ctx, X(sl.track[k].x), Y(sl.track[k].y));
+        ctx.stroke();
+      };
+      line(sl.track.length - 1, 1.6, withAlpha(color, 0.35));
+      line(now, 2.6, color);
+      ctx.restore();
+
+      const first = sl.track[0], last = sl.track[sl.track.length - 1], cur = sl.track[now];
+      ring(X(first.x), inside(Y(first.y)));
+      startLabel(X(first.x), inside(Y(first.y)));
+      if (now < sl.track.length - 1) ring(X(last.x), inside(Y(last.y)));
+      dot(X(cur.x), inside(Y(cur.y)));
+    } else {
+      // how training moved this weight: from its start value to where it ended
+      const ya = P.y + P.h - 11 * s, xa = X(sl.init), xb = X(sl.final);
+      ctx.strokeStyle = ctx.fillStyle = color; ctx.lineWidth = 1.8 * s;
+      if (Math.abs(xb - xa) > 8 * s) {
+        const dir = Math.sign(xb - xa);
+        ctx.beginPath(); ctx.moveTo(xa + dir * 4 * s, ya); ctx.lineTo(xb - dir * 2 * s, ya); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(xb, ya); ctx.lineTo(xb - dir * 7 * s, ya - 4 * s); ctx.lineTo(xb - dir * 7 * s, ya + 4 * s); ctx.closePath(); ctx.fill();
+      }
+      ring(xa, ya);
+      startLabel(xa, ya);
+      ctx.restore();
+      dot(xb, inside(Y(S.loss)));                                // the end point: where this slice was cut
+    }
+  });
+}
+
+const pct = v => `${Math.round(v * 100)}%`;
+
+function withAlpha(color, a) {
+  const m = /^#([0-9a-f]{6})$/i.exec(color.trim());
+  if (!m) return color;
+  const n = parseInt(m[1], 16);
+  return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
+// a numbered circle: the slice's number in text color inside a ring of its color
+function numberBadge(ctx, x, y, k, color, th, s) {
+  ctx.beginPath(); ctx.arc(x, y, 8.5 * s, 0, 7);
+  ctx.fillStyle = th.bg; ctx.fill();
+  ctx.strokeStyle = color; ctx.lineWidth = 2.5 * s; ctx.stroke();
+  ctx.fillStyle = th.text; ctx.font = font(10.5 * s, 700); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(String(k), x, y + 0.5 * s);
+}
+
+// neuron j of layer l (0 = the inputs): "x", "Hidden 1·3" or "ŷ"
+function neuronName(sizes, l, j, names) {
+  if (l === 0) return names?.[j] ?? `x${j + 1}`;
+  if (l === sizes.length - 1) return 'ŷ';
+  return `${t('Hidden {i}', { i: l })}·${j + 1}`;
+}
+
+export function paramName(sizes, info, names) {
+  const to = neuronName(sizes, info.layer + 1, info.to, names);
+  return info.bias ? t('Bias of {node}', { node: to })
+    : t('Weight {from} → {to}', { from: neuronName(sizes, info.layer, info.from, names), to });
+}
+
+// The network with the sliced weights marked: a weight is its colored edge, a bias a ring round its neuron
+function drawWeightNet(ctx, R, S, names, th, s) {
+  const { sizes, slices } = S, MAX = 8;
+  const shown = sizes.map((n, l) => {       // the neurons drawn: those the slices touch, then the first ones
+    const need = new Set();
+    for (const { info } of slices) {
+      if (info.layer + 1 === l) need.add(info.to);
+      if (!info.bias && info.layer === l) need.add(info.from);
+    }
+    for (let j = 0; need.size < Math.min(n, MAX); j++) need.add(j);
+    return [...need].sort((a, b) => a - b);
+  });
+  ctx.font = font(12 * s);
+  const leftW = Math.max(...shown[0].map(j => ctx.measureText(neuronName(sizes, 0, j, names)).width)) + 18 * s;
+  const span = Math.min(R.w - leftW - 30 * s, 150 * s * (sizes.length - 1));
+  const x0 = R.x + leftW + (R.w - leftW - 30 * s - span) / 2;
+  const xs = sizes.map((_, l) => x0 + (span * l) / Math.max(1, sizes.length - 1));
+  const top = R.y + 12 * s, bottom = R.y + R.h - 26 * s;
+  const gap = Math.min(24 * s, (bottom - top) / Math.max(1, Math.max(...shown.map(v => v.length)) - 1));
+  const rad = Math.max(4 * s, Math.min(9 * s, gap / 2 - 2 * s));
+  const pos = shown.map((js, l) => {
+    const y1 = (top + bottom) / 2 - (gap * (js.length - 1)) / 2;
+    return new Map(js.map((j, i) => [j, [xs[l], y1 + i * gap]]));
+  });
+
+  ctx.strokeStyle = th.frame; ctx.lineWidth = 1 * s;
+  ctx.beginPath();
+  for (let l = 0; l < sizes.length - 1; l++) {
+    for (const [, [ax, ay]] of pos[l]) for (const [, [bx, by]] of pos[l + 1]) { ctx.moveTo(ax, ay); ctx.lineTo(bx, by); }
+  }
+  ctx.stroke();
+  const badges = [];
+  slices.forEach(({ info }, k) => {
+    const [bx, by] = pos[info.layer + 1].get(info.to);
+    if (info.bias) {                      // above the output neuron, beside a hidden one (whose neighbours are close)
+      badges.push(info.layer === sizes.length - 2 ? [bx, by - rad - 13 * s, k] : [bx + rad + 8 * s, by - rad - 5 * s, k]);
+      return;
+    }
+    const [ax, ay] = pos[info.layer].get(info.from);
+    ctx.strokeStyle = th.slices[k]; ctx.lineWidth = 3 * s;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    // the badge halfway along the edge, or further along where another badge is already
+    const at = [0.5, 0.3, 0.7, 0.2, 0.8].map(u => [ax + u * (bx - ax), ay + u * (by - ay)]);
+    const free = at.find(([x, y]) => badges.every(([x2, y2]) => Math.hypot(x - x2, y - y2) > 19 * s)) || at[0];
+    badges.push([...free, k]);
+  });
+
+  sizes.forEach((n, l) => {
+    for (const [j, [x, y]] of pos[l]) {
+      ctx.beginPath(); ctx.arc(x, y, rad, 0, 7);
+      ctx.fillStyle = th.panel; ctx.fill();
+      ctx.strokeStyle = th.muted; ctx.lineWidth = 1.2 * s; ctx.stroke();
+      ctx.fillStyle = th.muted; ctx.textBaseline = 'middle';
+      if (l > 0 && l < sizes.length - 1 && rad >= 5 * s) {
+        ctx.font = font(Math.min(9 * s, rad * 1.35)); ctx.textAlign = 'center'; ctx.fillText(String(j + 1), x, y + 0.5 * s);
+      } else if (l === 0) {
+        ctx.font = font(12 * s); ctx.fillStyle = th.text; ctx.textAlign = 'right'; ctx.fillText(neuronName(sizes, 0, j, names), x - rad - 6 * s, y);
+      } else if (l === sizes.length - 1) {
+        ctx.font = font(12 * s); ctx.fillStyle = th.text; ctx.textAlign = 'left'; ctx.fillText('ŷ', x + rad + 9 * s, y);
+      }
+    }
+    if (n > shown[l].length) {
+      ctx.fillStyle = th.muted; ctx.font = font(12 * s); ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      const last = [...pos[l].values()].at(-1);
+      ctx.fillText(`⋮ ${n}`, xs[l] + rad + 4 * s, last[1] + gap * 0.6);
+    }
+    ctx.fillStyle = th.muted; ctx.font = font(11 * s); ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    const name = l === 0 ? t('Input') : l === sizes.length - 1 ? t('Output') : t('Hidden {i}', { i: l });
+    ctx.fillText(name, xs[l], R.y + R.h);
+  });
+  slices.forEach(({ info }, k) => {
+    if (!info.bias) return;
+    const [x, y] = pos[info.layer + 1].get(info.to);
+    ctx.beginPath(); ctx.arc(x, y, rad + 3.5 * s, 0, 7);
+    ctx.strokeStyle = th.slices[k]; ctx.lineWidth = 2.5 * s; ctx.stroke();
+  });
+  for (const [x, y, k] of badges) numberBadge(ctx, x, y, k + 1, th.slices[k], th, s);
 }
 
 // ---------- ③ loss curve (MP4 only) ----------

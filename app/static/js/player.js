@@ -2,9 +2,9 @@
 // The server only sends numbers (frames); every image is drawn here.
 // While a run is training only its data is drawn (the output panel shows a progress bar over it):
 // frames arrive much faster than they are played back, which looks like instant convergence.
-import { DEFAULT_VIEW, drawLandscape, drawLoss, drawPrediction, fitCanvas, fmtLoss, screenTheme } from './plot.js';
+import { DEFAULT_VIEW, drawLandscape, drawLoss, drawPrediction, drawSlices, fitCanvas, fmtLoss, screenTheme } from './plot.js';
 import { stepLabel } from './describe.js';
-import { hasLandscape, landscape } from './landscape.js';
+import { hasLandscape, hasSlices, landscape, paramSlices } from './landscape.js';
 
 const RUN_MS = 16_000;               // a whole run takes about this long at 1×
 const MAX_FRAME_MS = 267;           // runs with few frames (e.g. a shallow tree) don't flash by
@@ -26,11 +26,12 @@ export class Player {
     this.prevBtn = $('prev');
     this.nextBtn = $('next');
     this.speed = $('speed');
-    this.stepText = $('step-text');
     this.trainText = $('train-text');
     this.valText = $('val-text');
     this.loss = { open: $('loss-open'), dialog: $('loss-dialog'), canvas: $('loss-canvas'), log: $('loss-log') };
-    this.land = { open: $('land-open'), dialog: $('land-dialog'), canvas: $('land-canvas'), log: $('land-log') };
+    this.land = { open: $('land-open'), dialog: $('land-dialog'), canvas: $('land-canvas'), log: $('land-log'),
+                  hintSurface: $('land-hint-surface'), hintSlices: $('land-hint-slices'),
+                  play: $('land-play'), slider: $('land-slider'), step: $('land-step') };
     this.landView = { ...DEFAULT_VIEW };
     this.run = null;
     this.idx = 0;
@@ -38,17 +39,17 @@ export class Player {
     this.timer = null;
     this.view = { ...DEFAULT_VIEW };
 
-    this.playBtn.addEventListener('click', () => (this.timer ? this.pause() : this.play()));
+    for (const btn of [this.playBtn, this.land.play]) btn.addEventListener('click', () => (this.timer ? this.pause() : this.play()));
     this.prevBtn.addEventListener('click', () => this.seek(this.idx - 1));
     this.nextBtn.addEventListener('click', () => this.seek(this.idx + 1));
-    this.slider.addEventListener('input', () => this.seek(+this.slider.value));
+    for (const sl of [this.slider, this.land.slider]) sl.addEventListener('input', () => this.seek(+sl.value));
     document.addEventListener('keydown', e => this.onKey(e));
     this.enablePopup(this.loss, $('loss-close'));
     this.enablePopup(this.land, $('land-close'));
     for (const c of [this.canvas, this.loss.canvas, this.land.canvas]) new ResizeObserver(() => this.render()).observe(c);
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.render());
     this.enableRotate(this.canvas, this.view, () => this.run?.meta?.n_inputs === 2);
-    this.enableRotate(this.land.canvas, this.landView, () => true);
+    this.enableRotate(this.land.canvas, this.landView, () => this.landKind === 'surface');
     this.sync();
   }
 
@@ -114,7 +115,9 @@ export class Player {
   }
 
   onKey(e) {
-    if (!this.frames.length || this.run?.live || e.target.closest('input, select, textarea, button, dialog') || e.metaKey || e.ctrlKey) return;
+    const dialog = e.target.closest('dialog');     // the loss graph and landscape follow the frame, so they may play
+    if (dialog && dialog !== this.loss.dialog && dialog !== this.land.dialog) return;
+    if (!this.frames.length || this.run?.live || e.target.closest('input, select, textarea, button') || e.metaKey || e.ctrlKey) return;
     if (e.key === ' ') { e.preventDefault(); this.timer ? this.pause() : this.play(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); this.seek(this.idx - 1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); this.seek(this.idx + 1); }
@@ -123,23 +126,28 @@ export class Player {
   // controls and numbers for the current frame
   sync() {
     const n = this.run?.live ? 0 : this.frames.length, f = n ? this.frames[this.idx] : null;
-    this.slider.max = Math.max(0, n - 1);
-    this.slider.value = this.idx;
-    for (const el of [this.slider, this.playBtn, this.prevBtn, this.nextBtn]) el.disabled = n < 2;
+    for (const sl of [this.slider, this.land.slider]) { sl.max = Math.max(0, n - 1); sl.value = this.idx; }
+    for (const el of [this.slider, this.land.slider, this.playBtn, this.land.play, this.prevBtn, this.nextBtn]) el.disabled = n < 2;
     this.loss.open.disabled = !this.run?.meta || !!this.run.preview || !!this.run.live;
-    this.land.open.hidden = !this.hasLandscape;
-    if (this.land.open.hidden && this.land.dialog.open) this.land.dialog.close();
-    this.playBtn.classList.toggle('is-playing', !!this.timer);
-    this.playBtn.setAttribute('aria-pressed', String(!!this.timer));
+    const kind = this.landKind;
+    this.land.open.hidden = !kind;
+    if (!kind && this.land.dialog.open) this.land.dialog.close();
+    this.land.canvas.classList.toggle('is-slices', kind === 'slices');
+    this.land.hintSurface.hidden = kind !== 'surface';
+    this.land.hintSlices.hidden = kind !== 'slices';
+    for (const btn of [this.playBtn, this.land.play]) {
+      btn.classList.toggle('is-playing', !!this.timer);
+      btn.setAttribute('aria-pressed', String(!!this.timer));
+    }
     this.empty.hidden = !!this.run?.meta;
     this.empty.textContent = this.run?.error || this.emptyText;
     this.empty.classList.toggle('is-error', !!this.run?.error);
     if (f && this.run?.meta) {
-      this.stepText.textContent = `${stepLabel(this.run.meta.model)} ${f.step.toLocaleString()} / ${this.run.meta.total_steps.toLocaleString()}`;
+      this.land.step.textContent = `${stepLabel(this.run.meta.model)} ${f.step.toLocaleString()} / ${this.run.meta.total_steps.toLocaleString()}`;
       this.trainText.textContent = fmtLoss(f.train);
       this.valText.textContent = fmtLoss(f.val);
     } else {
-      this.stepText.textContent = '—';
+      this.land.step.textContent = '—';
       this.trainText.textContent = this.valText.textContent = '—';
     }
     this.render();
@@ -162,21 +170,25 @@ export class Player {
     });
   }
 
-  // the loss landscape of the run shown (one-input linear regression only), computed when first opened
-  get hasLandscape() { return !!this.run && !this.run.preview && !this.run.live && hasLandscape(this.run); }
-  get landscape() {
-    if (!this.hasLandscape) return null;
-    this.run.landscape ||= landscape(this.run);
-    return this.run.landscape;
+  // the loss landscape of the run shown, computed when first opened: the whole surface of one-input linear
+  // regression ('surface'), slices along the weights that mattered most for other runs that saved weights
+  get landKind() {
+    if (!this.run || this.run.preview || this.run.live) return null;
+    return hasLandscape(this.run) ? 'surface' : hasSlices(this.run) ? 'slices' : null;
   }
 
   renderLandscape(th) {
     const { ctx, w, h } = fitCanvas(this.land.canvas);
     ctx.fillStyle = th.bg;
     ctx.fillRect(0, 0, w, h);
-    const L = this.landscape;
-    if (L) drawLandscape(ctx, { x: 0, y: 0, w, h }, L, this.idx, this.run, th, Math.max(0.8, Math.min(1.1, w / 700)),
-      { view: this.landView, log: this.land.log.checked });
+    const kind = this.landKind, s = Math.max(0.8, Math.min(1.1, w / 700)), opts = { view: this.landView, log: this.land.log.checked };
+    if (kind === 'surface') {
+      this.run.landscape ||= landscape(this.run);
+      if (this.run.landscape) drawLandscape(ctx, { x: 0, y: 0, w, h }, this.run.landscape, this.idx, this.run, th, s, opts);
+    } else if (kind === 'slices') {
+      this.run.slices ||= paramSlices(this.run);
+      drawSlices(ctx, { x: 0, y: 0, w, h }, this.run.slices, this.idx, this.run, th, s, opts);
+    }
   }
 
   // loss curve up to the current frame, so it moves with the animation

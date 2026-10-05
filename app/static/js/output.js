@@ -74,7 +74,7 @@ export class OutputPanel {
   async fetchRun(row) {
     if (!this.cache.has(row.id)) {
       const d = await api.run(row.id);
-      this.cache.set(row.id, { row: d.run, config: d.config, meta: d.meta, frames: d.frames, loss: d.loss });
+      this.cache.set(row.id, { row: d.run, config: d.config, meta: d.meta, frames: d.frames, loss: d.loss, params: d.params });
     }
     return this.cache.get(row.id);
   }
@@ -163,6 +163,8 @@ export class OutputPanel {
       this.setProgress(ev.step / run.meta.total_steps);
     } else if (ev.type === 'loss') {
       for (const k of ['steps', 'train', 'val']) run.loss[k].push(...ev[k]);
+    } else if (ev.type === 'params') {
+      run.params = { init: ev.init, final: ev.final, contrib: ev.contrib, path_epochs: ev.path_epochs, paths: ev.paths };
     } else if (ev.type === 'end') {
       run.end = ev;
     } else if (ev.type === 'error') {

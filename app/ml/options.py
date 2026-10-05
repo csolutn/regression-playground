@@ -210,9 +210,9 @@ def trains_in_browser(cfg, n_train, n_val):
     multiplies = sum(a * b for a, b in zip(sizes, sizes[1:]))      # one prediction of one point
     weights = multiplies + sum(sizes[1:])
     steps = cfg['epochs'] * math.ceil(n_train / min(batch_size(cfg, n_train), n_train))
-    browser = (BROWSER_S_PER_MULTIPLY * cfg['epochs'] * multiplies * (4 * n_train + n_val)   # train ×3, evaluate
+    browser = (BROWSER_S_PER_MULTIPLY * cfg['epochs'] * multiplies * (6 * n_train + n_val)   # train ×3, evaluate, gradient ×2
                + BROWSER_S_PER_UPDATE * steps * weights)
-    server = steps * (SERVER_S_PER_STEP + SERVER_S_PER_LAYER_STEP * (len(sizes) - 1))
+    server = (steps + cfg['epochs']) * (SERVER_S_PER_STEP + SERVER_S_PER_LAYER_STEP * (len(sizes) - 1))   # + the gradient
     return browser <= BROWSER_SLOW_S or browser <= 2 * server
 
 

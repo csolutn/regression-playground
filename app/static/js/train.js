@@ -20,7 +20,7 @@ export async function trainRun(cfg, onEvent, signal, { guest = false } = {}) {
 }
 
 async function trainHere(cfg, { meta, time_limit_s: timeLimitS }, onEvent, signal, guest) {
-  const stored = { frames: [], loss: { steps: [], train: [], val: [] }, end: null };
+  const stored = { frames: [], loss: { steps: [], train: [], val: [] }, end: null, params: null };
   await new Promise((resolve, reject) => {
     const worker = new Worker(new URL('./train-worker.js', import.meta.url), { type: 'module' });
     const finish = (settle, value) => {
@@ -35,6 +35,7 @@ async function trainHere(cfg, { meta, time_limit_s: timeLimitS }, onEvent, signa
       if (ev.type === 'crash') return finish(reject, new Error(ev.error));
       if (ev.type === 'frame') stored.frames.push({ step: ev.step, pred: ev.pred, train: ev.train, val: ev.val });
       else if (ev.type === 'loss') for (const k of ['steps', 'train', 'val']) stored.loss[k].push(...ev[k]);
+      else if (ev.type === 'params') stored.params = { init: ev.init, final: ev.final, contrib: ev.contrib, path_epochs: ev.path_epochs, paths: ev.paths };
       else if (ev.type === 'end') stored.end = ev;
       onEvent(ev);
       if (ev.type === 'end') finish(resolve);

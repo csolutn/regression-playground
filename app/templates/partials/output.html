@@ -23,7 +23,6 @@
     </div>
 
     <div class="readout">
-      <span class="readout-step" data-role="step-text">—</span>
       <span><span class="dot dot-train"></span>{{ _('Training loss') }} <b data-role="train-text">—</b></span>
       <span><span class="dot dot-val"></span>{{ _('Validation loss') }} <b data-role="val-text">—</b></span>
       <button type="button" class="link-btn" data-role="loss-open" aria-haspopup="dialog">{{ _('Show loss graph') }}</button>
@@ -74,7 +73,8 @@
     <canvas data-role="loss-canvas" class="loss-canvas" aria-label="{{ _('Loss graph') }}"></canvas>
   </dialog>
 
-  {# one-input linear regression only: ŷ = w·x + b has two weights, so its whole loss landscape can be drawn #}
+  {# one-input linear regression: ŷ = w·x + b has two weights, so its whole loss landscape can be drawn;
+     other linear and neural network runs: slices along the weights that lowered the loss the most #}
   <dialog data-role="land-dialog" class="dialog dialog-wide" aria-labelledby="land-dialog-title">
     <header class="dialog-head">
       <h3 id="land-dialog-title">{{ _('Loss landscape') }}</h3>
@@ -82,7 +82,19 @@
       <button type="button" class="btn btn-icon btn-ghost" data-role="land-close" aria-label="{{ _('Close') }}">✕</button>
     </header>
     <canvas data-role="land-canvas" class="land-canvas" aria-label="{{ _('Loss landscape') }}"></canvas>
-    <p class="hint">{{ _('Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate.') }}</p>
+    {# the same frame as the player behind the dialog #}
+    <div class="player-bar">
+      <button type="button" class="btn btn-icon btn-play" data-role="land-play" title="{{ _('Play / pause (Space)') }}">
+        <span class="i-play">▶</span><span class="i-pause">❚❚</span>
+      </button>
+      <input type="range" data-role="land-slider" min="0" max="0" value="0" aria-label="{{ _('Epoch') }}">
+      <span class="readout-step" data-role="land-step">—</span>
+    </div>
+    <p class="hint" data-role="land-hint-surface">{{ _('Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate.') }}</p>
+    <div class="hint" data-role="land-hint-slices" hidden>
+      <p class="land-key"><span class="key"></span>{{ _('Slope it came down') }} <span class="key key-dashed"></span>{{ _('Landscape at the end (a cut)') }}</p>
+      <p>{{ _('The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. Dashed: the landscape at the end, cut along that parameter with every other one where training ended; the two meet at the end. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data.') }}</p>
+    </div>
   </dialog>
 
   <dialog data-role="mp4-dialog" class="dialog">

@@ -81,6 +81,7 @@ def test_train_stream_saves_history(client):
     assert [r['seq'] for r in rows] == [2, 1]
     detail = client.get(f"/api/runs/{rows[0]['id']}").get_json()
     assert detail['frames'] and detail['loss']['steps'] and detail['config']['learning_rate'] == 0.1
+    assert len(detail['params']['final']) == len(detail['params']['contrib']) == 1 * 4 + 4 + 4 + 1   # for the landscape
 
 
 def test_history_comes_a_page_at_a_time(app, client):

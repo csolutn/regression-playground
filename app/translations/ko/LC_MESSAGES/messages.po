@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 00:26+0900\n"
+"POT-Creation-Date: 2026-10-05 09:26+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -85,6 +85,10 @@ msgstr "배치 방식"
 #, python-brace-format
 msgid "Before: {v}"
 msgstr "이전: {v}"
+
+#, python-brace-format
+msgid "Bias of {node}"
+msgstr "{node}의 편향"
 
 msgid "Boosting learning rate"
 msgstr "부스팅 학습률"
@@ -341,6 +345,9 @@ msgstr "{field} 값이 올바르지 않습니다."
 
 msgid "Keeps rolling in the direction it was going"
 msgstr "가던 방향으로 관성을 유지"
+
+msgid "Landscape at the end (a cut)"
+msgstr "학습이 끝난 뒤의 지형(단면)"
 
 msgid "Last login"
 msgstr "마지막 로그인"
@@ -626,6 +633,9 @@ msgstr "손실 지형 보기"
 msgid "Show this run"
 msgstr "이 실험 보기"
 
+msgid "Slope it came down"
+msgstr "지나온 경사"
+
 msgid "Slope w"
 msgstr "기울기 w"
 
@@ -716,6 +726,9 @@ msgstr "수식에 쓸 수 없는 것이 있습니다. {vars}, 숫자, + - * / **
 
 msgid "The input range minimum must be smaller than the maximum."
 msgstr "입력 범위의 최솟값은 최댓값보다 작아야 합니다."
+
+msgid "The parameters that lowered the training loss the most while training. Solid: the slope each one actually came down, the slopes under its feet (tangents) joined up, so its drop is the loss that parameter lowered. Dashed: the landscape at the end, cut along that parameter with every other one where training ended; the two meet at the end. The dot is where it was at this epoch (open circles: start and end). Values are for the standardized data."
+msgstr "학습하는 동안 학습 손실을 가장 많이 줄인 가중치·편향입니다. 실선은 각 값이 학습 중 실제로 내려온 경사로, 그때그때 발밑의 기울기(접선)를 이어 붙인 것이라 내려온 높이가 곧 이 값이 줄인 손실입니다. 점선은 학습이 끝난 뒤의 지형을 나머지를 모두 끝난 값에 두고 이 값 방향으로 자른 단면이며, 두 선은 끝 지점에서 만납니다. 점은 이 에포크의 위치(빈 원: 처음과 끝)입니다. 값은 표준화한 데이터 기준입니다."
 
 msgid "The questions (x) and correct answers (y) the model learns from."
 msgstr "모델이 배울 문제(x)와 정답(y)입니다."
@@ -831,6 +844,10 @@ msgstr "학습이 끝날 때까지 기다려 주세요."
 msgid "Waiting for a free slot…"
 msgstr "차례를 기다리는 중…"
 
+#, python-brace-format
+msgid "Weight {from} → {to}"
+msgstr "가중치 {from} → {to}"
+
 msgid "Widths"
 msgstr "구조"
 
@@ -886,8 +903,15 @@ msgstr "미등록"
 msgid "set"
 msgstr "등록됨"
 
+msgid "start"
+msgstr "처음"
+
 msgid "sum in order"
 msgstr "차례로 더함"
+
+#, python-brace-format
+msgid "these {k}: {p} of the drop"
+msgstr "이 {k}개가 손실 감소의 {p}"
 
 msgid "time limit"
 msgstr "시간 제한"
@@ -909,6 +933,10 @@ msgid "{n} epochs"
 msgstr "{n} 에포크"
 
 #, python-brace-format
+msgid "{n} of {total} parameters barely changed the loss"
+msgstr "가중치·편향 {total}개 중 {n}개는 손실을 거의 바꾸지 않음"
+
+#, python-brace-format
 msgid "{n} of {total} runs"
 msgstr "{total}개 중 {n}개"
 
@@ -927,6 +955,10 @@ msgstr "깊이 {d}인 트리 {n}개를 각각 무작위 표본으로 학습합�
 #, python-brace-format
 msgid "{n} weights and biases to learn. Each hidden neuron bends the line with {act}."
 msgstr "학습할 가중치·편향 {n}개. 은닉층 뉴런마다 {act}로 선을 구부립니다."
+
+#, python-brace-format
+msgid "{p} of the drop"
+msgstr "손실 감소의 {p}"
 
 msgid "① Data"
 msgstr "① 데이터"

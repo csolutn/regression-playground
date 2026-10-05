@@ -1,7 +1,7 @@
 // Linear regression and neural network training in the browser: the same ② → ③ → ④ loop as
 // train_gradient() in app/ml/trainer.py, written out by hand so it needs no library.
 //
-// train(cfg, meta, opts) is a generator of the trainer's events ('start', 'frame', 'loss', 'end'),
+// train(cfg, meta, opts) is a generator of the trainer's events ('start', 'frame', 'loss', 'params', 'end'),
 // so the output panel draws a browser run exactly like a server run. The data comes from the server
 // (POST /api/prepare), which builds it as before; only the random weights and batch order differ,
 // so the numbers differ from the server's while the behaviour is the same.
@@ -9,6 +9,9 @@
 
 export const MAX_FRAMES = 300;      // one frame per epoch up to this many, then every k-th
 export const LOSS_EVENTS = 100;     // about this many loss events per run
+export const CHECKPOINT_GROWTH = 1.2;   // weight contributions: checkpoints after steps 1, 2, 3, 4, 5, 6, 8, 10, …, and every epoch
+const MAX_SPLITS = 4;                   // … with a stretch between two of them halved at most this many times
+export const TOP_WEIGHTS = 4;           // the weights with the largest contributions: their paths (values, contributions so far) are saved
 
 // ---------- small helpers ----------
 
@@ -232,6 +235,21 @@ export function prepareData(meta) {
   };
 }
 
+// The training loss (on standardized y, as train() reports it) of the network with the given weights,
+// flat in train()'s order [W0, b0, W1, b1, …]: lossAt(flat) → number
+export function trainingLoss(cfg, meta) {
+  const { Xt, yt } = prepareData(meta), n = yt.length, loss = lossFns(cfg);
+  const net = new Network(structure(cfg), cfg.activation, () => 0.5);
+  return flat => {
+    let o = 0;
+    for (const p of net.params) { for (let i = 0; i < p.length; i++) p[i] = flat[o + i]; o += p.length; }
+    const pred = net.forward(Xt, n);
+    let s = 0;
+    for (let i = 0; i < n; i++) s += loss.f(pred[i] - yt[i]);
+    return s / n;
+  };
+}
+
 // ---------- the training loop ----------
 
 export function* train(cfg, meta, { timeLimitS = 30, now = () => performance.now() } = {}) {
@@ -257,6 +275,57 @@ export function* train(cfg, meta, { timeLimitS = 30, now = () => performance.now
     for (let i = 0; i < n; i++) s += loss.f(pred[i] - y[i]);
     return s / n;
   };
+
+  // How much each weight lowered the training loss (Loss Change Allocation): between two checkpoints,
+  // weight i moved by Δθᵢ while the full-batch gradient went from g to g', so it lowered the loss by
+  // about −½(gᵢ + g'ᵢ)·Δθᵢ. Summed over the weights this should be the drop of the training loss between
+  // them; where it is not (big steps across a curved valley), the stretch is halved and each half added
+  // up the same way, down to MAX_SPLITS times.
+  const nParams = net.params.reduce((s, p) => s + p.length, 0), dFull = new Float64Array(nT);
+  const point = () => ({ p: new Float64Array(nParams), g: new Float64Array(nParams), l: 0 });
+  const contrib = new Float64Array(nParams), halves = Array.from({ length: MAX_SPLITS }, point);
+  let prev = point(), cur = point(), initParams = null, initLoss = 0;
+  const setParams = flat => { let o = 0; for (const P of net.params) { P.set(flat.subarray(o, o + P.length)); o += P.length; } };
+  // the full-batch gradient right after meanLoss(Xt, yt, nT) returned trainLoss (backward() reuses that forward pass)
+  const gradient = (into, trainLoss) => {
+    const pred = net.a[net.sizes.length - 1];
+    for (let i = 0; i < nT; i++) dFull[i] = loss.df(pred[i] - yt[i]) / nT;
+    net.backward(dFull, nT);
+    let o = 0;
+    for (let l = 0; l < net.params.length; l++) { into.p.set(net.params[l], o); into.g.set(net.grads[l], o); o += net.params[l].length; }
+    into.l = trainLoss;
+  };
+  // the contributions along the straight line from point a to point b, if they add up to its drop within
+  // tol (else the halves, each within tol / 2); true if it was split
+  const along = (a, b, tol, depth = 0) => {
+    let sum = 0;
+    for (let i = 0; i < nParams; i++) sum -= 0.5 * (a.g[i] + b.g[i]) * (b.p[i] - a.p[i]);
+    if (depth === MAX_SPLITS || Math.abs(sum - (a.l - b.l)) <= tol) {
+      for (let i = 0; i < nParams; i++) contrib[i] -= 0.5 * (a.g[i] + b.g[i]) * (b.p[i] - a.p[i]);
+      return false;
+    }
+    const m = halves[depth];
+    for (let i = 0; i < nParams; i++) m.p[i] = 0.5 * (a.p[i] + b.p[i]);
+    setParams(m.p);
+    gradient(m, meanLoss(Xt, yt, nT));
+    along(a, m, tol / 2, depth + 1);
+    along(m, b, tol / 2, depth + 1);
+    return true;
+  };
+  const checkpoint = tl => {            // tl: the training loss meanLoss(Xt, yt, nT) just returned
+    gradient(cur, tl);
+    if (!initParams) { initParams = cur.p.slice(); initLoss = tl; }
+    else if (along(prev, cur, 0.02 * Math.abs(prev.l - tl) + 1e-5 * initLoss)) setParams(cur.p);   // back from halfway
+    [prev, cur] = [cur, prev];
+  };
+  // every weight and its contribution so far, for the paths of the TOP_WEIGHTS: at every frame and,
+  // where the weights move fast early on, at checkpoints after steps 1, 2, 3, 4, 5, 6, 8, 10, … too
+  let steps = 0, nextCheckpoint = 1, nextRecord = 1;
+  const snapshots = [];
+  const record = epochAt => {           // right after a checkpoint; epochAt may be part of an epoch
+    snapshots.push({ epoch: epochAt, w: Float32Array.from(net.params.flatMap(p => Array.from(p))), c: Float32Array.from(contrib) });
+    nextRecord = Math.max(steps + 1, Math.ceil(steps * CHECKPOINT_GROWTH));
+  };
   const frame = (epoch, tl, vl) => {
     const pred = net.forward(Xp, data.nPlot), out = new Array(data.nPlot);
     for (let i = 0; i < data.nPlot; i++) {
@@ -267,7 +336,10 @@ export function* train(cfg, meta, { timeLimitS = 30, now = () => performance.now
   };
 
   yield { type: 'start', meta };
-  yield frame(0, meanLoss(Xt, yt, nT), meanLoss(Xv, yv, nV));     // epoch 0: the untrained model
+  const vl0 = meanLoss(Xv, yv, nV), tl0 = meanLoss(Xt, yt, nT);
+  checkpoint(tl0);
+  record(0);
+  yield frame(0, tl0, vl0);                                        // epoch 0: the untrained model
 
   let status = 'done', epoch = 0;
   while (epoch < epochs) {
@@ -287,15 +359,24 @@ export function* train(cfg, meta, { timeLimitS = 30, now = () => performance.now
       for (let i = 0; i < n; i++) dOut[i] = loss.df(pred[i] - yb[i]) / n;   // ③ loss (its gradient)
       net.backward(dOut, n);                                         //    backpropagation
       step();                                                        // ④ update the weights
+      if (++steps >= nextCheckpoint) {     // the weights move fast early on: checkpoints in the epoch too
+        nextCheckpoint = Math.ceil(steps * CHECKPOINT_GROWTH);
+        if (start + bs < nT) {                                       // (the epoch's end has its own)
+          checkpoint(meanLoss(Xt, yt, nT));
+          if (steps >= nextRecord) record(epoch - 1 + (start + n) / nT);
+        }
+      }
     }
 
-    const tl = meanLoss(Xt, yt, nT), vl = meanLoss(Xv, yv, nV);
+    const vl = meanLoss(Xv, yv, nV), tl = meanLoss(Xt, yt, nT);
     const diverged = !(Number.isFinite(tl) && Number.isFinite(vl));
     pending.steps.push(epoch);
     pending.train.push(finite(tl));
     pending.val.push(finite(vl));
-    const last = epoch === epochs || diverged || now() > deadline;
-    if (epoch % frameEvery === 0 || last) yield frame(epoch, tl, vl);
+    if (!diverged) checkpoint(tl);
+    const last = epoch === epochs || diverged || now() > deadline, isFrame = epoch % frameEvery === 0 || last;
+    if (!diverged && (isFrame || steps >= nextRecord)) record(epoch);
+    if (isFrame) yield frame(epoch, tl, vl);
     if (epoch % lossEvery === 0 || last) {
       for (const k in history) history[k].push(...pending[k]);
       yield { type: 'loss', ...pending };
@@ -306,6 +387,15 @@ export function* train(cfg, meta, { timeLimitS = 30, now = () => performance.now
       else if (epoch < epochs) status = 'timeout';
       break;
     }
+  }
+  // the weights at the start and at the end (the last frame), for the loss landscape; not for a diverged run
+  const out = a => Array.from(a, finite);
+  if (status !== 'diverged' && prev.p.every(Number.isFinite) && contrib.every(Number.isFinite)) {
+    const c = out(contrib), top = c.map((_, i) => i).sort((a, b) => c[b] - c[a]).slice(0, TOP_WEIGHTS);
+    const paths = top.map(i => ({ index: i, values: snapshots.map(f => sig(f.w[i], 6)),
+                                  lowered: snapshots.map(f => sig(f.c[i], 6)) }));
+    yield { type: 'params', init: out(initParams), final: out(prev.p), contrib: c,
+            path_epochs: snapshots.map(f => sig(f.epoch, 6)), paths };
   }
   yield { type: 'end', status, steps: epoch, final_train: history.train.at(-1), final_val: history.val.at(-1),
           duration: Math.round((now() - started) / 10) / 100 };

@@ -134,6 +134,8 @@ def train():
                 elif event['type'] == 'loss':
                     for k in stored['loss']:
                         stored['loss'][k] += event[k]
+                elif event['type'] == 'params':
+                    stored['params'] = {k: event[k] for k in ('init', 'final', 'contrib', 'path_epochs', 'paths')}
                 elif event['type'] == 'end':
                     end = event
                 yield line(event)
@@ -160,12 +162,13 @@ def save_run(user_id, cfg, end, stored):
 
 
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024     # 300 frames of a 30 × 30 surface are about 2 MB
+MAX_PATH_POINTS = 1000                 # the frames plus the early checkpoints (about 70 at most)
 
 
 @bp.post('/runs')
 @login_required
 def upload_run():
-    """Save a run trained in the browser: {config, frames, loss, end}. The server rebuilds the data itself."""
+    """Save a run trained in the browser: {config, frames, loss, end, params?}. The server rebuilds the data itself."""
     request.max_content_length = MAX_UPLOAD_BYTES
     if not request.is_json:
         abort(415)
@@ -182,15 +185,18 @@ def upload_run():
     except (ml_data.DataError, trainer.BudgetError) as exc:
         return error_response([(exc.msgid, exc.params)])
     try:
-        frames, loss, end = checked_upload(body, cfg['epochs'], len(ds.X_plot))
+        frames, loss, end, params = checked_upload(body, cfg['epochs'], len(ds.X_plot), trainer.n_params(cfg))
     except (KeyError, TypeError, ValueError):
         abort(400)
-    run = save_run(g.user.id, cfg, end, {'meta': trainer.meta(cfg, ds), 'frames': frames, 'loss': loss})
+    stored = {'meta': trainer.meta(cfg, ds), 'frames': frames, 'loss': loss}
+    if params:
+        stored['params'] = params
+    run = save_run(g.user.id, cfg, end, stored)
     return jsonify({'run': run.to_row()}), 201
 
 
-def checked_upload(body, epochs, n_plot):
-    """The uploaded frames, loss history and end, in the trainer's shapes; raises on anything else."""
+def checked_upload(body, epochs, n_plot, n_params):
+    """The uploaded frames, loss history, end and weights (or None), in the trainer's shapes; raises on anything else."""
     def number(v, optional=False):
         if v is None and optional:
             return None
@@ -200,6 +206,11 @@ def checked_upload(body, epochs, n_plot):
 
     def step(v):
         if isinstance(v, bool) or not isinstance(v, int) or not 0 <= v <= epochs:
+            raise ValueError(v)
+        return v
+
+    def index(v):
+        if isinstance(v, bool) or not isinstance(v, int) or not 0 <= v < n_params:
             raise ValueError(v)
         return v
 
@@ -217,7 +228,21 @@ def checked_upload(body, epochs, n_plot):
         raise ValueError(e['status'])
     end = {'status': e['status'], 'steps': step(e['steps']), 'final_train': number(e['final_train'], True),
            'final_val': number(e['final_val'], True), 'duration': number(e['duration'])}
-    return frames, loss, end
+    params = None
+    if body.get('params') is not None:      # older pages and diverged runs send none
+        p = body['params']
+        params = {k: [number(v) for v in p[k]] for k in ('init', 'final', 'contrib')}
+        if any(len(v) != n_params for v in params.values()):
+            raise ValueError('params')
+        times = params['path_epochs'] = [number(v) for v in p['path_epochs']]
+        if not len(frames) <= len(times) <= MAX_PATH_POINTS or any(not 0 <= v <= epochs for v in times) or times != sorted(times):
+            raise ValueError('path_epochs')
+        params['paths'] = [{'index': index(q['index']), 'values': [number(v) for v in q['values']],
+                            'lowered': [number(v) for v in q['lowered']]} for q in p['paths']]
+        if len(params['paths']) > trainer.TOP_WEIGHTS or any(
+                len(q['values']) != len(times) or len(q['lowered']) != len(times) for q in params['paths']):
+            raise ValueError('paths')
+    return frames, loss, end, params
 
 
 def visible_user_id():

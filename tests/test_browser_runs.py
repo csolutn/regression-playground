@@ -21,7 +21,9 @@ def upload_for(over):
     loss = {k: [v for e in events if e['type'] == 'loss' for v in e[k]] for k in ('steps', 'train', 'val')}
     frames = [{k: e[k] for k in ('step', 'pred', 'train', 'val')} for e in events if e['type'] == 'frame']
     end = {k: v for k, v in events[-1].items() if k != 'type'}
-    return {'config': cfg, 'frames': frames, 'loss': loss, 'end': end}
+    params = next(({k: e[k] for k in ('init', 'final', 'contrib', 'path_epochs', 'paths')}
+                   for e in events if e['type'] == 'params'), None)
+    return {'config': cfg, 'frames': frames, 'loss': loss, 'end': end, 'params': params}
 
 
 def test_slow_big_batch_runs_stay_on_the_server():
@@ -52,6 +54,17 @@ def test_upload_saves_a_browser_run(client):
     detail = client.get(f"/api/runs/{r.get_json()['run']['id']}").get_json()
     assert detail['meta']['n_inputs'] == 2 and len(detail['frames']) == len(upload['frames'])
     assert detail['run']['final_val'] == upload['end']['final_val']
+    assert detail['params'] == upload['params'] and len(detail['params']['final']) == 2 * 4 + 4 + 4 + 1
+
+
+def test_upload_without_weights(client):
+    """A page from before weights were saved, or a diverged run: saved without a loss landscape."""
+    login(client)
+    upload = upload_for({'epochs': 20})
+    upload.pop('params')
+    r = post(client, '/api/runs', upload)
+    assert r.status_code == 201
+    assert 'params' not in client.get(f"/api/runs/{r.get_json()['run']['id']}").get_json()
 
 
 def test_upload_rejects_bad_runs(client):
@@ -71,6 +84,15 @@ def test_upload_rejects_bad_runs(client):
     assert bad(lambda b: b['config'].__setitem__('model', 'decision_tree')) == 400
     assert bad(lambda b: b.pop('frames')) == 400
     assert bad(lambda b: b['frames'][0].__setitem__('val', float('nan'))) == 400  # json.dumps writes NaN
+    assert bad(lambda b: b['params']['final'].pop()) == 400                       # wrong number of weights
+    assert bad(lambda b: b['params']['contrib'].__setitem__(0, None)) == 400
+    assert bad(lambda b: b['params'].pop('init')) == 400
+    assert bad(lambda b: b['params']['paths'][0]['values'].pop()) == 400              # not one value per point
+    assert bad(lambda b: b['params']['path_epochs'].reverse()) == 400                 # not in order
+    assert bad(lambda b: b['params']['path_epochs'].__setitem__(-1, 21)) == 400       # more epochs than set
+    assert bad(lambda b: b['params']['paths'][0]['lowered'].pop()) == 400
+    assert bad(lambda b: b['params']['paths'][0].__setitem__('index', 999)) == 400
+    assert bad(lambda b: b['params']['paths'].append(b['params']['paths'][0])) == 400   # more than TOP_WEIGHTS
     assert client.post('/api/runs', data='x', content_type='text/plain').status_code == 415
 
 

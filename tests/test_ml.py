@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+import torch
 
 from app.ml import data, expr, options, trainer
 
@@ -22,6 +23,52 @@ def test_every_model_streams_start_frames_end(model, n_inputs):
     grid = len(events[0]['meta']['axes'][0]) * (len(events[0]['meta']['axes'][1]) if n_inputs == 2 else 1)
     assert all(len(f['pred']) == grid for f in frames)
     json.dumps(events, allow_nan=False)      # must be valid JSON for the browser
+
+
+@pytest.mark.parametrize('over', [
+    {'model': 'neural_net', 'hidden_layers': [4, 4], 'optimizer': 'adam'},
+    {'model': 'neural_net', 'hidden_layers': [4, 4], 'activation': 'tanh', 'optimizer': 'bgd', 'learning_rate': 0.3, 'epochs': 300},
+    {'model': 'neural_net', 'hidden_layers': [8], 'optimizer': 'sgd', 'epochs': 30},
+    {'model': 'linear', 'n_inputs': 2, 'epochs': 100},
+])
+def test_weights_and_their_contributions(over):
+    """The saved weights give the run's losses, and the contributions add up to the drop of the training loss."""
+    events = run(**over)
+    cfg = options.validate(over)[0]
+    params = next(e for e in events if e['type'] == 'params')
+    frames = [e for e in events if e['type'] == 'frame']
+    assert len(params['init']) == len(params['final']) == len(params['contrib']) == trainer.n_params(cfg)
+
+    ds = data.build_dataset(cfg)
+    model, loss_fn = trainer.build_network(cfg), trainer.build_loss(cfg)
+    Xt, yt = trainer.to_tensor(ds.scale_x(ds.X_train)), trainer.to_tensor(ds.scale_y(ds.y_train))
+
+    def loss_at(flat):
+        with torch.no_grad():
+            torch.nn.utils.vector_to_parameters(torch.tensor(flat, dtype=torch.float32), model.parameters())
+            return loss_fn(model(Xt), yt).item()
+    first, last = frames[0]['train'], frames[-1]['train']
+    assert loss_at(params['init']) == pytest.approx(first, rel=1e-3)
+    assert loss_at(params['final']) == pytest.approx(last, rel=1e-2, abs=1e-5)
+    assert sum(params['contrib']) == pytest.approx(first - last, rel=0.05)
+
+    # the paths of the TOP_WEIGHTS largest contributions: at every frame and more often early on
+    top = sorted(range(len(params['contrib'])), key=lambda i: -params['contrib'][i])[:trainer.TOP_WEIGHTS]
+    assert [p['index'] for p in params['paths']] == top
+    times = params['path_epochs']
+    assert times == sorted(times) and set(f['step'] for f in frames) <= set(times)
+    for p in params['paths']:
+        assert len(p['values']) == len(times)
+        assert p['values'][0] == pytest.approx(params['init'][p['index']], abs=1e-5)
+        assert p['values'][-1] == pytest.approx(params['final'][p['index']], abs=1e-5)
+        assert len(p['lowered']) == len(times) and p['lowered'][0] == 0
+        assert p['lowered'][-1] == pytest.approx(params['contrib'][p['index']], rel=1e-4)
+
+
+def test_diverged_and_tree_runs_save_no_weights():
+    events = run(model='neural_net', optimizer='sgd', learning_rate=1, hidden_layers=[32, 32, 32], epochs=50)
+    assert events[-1]['status'] == 'diverged' and not any(e['type'] == 'params' for e in events)
+    assert not any(e['type'] == 'params' for e in run(model='decision_tree'))
 
 
 def test_neural_net_learns_abs():
