@@ -13,7 +13,7 @@ const OPTIONS = window.OPTIONS;
 const root = document.querySelector('[data-page=playground]');
 const form = document.getElementById('settings');
 const guest = root.dataset.guest === '1';        // no database: runs train in this browser and stay in this page
-const settings = new Settings(form, OPTIONS.defaults, `mlp.settings.v2.${root.dataset.user}`,
+const settings = new Settings(form, OPTIONS.defaults, `mlp.settings.v3.${root.dataset.user}`,
   guest ? () => sessionStorage : () => localStorage);
 
 // ---------- step cards ① → ④ ----------

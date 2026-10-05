@@ -50,7 +50,7 @@ DEFAULTS = {
     # ④ optimization
     'optimizer': 'bgd',
     'learning_rate': 0.01,
-    'epochs': 1000,
+    'epochs': 750,
     'batch_method': 'bgd',
     'batch_size': 32,
     'tree_learning_rate': 0.1,
