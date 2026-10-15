@@ -205,6 +205,9 @@ msgstr "점: 이 에포크의 위치입니다. 빈 원은 처음과 끝입니다
 msgid "Download all runs (CSV)"
 msgstr "전체 학습 이력 내려받기 (CSV)"
 
+msgid "Download the list (CSV)"
+msgstr "목록 내려받기 (CSV)"
+
 msgid "Drag a handle (or click a graph): the small plot shows the prediction with that one parameter changed, and its loss. An experiment on the end state, not a moment of training."
 msgstr "손잡이를 끌거나 그래프를 누르면 그 값 하나만 바꾼 예측과 손실이 작은 그래프에 나타납니다. 학습 중의 한 장면이 아니라 끝난 상태에서 해 보는 실험입니다."
 

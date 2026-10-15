@@ -28,7 +28,10 @@
   </section>
 
   <section class="card">
-    <h2>{{ _('Students') }} <span class="muted">({{ students|length }})</span></h2>
+    <div class="admin-head">
+      <h2>{{ _('Students') }} <span class="muted">({{ students|length }})</span></h2>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.export_students') }}">{{ _('Download the list (CSV)') }}</a>
+    </div>
     <div class="table-wrap">
       <table class="history admin-table">
         <thead><tr>

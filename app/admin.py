@@ -16,13 +16,37 @@ from .roster import import_roster, parse_roster
 bp = Blueprint('admin', __name__, url_prefix='/teacher')
 
 
+def run_counts():
+    return dict(db.session.execute(db.select(Run.user_id, db.func.count(Run.id)).group_by(Run.user_id)).all())
+
+
+def all_students():
+    return db.session.scalars(db.select(User).filter_by(role='student').order_by(User.login_id)).all()
+
+
+def csv_response(rows, filename):
+    """UTF-8 with BOM so Excel shows Korean correctly."""
+    out = io.StringIO()
+    out.write('\ufeff')
+    csv.writer(out).writerows(rows)
+    return Response(out.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': f'attachment; filename={filename}'})
+
+
 @bp.get('/')
 @teacher_required
 def index():
-    counts = dict(db.session.execute(db.select(Run.user_id, db.func.count(Run.id)).group_by(Run.user_id)).all())
     last = dict(db.session.execute(db.select(Run.user_id, db.func.max(Run.created_at)).group_by(Run.user_id)).all())
-    students = db.session.scalars(db.select(User).filter_by(role='student').order_by(User.login_id)).all()
-    return render_template('admin/index.html', students=students, counts=counts, last=last)
+    return render_template('admin/index.html', students=all_students(), counts=run_counts(), last=last)
+
+
+@bp.get('/students.csv')
+@teacher_required
+def export_students():
+    """The class list with each student's number of runs, as on the teacher page."""
+    counts = run_counts()
+    return csv_response([[_('Student ID'), _('Name'), _('Runs')],
+                         *([s.login_id, s.name, counts.get(s.id, 0)] for s in all_students())], 'students.csv')
 
 
 @bp.post('/roster')
@@ -95,24 +119,18 @@ def student(user_id):
 @bp.get('/runs.csv')
 @teacher_required
 def export_runs():
-    """All runs as a spreadsheet (UTF-8 with BOM so Excel shows Korean correctly).
-    Times are in ?tz= (the teacher's browser time zone, added by the page), else UTC."""
+    """All runs as a spreadsheet. Times are in ?tz= (the teacher's browser time zone, added by the page), else UTC."""
     try:
         zone = ZoneInfo(request.args.get('tz') or 'UTC')
     except (KeyError, ValueError):                # unknown or malformed zone name
         zone = ZoneInfo('UTC')
-    out = io.StringIO()
-    out.write('﻿')
-    w = csv.writer(out)
     keys = ['function_1d', 'function_2d', 'data_size', 'noise_std', 'model', 'hidden_layers', 'activation',
             'max_depth', 'n_estimators', 'loss', 'optimizer', 'learning_rate', 'epochs', 'batch_method']
-    w.writerow(['student_id', 'name', 'run', f'created_at ({zone.key})', 'status', 'final_train_loss', 'final_val_loss',
-                'duration_s', 'n_inputs', 'data_source'] + keys)
-    rows = db.session.execute(db.select(Run, User).join(User).order_by(User.login_id, Run.seq))
-    for run, user in rows:
+    rows = [['student_id', 'name', 'run', f'created_at ({zone.key})', 'status', 'final_train_loss', 'final_val_loss',
+             'duration_s', 'n_inputs', 'data_source'] + keys]
+    for run, user in db.session.execute(db.select(Run, User).join(User).order_by(User.login_id, Run.seq)):
         cfg = run.config
         created = run.created_at.replace(tzinfo=timezone.utc).astimezone(zone)   # stored as naive UTC
-        w.writerow([user.login_id, user.name, run.seq, f'{created:%Y-%m-%d %H:%M:%S}', run.status, run.final_train,
-                    run.final_val, run.duration, cfg.get('n_inputs'), cfg.get('data_source')] + [cfg.get(k) for k in keys])
-    return Response(out.getvalue(), mimetype='text/csv',
-                    headers={'Content-Disposition': 'attachment; filename=runs.csv'})
+        rows.append([user.login_id, user.name, run.seq, f'{created:%Y-%m-%d %H:%M:%S}', run.status, run.final_train,
+                     run.final_val, run.duration, cfg.get('n_inputs'), cfg.get('data_source')] + [cfg.get(k) for k in keys])
+    return csv_response(rows, 'runs.csv')

@@ -168,6 +168,8 @@ def test_teacher_pages(client):
     from datetime import datetime, timedelta
     assert datetime.fromisoformat(seoul.splitlines()[1].split(',')[3]) - datetime.fromisoformat(utc) == timedelta(hours=9)
     assert 'created_at (UTC)' in client.get('/teacher/runs.csv?tz=../../etc/passwd').get_data(as_text=True)
+    students = client.get('/teacher/students.csv').get_data(as_text=True)
+    assert students.lstrip('\ufeff').splitlines() == ['학번,이름,실험 수', '20101,김하늘,1', '20102,이바다,0']
     roster = '학번,이름\n20103,박산\n20101,김하늘\n'.encode('cp949')
     from io import BytesIO
     r = client.post('/teacher/roster', data={'roster': (BytesIO(roster), 'r.csv')}, follow_redirects=True)
