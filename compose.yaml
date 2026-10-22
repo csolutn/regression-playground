@@ -13,8 +13,8 @@ services:
     ports:
       - "127.0.0.1:18001:8000"          # this Mac only, for the teacher and checks; students use the tunnel
     restart: unless-stopped
-    cpus: 7                             # leave room inside the VM for gunicorn and cloudflared
-    mem_limit: 6g
+    cpus: 3                             # Colima VM has 4 CPUs; leave room for cloudflared and Codelog
+    mem_limit: 3g                       # 30-student load test peaked at ~2.5 GB
     pids_limit: 512
     read_only: true
     tmpfs: [/tmp]
