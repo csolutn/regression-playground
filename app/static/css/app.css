@@ -164,19 +164,11 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .toast-error { background: var(--danger); color: #fff; }
 
 /* ---------- login ---------- */
-.login-wrap { display: grid; place-items: center; padding: 48px 16px; }
-.login-card { width: min(380px, 100%); display: flex; flex-direction: column; gap: 4px; }
-.login-card h1 { margin-bottom: 4px; }
-.login-card p { margin: 0 0 12px; }
-/* the login page and a guest's login popup: each label beside its box */
+/* a guest's login popup: each label beside its box */
 .login-fields { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 12px; margin-bottom: 12px; }
 .login-fields label { display: contents; }      /* the labels line up in one column, the boxes in the other */
 .login-fields label[hidden] { display: none; }
 .login-fields span { font-size: 13px; font-weight: 600; }
-.login-card .guest-link { margin: 14px 0 0; text-align: center; }
-.quiet-link { border: 0; padding: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer;
-  text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--muted) 45%, transparent); text-underline-offset: 3px; }
-.quiet-link:hover { color: var(--text); }
 .info-btn { display: inline-grid; place-items: center; width: 17px; height: 17px; margin-left: 4px; padding: 0; vertical-align: 1px;
   border: 1.3px solid var(--muted); border-radius: 50%; background: none; color: var(--muted);
   font: italic 700 11px/1 Georgia, 'Times New Roman', serif; cursor: pointer; }
@@ -273,7 +265,6 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .credits { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .credits a { display: inline-flex; color: inherit; opacity: .8; text-decoration: none; }
 .credits a:hover { opacity: 1; color: var(--text); }
-.login-wrap .credits { margin-top: 18px; }
 .page-credits { display: none; }
 #train-btn.is-running { background: var(--danger); border-color: var(--danger); }
 

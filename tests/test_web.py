@@ -4,29 +4,32 @@ from conftest import login
 
 
 def test_login_requires_roster_and_sets_password_on_first_login(client):
-    html = login(client, '99999', '없는사람').get_data(as_text=True)
-    assert '학번과 이름이 명단에 없습니다.' in html and '선생님께 문의' not in html
-    assert 'value="99999"' in html and '<label data-role="confirm" hidden>' in html     # no second password yet
-    r = client.post('/login', data={'login_id': '20101', 'name': '김하늘', 'password': 'pass1234'})
-    assert r.status_code == 200 and '<label data-role="confirm" >' in r.get_data(as_text=True)     # asks to confirm
-    assert login(client).status_code == 302                                              # registers
+    r = login(client, '99999', '없는사람')
+    assert r.status_code == 400 and r.get_json()['message'] == '학번과 이름이 명단에 없습니다.'
+    r = login(client, confirm=False)
+    assert r.status_code == 400 and r.get_json()['first_login']                       # asks to confirm
+    assert login(client).get_json() == {'user': 1, 'home': None}                      # registers
     client.post('/logout')
-    assert login(client, password='wrong', confirm=False).status_code == 200            # wrong password
-    assert login(client, confirm=False).status_code == 302
-    assert client.get('/').status_code == 200
+    assert login(client, password='wrong', confirm=False).status_code == 400          # wrong password
+    assert login(client, confirm=False).status_code == 200
+    assert 'data-guest=""' in client.get('/').get_data(as_text=True)
 
 
-def test_first_login_keeps_the_typed_password(client):
+def test_there_is_no_login_page(client):
+    """/login (an old bookmark), a page that needs a login and a form post all open the playground's popup."""
+    r = client.get('/login')
+    assert r.status_code == 302 and r.headers['Location'] == '/?login=1'
+    assert client.get('/login?next=/teacher/').headers['Location'] == '/?login=1&next=/teacher/'
     r = client.post('/login', data={'login_id': '20101', 'name': '김하늘', 'password': 'pass1234'})
-    html = r.get_data(as_text=True)
-    assert 'value="pass1234"' in html and r.headers['Cache-Control'] == 'no-store'
-    r = client.post('/login', data={'login_id': '20101', 'name': '김하늘', 'password': 'pass1234',
-                                    'password_confirm': 'other123'})
-    assert 'value="pass1234"' not in r.get_data(as_text=True)      # mismatch: retype both
+    assert r.status_code == 302 and r.headers['Location'] == '/?login=1'
+    assert client.post('/guest').status_code == 404
+    r = client.get('/teacher/')
+    assert r.status_code == 302 and r.headers['Location'] == '/?login=1&next=/teacher/'
+    assert 'id="login-dialog"' in client.get(r.headers['Location']).get_data(as_text=True)
 
 
-def test_login_page_explains_the_password(client):
-    html = client.get('/login').get_data(as_text=True)
+def test_login_popup_explains_the_password(client):
+    html = client.get('/').get_data(as_text=True)
     assert '명단에 있는' not in html and 'class="info-btn"' in html
     assert '로그인은 등록된 사용자만 가능합니다.' in html
     assert '등록된 사용자의 경우 비밀번호는 첫 로그인 시 입력한 값으로 설정됩니다.' in html
@@ -34,7 +37,7 @@ def test_login_page_explains_the_password(client):
 
 
 def test_name_spaces_are_ignored(client):
-    assert login(client, name='김 하늘').status_code == 302
+    assert login(client, name='김 하늘').status_code == 200
 
 
 def test_api_requires_login(client):
@@ -42,14 +45,9 @@ def test_api_requires_login(client):
     assert client.post('/api/train', json={}).status_code == 401
 
 
-def test_guest_uses_the_browser_only_and_nothing_is_saved(client):
-    page = client.get('/login').get_data(as_text=True)
-    assert 'formaction="/guest"' in page
-    assert client.get('/').status_code == 302                         # the login page stays the first page
-    r = client.post('/guest')
-    assert r.status_code == 302 and r.headers['Location'].endswith('/')
-    page = client.get('/').get_data(as_text=True)
-    assert 'data-guest="1"' in page and 'data-login="guest"' in page
+def test_the_front_page_is_the_guest_playground_and_nothing_is_saved(client):
+    page = client.get('/').get_data(as_text=True)                     # no login first: a guest
+    assert 'data-guest="1"' in page and 'data-login="guest"' in page and 'id="login-dialog"' in page
     assert client.post('/api/preview', json={'epochs': 20}).status_code == 200
     prep = client.post('/api/prepare', json={'epochs': 20, 'model': 'linear'})
     assert prep.status_code == 200 and prep.get_json()['browser'] is True
@@ -59,20 +57,23 @@ def test_guest_uses_the_browser_only_and_nothing_is_saved(client):
     assert client.get('/teacher/').status_code == 302
 
 
-def test_logging_in_ends_the_guest_session(client):
-    client.post('/guest')
+def test_logging_out_leaves_the_guest_playground(client):
+    client.get('/lang/en')
     login(client)
     page = client.get('/').get_data(as_text=True)
     assert 'data-guest=""' in page and 'data-login="20101"' in page
+    r = client.post('/logout')
+    assert r.status_code == 302 and r.headers['Location'] == '/'
+    page = client.get('/').get_data(as_text=True)
+    assert 'data-guest="1"' in page and '<html lang="en">' in page     # the language stays
+    assert client.get('/api/runs').status_code == 403                # a guest now, not a lost session
 
 
 def test_a_guest_logs_in_from_the_popup_and_keeps_the_runs(client):
     """The guest's login popup posts JSON to /login; the page then uploads the guest's runs (POST /api/runs)."""
-    client.post('/guest')
     page = client.get('/').get_data(as_text=True)
     assert 'id="login-dialog"' in page and page.count('data-role="login-open"') == 2
     assert page.count('id="pw-help"') == 1 and 'data-role="pw-help-open"' in page and 'name="password_confirm"' in page
-    assert '로그인은 등록된 사용자만 가능합니다.' in page                  # the same (i) as the login page
     who = {'login_id': '20101', 'name': '김 하늘', 'password': 'pass1234'}
     r = client.post('/login', json={**who, 'name': '없는사람'})
     assert r.status_code == 400 and r.get_json()['kind'] == 'error' and not r.get_json()['first_login']
@@ -81,13 +82,12 @@ def test_a_guest_logs_in_from_the_popup_and_keeps_the_runs(client):
     assert client.post('/login', json={**who, 'password_confirm': 'other123'}).status_code == 400
     assert 'data-guest="1"' in client.get('/').get_data(as_text=True)    # still a guest
     r = client.post('/login', json={**who, 'password_confirm': 'pass1234'})
-    assert r.status_code == 200 and r.get_json() == {'user': 1}
+    assert r.status_code == 200 and r.get_json() == {'user': 1, 'home': None}
     end = {'status': 'done', 'steps': 20, 'final_train': 0.1, 'final_val': 0.2, 'duration': 0.3}
     assert client.post('/api/runs', json={'config': {'epochs': 20}, 'end': end, 'trainer': 1}).status_code == 201
     assert [row['seq'] for row in client.get('/api/runs').get_json()['runs']] == [1]
     assert 'data-guest=""' in client.get('/').get_data(as_text=True)
     client.post('/logout')
-    client.post('/guest')
     assert client.post('/login', json={**who, 'password': 'wrong'}).get_json()['first_login'] is False
     assert client.post('/login', json=who).status_code == 200            # the password is set now
 
@@ -155,7 +155,7 @@ def test_teacher_pages(client):
     login(client)
     train(client)
     client.post('/logout')
-    assert login(client, 'teacher', '선생님', 'teachpw', confirm=False).status_code == 302
+    assert login(client, 'teacher', '선생님', 'teachpw', confirm=False).get_json()['home'] == '/teacher/'
     assert '김하늘' in client.get('/teacher/').get_data(as_text=True)
     rows = client.get('/api/runs?user=1').get_json()['runs']
     assert len(rows) == 1
@@ -176,8 +176,7 @@ def test_teacher_pages(client):
     assert '박산' in r.get_data(as_text=True)
     client.post('/teacher/students/1/reset-password')
     client.post('/logout')
-    r = client.post('/login', data={'login_id': '20101', 'name': '김하늘', 'password': 'pass1234'})
-    assert 'password_confirm' in r.get_data(as_text=True)      # must register a new password
+    assert login(client, confirm=False).get_json()['first_login']      # must register a new password
 
 
 def test_history_tools_name_the_csv_after_the_student(client):
@@ -225,7 +224,7 @@ def test_static_urls_carry_a_version_and_are_cached(app, client, tmp_path):
 
 
 def test_icons_for_safari_and_ios(client):
-    page = client.get('/login').get_data(as_text=True)
+    page = client.get('/').get_data(as_text=True)
     assert 'icons/icon.png' in page and 'icons/icon.svg' not in page
     for path in ['/favicon.ico', '/apple-touch-icon.png']:
         r = client.get(path)

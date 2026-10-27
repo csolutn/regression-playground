@@ -1,6 +1,7 @@
-// A guest's login popup on the playground (partials/login_dialog.html). It logs in with POST /login as JSON,
-// so the page stays: the runs made as a guest are then saved to the account (only their results, as for any
-// browser run), carry(user) keeps the settings, and the page reloads as that user.
+// A guest's login popup on the playground (partials/login_dialog.html), the only way to log in. It logs in with
+// POST /login as JSON, so the page stays: the runs made as a guest are then saved to the account (only their
+// results, as for any browser run), carry(user) keeps the settings, and the page loads again as that user:
+// the page that asked for the login (/?login=1&next=…), else the teacher page for a teacher, else the playground.
 import { t } from './i18n.js';
 
 export function mountGuestLogin(dialog, { output, toast, carry }) {
@@ -14,13 +15,20 @@ export function mountGuestLogin(dialog, { output, toast, carry }) {
     message.className = `flash flash-${kind}`;
   };
 
+  const open = () => {
+    if (output.run?.live) { toast(t('Wait until training finishes.'), 'info'); return; }
+    say(null);
+    dialog.showModal();
+  };
   for (const el of document.querySelectorAll('[data-role="login-open"]')) {
-    el.addEventListener('click', e => {
-      e.preventDefault();               // without this script the top bar's link goes to the login page
-      if (output.run?.live) { toast(t('Wait until training finishes.'), 'info'); return; }
-      say(null);
-      dialog.showModal();
-    });
+    el.addEventListener('click', e => { e.preventDefault(); open(); });    // the top bar's link is /?login=1
+  }
+  const query = new URLSearchParams(location.search);
+  const next = query.get('next') || '';
+  const nextPath = next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : null;   // this site only
+  if (query.has('login')) {
+    history.replaceState(null, '', location.pathname);      // a reload stays the plain playground
+    open();
   }
   $('login-cancel').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', e => { if (e.target === dialog && !submit.disabled) dialog.close(); });
@@ -57,7 +65,7 @@ export function mountGuestLogin(dialog, { output, toast, carry }) {
       const failed = await output.saveGuestRuns();
       carry(reply.user);
       if (failed) alert(t('{n} of the runs made as a guest could not be saved.', { n: failed }));
-      location.reload();
+      location.replace(nextPath || reply.home || location.pathname);
     } catch (err) {
       say(err.message);
       submit.disabled = false;

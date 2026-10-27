@@ -1,15 +1,15 @@
-"""Login with student number + name + password, or use the playground as a guest.
+"""The playground is open to guests; students log in with student number + name + password.
 
-Students come from the teacher's roster. The first login sets the password
-(typed twice); after that the same password is required. A teacher can reset it.
-Guests (a public demo) get the playground without the database: their runs train in
-the browser and live only in that page, and server training is for logged-in users.
-A guest logs in from a popup on the playground (POST /login as JSON), and the page then
-saves the runs made as a guest to that account (POST /api/runs) before it reloads.
+Anyone who is not logged in uses the playground as a guest (the front page, also after logging out):
+no database, their runs train in the browser and live only in that page, and server training is for
+logged-in users. Students come from the teacher's roster. The first login sets the password (typed
+twice); after that the same password is required. A teacher can reset it.
+There is no login page: a guest logs in from a popup on the playground (POST /login as JSON), and the
+page then saves the runs made as a guest to that account (POST /api/runs) before it reloads.
 """
 from functools import wraps
 
-from flask import Blueprint, abort, flash, g, jsonify, make_response, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, g, jsonify, redirect, request, session, url_for
 from flask_babel import gettext as _
 
 from .extensions import db
@@ -35,21 +35,27 @@ def login_required(view):
                 if g.guest:            # a message, not 401 (the page would send the guest to the login form)
                     return jsonify({'errors': [_('This feature is not available to guests.')]}), 403
                 abort(401)
-            return redirect(url_for('auth.login', next=request.path))
+            return redirect(login_url(request.path))
         return view(*args, **kwargs)
     return wrapped
 
 
 def user_or_guest_required(view):
-    """Pages and API calls a guest may use too (nothing that reads or writes the database)."""
+    """Pages and API calls a guest may use too (nothing that reads or writes the database).
+    A page makes anyone not logged in a guest; an API call without a session (one that ran out) is a 401."""
     @wraps(view)
     def wrapped(*args, **kwargs):
         if g.user is None and not g.guest:
             if request.path.startswith('/api/'):
                 abort(401)
-            return redirect(url_for('auth.login', next=request.path))
+            start_guest()
         return view(*args, **kwargs)
     return wrapped
+
+
+def login_url(next_path=None):
+    """The playground with its login popup open; after the login the page goes to next_path."""
+    return url_for('main.index', login=1, next=next_path or None)
 
 
 def teacher_required(view):
@@ -68,29 +74,17 @@ def normalize_name(name):
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """POST as JSON from the login popup; anything else (an old bookmark or tab of the login page that
+    was here before) goes to the playground with the popup open."""
     if request.method == 'POST' and request.is_json:
         return login_json()
-    form = {'login_id': '', 'name': ''}
-    first_login, kept_password = False, ''
-    if request.method == 'POST':
-        form = {'login_id': request.form.get('login_id', '').strip(), 'name': request.form.get('name', '').strip()}
-        password, confirm = request.form.get('password', ''), request.form.get('password_confirm')
-        user, (category, message), first_login = check_login(form['login_id'], form['name'], password, confirm)
-        if user:
-            return finish_login(user)
-        if first_login and confirm is None:
-            kept_password = password    # refilled so only the confirmation needs typing
-        flash(message, category)
-    resp = make_response(render_template('login.html', form=form, first_login=first_login,
-                                         kept_password=kept_password))
-    resp.headers['Cache-Control'] = 'no-store'     # the page may carry the typed password
-    return resp
+    return redirect(login_url(request.args.get('next')))
 
 
 def login_json():
-    """The guest's login popup on the playground (the same POST /login, as JSON, so the page and the
-    guest's runs stay): {'user': id}, or {'message', 'kind' ('error' | 'info'), 'first_login'} (to ask for
-    the password again)."""
+    """The guest's login popup on the playground (POST /login as JSON, so the page and the guest's runs
+    stay): {'user': id, 'home'} (the teacher page for a teacher, else null), or
+    {'message', 'kind' ('error' | 'info'), 'first_login'} (to ask for the password again)."""
     body = request.get_json(silent=True)
     body = {k: v for k, v in body.items() if isinstance(v, str)} if isinstance(body, dict) else {}
     user, (category, message), first_login = check_login(
@@ -99,7 +93,7 @@ def login_json():
     if not user:
         return jsonify({'message': message, 'kind': category, 'first_login': first_login}), 400
     start_session(user)
-    return jsonify({'user': user.id})
+    return jsonify({'user': user.id, 'home': url_for('admin.index') if user.is_teacher else None})
 
 
 def check_login(login_id, name, password, confirm):
@@ -122,14 +116,6 @@ def check_login(login_id, name, password, confirm):
     return user, (None, None), True
 
 
-def finish_login(user):
-    start_session(user)
-    next_url = request.args.get('next', '')
-    if next_url.startswith('/') and not next_url.startswith('//'):
-        return redirect(next_url)
-    return redirect(url_for('admin.index' if user.is_teacher else 'main.index'))
-
-
 def start_session(user):
     user.last_login_at = utcnow()
     db.session.commit()
@@ -141,15 +127,9 @@ def start_session(user):
     session.permanent = True
 
 
-@bp.post('/guest')
-def guest():
-    """"Use as a guest" below the login form (a POST, so another site cannot switch a student to guest)."""
-    lang = session.get('lang')
-    session.clear()
-    session['guest'] = True          # until the browser closes (not a permanent session)
-    if lang:
-        session['lang'] = lang
-    return redirect(url_for('main.index'))
+def start_guest():
+    session['guest'] = True          # until the browser closes (not a permanent session); keeps the language
+    g.guest = True
 
 
 @bp.post('/logout')
@@ -158,7 +138,8 @@ def logout():
     session.clear()
     if lang:
         session['lang'] = lang
-    return redirect(url_for('auth.login'))
+    start_guest()
+    return redirect(url_for('main.index'))
 
 
 @bp.get('/lang/<code>')

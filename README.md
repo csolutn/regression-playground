@@ -3,7 +3,7 @@
 A web GUI for exploring supervised regression. Students set up the four steps of the
 learning loop, press **Train**, and watch the prediction change in the browser.
 
-**Demo: <https://yhat.solsam.app>** — choose "Use as a guest" below the login form; no account needed.
+**Demo: <https://yhat.solsam.app>** — opens as a guest; no account needed.
 
 ```
 ① Training data  →  ② Predictor  →  ③ Loss function        →  ④ Optimization
@@ -18,9 +18,12 @@ learning loop, press **Train**, and watch the prediction change in the browser.
   frame), and the history table below it (cells that changed from the run before are highlighted).
 - **Save MP4**: a 1080×1920 video (title, prediction, loss curve) made in the browser.
   The server sends only numbers, so animation and video cost no server time.
-- Login: student number + name from the teacher's class list. The first login sets the password.
-- Guests (public demo, "Use as a guest" below the login form): no database. Runs train in the browser and
-  stay in that page (gone on reload); tree models and runs too big for the browser need a login.
+- Guests: the front page (also after logging out) is the playground as a guest, with no database. Runs
+  train in the browser and stay in that page (gone on reload); tree models and runs too big for the
+  browser need a login.
+- Login: **Log in** in the top bar opens a popup (there is no login page; `/login` and pages that need a
+  login open it at `/?login=1`). Student number + name from the teacher's class list; the first login
+  sets the password. The runs made as a guest are saved to the account.
 - Teacher page (`/teacher`): import the class list, reset passwords, see every student's history,
   download all runs as CSV.
 

@@ -1,5 +1,6 @@
-{# A guest's login on the playground (opened by "Log in" in the top bar and under the history): the page
-   stays, so the runs made as a guest can be saved to the account (login.js) #}
+{# The only login: a guest's popup on the playground (opened by "Log in" in the top bar and under the history,
+   and by /?login=1, where /login and pages that need a login send to). The page stays, so the runs made as a
+   guest can be saved to the account (login.js) #}
 <dialog class="dialog login-dialog" id="login-dialog" aria-labelledby="login-dialog-title">
   <form>
     {# the line beside the title while it fits, else below it #}
@@ -9,7 +10,26 @@
         <button type="button" class="info-btn" data-role="pw-help-open" aria-haspopup="dialog"
                 title="{{ _('About logging in') }}" aria-label="{{ _('About logging in') }}">i</button></p>
     </div>
-    {% include 'partials/login_fields.html' %}
+    {# each label beside its box #}
+    <div class="login-fields">
+      <label>
+        <span>{{ _('Student ID') }}</span>
+        <input name="login_id" required autocomplete="username" autofocus placeholder="{{ _('e.g. %(example)s', example='21401') }}">
+      </label>
+      <label>
+        <span>{{ _('Name') }}</span>
+        <input name="name" required autocomplete="name" placeholder="{{ _('e.g. %(example)s', example='김경기') }}">
+      </label>
+      <label>
+        <span>{{ _('Password') }}</span>
+        <input name="password" type="password" required autocomplete="current-password">
+      </label>
+      {# a first login sets the password: typed twice (hidden and disabled, so not sent, until login.js shows it) #}
+      <label data-role="confirm" hidden>
+        <span>{{ _('Password again') }}</span>
+        <input name="password_confirm" type="password" required autocomplete="new-password" disabled>
+      </label>
+    </div>
     <p class="flash" data-role="login-message" hidden></p>
     <div class="dialog-actions">
       <button type="button" class="btn btn-ghost" data-role="login-cancel">{{ _('Cancel') }}</button>

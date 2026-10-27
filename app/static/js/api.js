@@ -10,7 +10,7 @@ export class ApiError extends Error {
 }
 
 async function check(res) {
-  if (res.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname); throw new ApiError([t('Please log in again.')]); }
+  if (res.status === 401) { location.href = '/?login=1&next=' + encodeURIComponent(location.pathname); throw new ApiError([t('Please log in again.')]); }
   if (res.ok) return res;
   let messages;
   try { messages = (await res.json()).errors; } catch { /* not JSON */ }

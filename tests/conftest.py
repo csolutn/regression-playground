@@ -27,4 +27,4 @@ def login(client, login_id='20101', name='김하늘', password='pass1234', confi
     data = {'login_id': login_id, 'name': name, 'password': password}
     if confirm:
         data['password_confirm'] = password
-    return client.post('/login', data=data)
+    return client.post('/login', json=data)        # the playground's login popup (there is no login page)
