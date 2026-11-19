@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-19 18:11+0900\n"
+"POT-Creation-Date: 2026-11-19 18:14+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -561,6 +561,10 @@ msgstr ""
 msgid "Password reset for %(name)s. The next login sets a new one."
 msgstr ""
 
+#, python-format
+msgid "Password reset for the teacher %(name)s. The next login sets a new one."
+msgstr ""
+
 msgid "Path of this run"
 msgstr ""
 
@@ -620,6 +624,10 @@ msgstr ""
 
 #, python-format
 msgid "Reset the password of %(name)s?"
+msgstr ""
+
+#, python-format
+msgid "Reset the password of the teacher %(name)s?"
 msgstr ""
 
 msgid "Result"

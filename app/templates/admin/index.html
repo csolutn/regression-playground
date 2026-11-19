@@ -97,6 +97,10 @@
                 {% if loop.first %}
                   <span class="pill">{{ _('First teacher') }}</span>
                 {% else %}
+                  <form method="post" action="{{ url_for('admin.reset_teacher_password', user_id=t.id) }}" class="inline"
+                        onsubmit="return confirm({{ _('Reset the password of the teacher %(name)s?', name=t.name)|tojson }})">
+                    <button class="btn btn-ghost btn-sm" {{ 'disabled' if not t.has_password }}>{{ _('Reset password') }}</button>
+                  </form>
                   <form method="post" action="{{ url_for('admin.delete_teacher', user_id=t.id) }}" class="inline"
                         onsubmit="return confirm({{ _('Delete the teacher %(name)s and their runs?', name=t.name)|tojson }})">
                     <button class="btn btn-ghost btn-sm btn-danger">{{ _('Delete') }}</button>

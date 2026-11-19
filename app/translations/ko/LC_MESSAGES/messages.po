@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-19 18:11+0900\n"
+"POT-Creation-Date: 2026-11-19 18:14+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -562,6 +562,10 @@ msgstr "비밀번호 확인"
 msgid "Password reset for %(name)s. The next login sets a new one."
 msgstr "%(name)s 학생의 비밀번호를 초기화했습니다. 다음 로그인 때 새 비밀번호를 등록합니다."
 
+#, python-format
+msgid "Password reset for the teacher %(name)s. The next login sets a new one."
+msgstr "관리자 %(name)s의 비밀번호를 초기화했습니다. 다음 로그인 때 새 비밀번호를 등록합니다."
+
 msgid "Path of this run"
 msgstr "이번 학습이 지나온 길"
 
@@ -622,6 +626,10 @@ msgstr "설정 초기화"
 #, python-format
 msgid "Reset the password of %(name)s?"
 msgstr "%(name)s 학생의 비밀번호를 초기화할까요?"
+
+#, python-format
+msgid "Reset the password of the teacher %(name)s?"
+msgstr "관리자 %(name)s의 비밀번호를 초기화할까요?"
 
 msgid "Result"
 msgstr "결과"

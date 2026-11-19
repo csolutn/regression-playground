@@ -264,6 +264,9 @@ def test_the_first_teacher_adds_and_deletes_teachers(client):
     login(client, 'teacher', '선생님', 'teachpw', confirm=False)
     page = client.get('/teacher/').get_data(as_text=True)
     assert '최초 관리자' in page and 'action="/teacher/teachers"' in page
+    client.post('/teacher/teachers', data={'login_id': 'x', 'name': 'x'})
+    assert json.dumps('관리자 x의 비밀번호를 초기화할까요?') in client.get('/teacher/').get_data(as_text=True)   # as tojson writes it
+    client.post('/teacher/teachers/4/delete')                                    # x goes again
     r = client.post('/teacher/teachers', data={'login_id': 'second', 'name': '둘째'}, follow_redirects=True)
     assert '관리자 둘째을(를) 추가했습니다.' in r.get_data(as_text=True)
     r = client.post('/teacher/teachers', data={'login_id': '20101', 'name': '김하늘'}, follow_redirects=True)
@@ -276,10 +279,16 @@ def test_the_first_teacher_adds_and_deletes_teachers(client):
     assert '최초 관리자' not in page and 'action="/teacher/teachers"' not in page
     assert client.post('/teacher/teachers', data={'login_id': 'third', 'name': '셋째'}).status_code == 403
     assert client.post('/teacher/teachers/1/delete').status_code == 403
+    assert client.post('/teacher/teachers/3/reset-password').status_code == 403
     client.post('/logout')
     login(client, 'teacher', '선생님', 'teachpw', confirm=False)
     teacher_id, second_id = 3, 4                                                 # after the two students
     assert client.post(f'/teacher/teachers/{teacher_id}/delete').status_code == 404   # not the first teacher itself
     assert client.post('/teacher/teachers/1/delete').status_code == 404              # nor a student
+    assert client.post(f'/teacher/teachers/{teacher_id}/reset-password').status_code == 404
+    r = client.post(f'/teacher/teachers/{second_id}/reset-password', follow_redirects=True)
+    assert '관리자 둘째의 비밀번호를 초기화했습니다.' in r.get_data(as_text=True)
+    r = login(client, 'second', '둘째', 'new-pw', confirm=False)                  # sets a new password next time
+    assert r.status_code == 400 and r.get_json()['first_login']
     r = client.post(f'/teacher/teachers/{second_id}/delete', follow_redirects=True)
     assert '둘째' in r.get_data(as_text=True) and login(client, 'second', '둘째', 'pw2nd').status_code == 400

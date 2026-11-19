@@ -146,12 +146,27 @@ def add_teacher():
     return redirect(url_for('.index'))
 
 
+def get_other_teacher(user_id):
+    user = db.get_or_404(User, user_id)
+    if not user.is_teacher or user == g.user:          # the first teacher keeps its account and password
+        abort(404)
+    return user
+
+
+@bp.post('/teachers/<int:user_id>/reset-password')
+@first_teacher_required
+def reset_teacher_password(user_id):
+    user = get_other_teacher(user_id)
+    user.password_hash = None
+    db.session.commit()
+    flash(_('Password reset for the teacher %(name)s. The next login sets a new one.', name=user.name), 'info')
+    return redirect(url_for('.index'))
+
+
 @bp.post('/teachers/<int:user_id>/delete')
 @first_teacher_required
 def delete_teacher(user_id):
-    user = db.get_or_404(User, user_id)
-    if not user.is_teacher or user == g.user:          # the first teacher stays
-        abort(404)
+    user = get_other_teacher(user_id)
     db.session.delete(user)
     db.session.commit()
     flash(_('Deleted %(name)s and their history.', name=user.name), 'info')
