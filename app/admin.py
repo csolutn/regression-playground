@@ -1,10 +1,14 @@
-"""Teacher pages: class list, password reset, and every student's history."""
+"""Teacher pages: class list, password reset, and every student's history.
+The first teacher (the oldest teacher account) also adds and deletes the other teachers; a new teacher, like a
+student, sets the password at the first login."""
 import csv
 import io
 from datetime import timezone
 from zoneinfo import ZoneInfo
 
-from flask import Blueprint, Response, abort, flash, redirect, render_template, request, url_for
+from functools import wraps
+
+from flask import Blueprint, Response, abort, flash, g, redirect, render_template, request, url_for
 from flask_babel import gettext as _
 
 from .auth import teacher_required
@@ -24,6 +28,21 @@ def all_students():
     return db.session.scalars(db.select(User).filter_by(role='student').order_by(User.login_id)).all()
 
 
+def all_teachers():
+    """Oldest first: the first one is the first teacher."""
+    return db.session.scalars(db.select(User).filter_by(role='teacher').order_by(User.id)).all()
+
+
+def first_teacher_required(view):
+    @wraps(view)
+    @teacher_required
+    def wrapped(*args, **kwargs):
+        if all_teachers()[0] != g.user:
+            abort(403)
+        return view(*args, **kwargs)
+    return wrapped
+
+
 def csv_response(rows, filename):
     """UTF-8 with BOM so Excel shows Korean correctly."""
     out = io.StringIO()
@@ -37,7 +56,9 @@ def csv_response(rows, filename):
 @teacher_required
 def index():
     last = dict(db.session.execute(db.select(Run.user_id, db.func.max(Run.created_at)).group_by(Run.user_id)).all())
-    return render_template('admin/index.html', students=all_students(), counts=run_counts(), last=last)
+    teachers = all_teachers()
+    return render_template('admin/index.html', students=all_students(), counts=run_counts(), last=last,
+                           teachers=teachers if teachers[0] == g.user else None)
 
 
 @bp.get('/students.csv')
@@ -104,6 +125,33 @@ def reset_password(user_id):
 @teacher_required
 def delete_student(user_id):
     user = get_student(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash(_('Deleted %(name)s and their history.', name=user.name), 'info')
+    return redirect(url_for('.index'))
+
+
+@bp.post('/teachers')
+@first_teacher_required
+def add_teacher():
+    login_id, name = request.form.get('login_id', '').strip(), request.form.get('name', '').strip()
+    if not login_id or not name:
+        flash(_('Enter a login ID and a name.'), 'error')
+    elif db.session.scalar(db.select(User.id).filter_by(login_id=login_id)) is not None:
+        flash(_('The login ID %(login_id)s is already in use.', login_id=login_id), 'error')
+    else:
+        db.session.add(User(login_id=login_id, name=name, role='teacher'))      # no password: set at the first login
+        db.session.commit()
+        flash(_('Teacher %(name)s added. The first login sets the password.', name=name), 'info')
+    return redirect(url_for('.index'))
+
+
+@bp.post('/teachers/<int:user_id>/delete')
+@first_teacher_required
+def delete_teacher(user_id):
+    user = db.get_or_404(User, user_id)
+    if not user.is_teacher or user == g.user:          # the first teacher stays
+        abort(404)
     db.session.delete(user)
     db.session.commit()
     flash(_('Deleted %(name)s and their history.', name=user.name), 'info')

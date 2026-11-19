@@ -373,6 +373,7 @@ table.history { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .admin-forms { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .admin-form h2 { margin-bottom: 4px; }
 .admin-form p { margin: 0 0 10px; font-size: 13px; }
+.teacher-form { max-width: 560px; margin: 8px 0 16px; }
 .admin-table td a { font-weight: 600; }
 .page-student .viz canvas { max-height: 70vh; }
 

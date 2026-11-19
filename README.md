@@ -25,7 +25,8 @@ learning loop, press **Train**, and watch the prediction change in the browser.
   login open it at `/?login=1`). Student number + name from the teacher's class list; the first login
   sets the password. The runs made as a guest are saved to the account.
 - Teacher page (`/teacher`): import the class list, reset passwords, see every student's history,
-  download all runs as CSV.
+  download all runs as CSV. The first teacher account also adds and deletes the other teachers (login ID
+  and name; the first login sets the password).
 
 ## Run locally
 
@@ -82,8 +83,8 @@ docker compose up -d --build
 **The teacher account.** At its first start the app makes a teacher account from `ADMIN_LOGIN_ID`,
 `ADMIN_NAME` and `ADMIN_PASSWORD` in `deploy.env` (only while there is no teacher yet; nothing changes
 later, so the lines may be deleted afterwards). Log in with them from **Log in** in the top bar and open
-**Teacher** (`/teacher`) to import the class list. Another teacher, or a forgotten password:
-`docker compose exec web flask --app app create-teacher`.
+**Teacher** (`/teacher`) to import the class list and add other teachers. A teacher's forgotten password:
+`docker compose exec web flask --app app create-teacher` (the same login ID sets a new password).
 
 **Credits.** The line under the playground (`© …`, GitHub and e-mail icons) comes from `CREDIT_NAME`,
 `CREDIT_URL`, `GITHUB_URL` and `CONTACT_EMAIL` in `deploy.env`; empty ones are left out.

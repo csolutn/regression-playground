@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 21:06+0900\n"
+"POT-Creation-Date: 2026-11-19 18:11+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -34,6 +34,9 @@ msgstr "입력 2개"
 msgid "A neural network needs 1 to {max} hidden layers."
 msgstr "신경망의 은닉층은 1~{max}개여야 합니다."
 
+msgid "A new teacher logs in with this login ID and name, and the first login sets the password."
+msgstr "새 관리자는 이 아이디와 이름으로 로그인하고, 처음 로그인할 때 비밀번호를 정합니다."
+
 msgid "A straight line (or flat plane): ŷ = w·x + b"
 msgstr "직선(또는 평면): ŷ = w·x + b"
 
@@ -51,6 +54,9 @@ msgstr "추가"
 
 msgid "Add one student"
 msgstr "학생 한 명 추가"
+
+msgid "Add teacher"
+msgstr "관리자 추가"
 
 msgid "Adds trees one by one; each fixes the error left"
 msgstr "트리를 하나씩 더하며 남은 오차를 보정"
@@ -187,6 +193,10 @@ msgid "Delete run #{n}? This cannot be undone."
 msgstr "#{n} 실험을 삭제할까요? 되돌릴 수 없습니다."
 
 #, python-format
+msgid "Delete the teacher %(name)s and their runs?"
+msgstr "관리자 %(name)s 계정과 실험 기록을 모두 삭제할까요?"
+
+#, python-format
 msgid "Deleted %(name)s and their history."
 msgstr "%(name)s 학생과 이력을 삭제했습니다."
 
@@ -224,6 +234,9 @@ msgstr "은닉층마다 뉴런은 1~{max}개여야 합니다."
 msgid "Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate."
 msgstr "곡면의 각 점은 직선 ŷ = w·x + b 하나의 학습 손실입니다. 드래그하면 돌려 볼 수 있습니다."
 
+msgid "Enter a login ID and a name."
+msgstr "아이디와 이름을 입력하세요."
+
 msgid "Enter a student number and a name."
 msgstr "학번과 이름을 입력하세요."
 
@@ -253,6 +266,9 @@ msgstr "첫 로그인입니다. 같은 비밀번호를 한 번 더 입력하면 
 
 msgid "First row = column names. Numbers only. Up to 1 MB."
 msgstr "첫 줄은 열 이름, 나머지는 숫자만. 최대 1 MB."
+
+msgid "First teacher"
+msgstr "최초 관리자"
 
 msgid "For registered users, the password is set to what you type at your first login."
 msgstr "등록된 사용자의 경우 비밀번호는 첫 로그인 시 입력한 값으로 설정됩니다."
@@ -407,6 +423,9 @@ msgstr "로그아웃"
 
 msgid "Log scale"
 msgstr "로그 스케일"
+
+msgid "Login ID"
+msgstr "아이디"
 
 msgid "Loss"
 msgstr "손실"
@@ -716,6 +735,13 @@ msgstr "공부 시간 → 시험 점수"
 msgid "Teacher"
 msgstr "교사"
 
+#, python-format
+msgid "Teacher %(name)s added. The first login sets the password."
+msgstr "관리자 %(name)s을(를) 추가했습니다. 처음 로그인할 때 비밀번호를 정합니다."
+
+msgid "Teacher accounts"
+msgstr "관리자"
+
 msgid "Temperature → ice cream sales"
 msgstr "기온 → 아이스크림 판매량"
 
@@ -758,6 +784,10 @@ msgstr "수식에 쓸 수 없는 것이 있습니다. {vars}, 숫자, + - * / **
 
 msgid "The input range minimum must be smaller than the maximum."
 msgstr "입력 범위의 최솟값은 최댓값보다 작아야 합니다."
+
+#, python-format
+msgid "The login ID %(login_id)s is already in use."
+msgstr "아이디 %(login_id)s은(는) 이미 사용 중입니다."
 
 msgid "The questions (x) and correct answers (y) the model learns from."
 msgstr "모델이 배울 문제(x)와 정답(y)입니다."
@@ -849,9 +879,6 @@ msgstr "먼저 CSV 파일을 올리세요."
 msgid "Use a password of at least %(n)d characters."
 msgstr "비밀번호는 %(n)d자 이상이어야 합니다."
 
-msgid "Use as a guest"
-msgstr "게스트로 이용하기"
-
 msgid "Use x, numbers, + - * / ** and sin, cos, exp, log, abs, sqrt, tanh, max, min."
 msgstr "x, 숫자, + - * / ** 와 sin, cos, exp, log, abs, sqrt, tanh, max, min을 쓸 수 있습니다."
 
@@ -916,10 +943,6 @@ msgstr "깊이 {d} (위 {k}단계만 표시)"
 
 msgid "diverged"
 msgstr "발산"
-
-#, python-format
-msgid "e.g. %(example)s"
-msgstr "예) %(example)s"
 
 msgid "full batch"
 msgstr "전체 배치"
@@ -1016,4 +1039,10 @@ msgstr "■ 중지"
 
 msgid "▶ Train"
 msgstr "▶ 학습"
+
+#~ msgid "Use as a guest"
+#~ msgstr "게스트로 이용하기"
+
+#~ msgid "e.g. %(example)s"
+#~ msgstr "예) %(example)s"
 

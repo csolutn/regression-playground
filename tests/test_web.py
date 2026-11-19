@@ -258,3 +258,28 @@ def test_credits_come_from_settings(client, app):
     assert '<a href="https://example.com" target="_blank" rel="noopener">© 2026 Example School</a>' in page
     assert 'href="https://github.com/example"' in page
     assert 'a@b.c' not in page and '&#97;&#64;&#98;&#46;&#99;' in page
+
+
+def test_the_first_teacher_adds_and_deletes_teachers(client):
+    login(client, 'teacher', '선생님', 'teachpw', confirm=False)
+    page = client.get('/teacher/').get_data(as_text=True)
+    assert '최초 관리자' in page and 'action="/teacher/teachers"' in page
+    r = client.post('/teacher/teachers', data={'login_id': 'second', 'name': '둘째'}, follow_redirects=True)
+    assert '관리자 둘째을(를) 추가했습니다.' in r.get_data(as_text=True)
+    r = client.post('/teacher/teachers', data={'login_id': '20101', 'name': '김하늘'}, follow_redirects=True)
+    assert '아이디 20101은(는) 이미 사용 중입니다.' in r.get_data(as_text=True)     # a student stays a student
+    client.post('/logout')
+    r = login(client, 'second', '둘째', 'pw2nd', confirm=False)                     # no password yet: set it now
+    assert r.status_code == 400 and r.get_json()['first_login']
+    assert login(client, 'second', '둘째', 'pw2nd').get_json()['home'] == '/teacher/'
+    page = client.get('/teacher/').get_data(as_text=True)                        # another teacher: no accounts part
+    assert '최초 관리자' not in page and 'action="/teacher/teachers"' not in page
+    assert client.post('/teacher/teachers', data={'login_id': 'third', 'name': '셋째'}).status_code == 403
+    assert client.post('/teacher/teachers/1/delete').status_code == 403
+    client.post('/logout')
+    login(client, 'teacher', '선생님', 'teachpw', confirm=False)
+    teacher_id, second_id = 3, 4                                                 # after the two students
+    assert client.post(f'/teacher/teachers/{teacher_id}/delete').status_code == 404   # not the first teacher itself
+    assert client.post('/teacher/teachers/1/delete').status_code == 404              # nor a student
+    r = client.post(f'/teacher/teachers/{second_id}/delete', follow_redirects=True)
+    assert '둘째' in r.get_data(as_text=True) and login(client, 'second', '둘째', 'pw2nd').status_code == 400

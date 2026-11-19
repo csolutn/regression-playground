@@ -66,6 +66,50 @@
       </table>
     </div>
   </section>
+
+  {% if teachers %}
+  {# only the first teacher sees this: adds and deletes the other teachers #}
+  <section class="card">
+    <div class="admin-head">
+      <h2>{{ _('Teacher accounts') }} <span class="muted">({{ teachers|length }})</span></h2>
+    </div>
+    <form method="post" action="{{ url_for('admin.add_teacher') }}" class="admin-form teacher-form">
+      <p class="muted">{{ _('A new teacher logs in with this login ID and name, and the first login sets the password.') }}</p>
+      <div class="field-row">
+        <label class="field"><span class="label">{{ _('Login ID') }}</span><input name="login_id" required></label>
+        <label class="field"><span class="label">{{ _('Name') }}</span><input name="name" required></label>
+      </div>
+      <button class="btn btn-primary btn-sm">{{ _('Add teacher') }}</button>
+    </form>
+    <div class="table-wrap">
+      <table class="history admin-table">
+        <thead><tr>
+          <th>{{ _('Login ID') }}</th><th>{{ _('Name') }}</th><th>{{ _('Password') }}</th><th>{{ _('Last login') }}</th><th></th>
+        </tr></thead>
+        <tbody>
+          {% for t in teachers %}
+            <tr>
+              <td>{{ t.login_id }}</td>
+              <td>{{ t.name }}</td>
+              <td>{% if t.has_password %}<span class="pill pill-ok">{{ _('set') }}</span>{% else %}<span class="pill">{{ _('not yet') }}</span>{% endif %}</td>
+              <td>{{ local_time(t.last_login_at) }}</td>
+              <td class="actions">
+                {% if loop.first %}
+                  <span class="pill">{{ _('First teacher') }}</span>
+                {% else %}
+                  <form method="post" action="{{ url_for('admin.delete_teacher', user_id=t.id) }}" class="inline"
+                        onsubmit="return confirm({{ _('Delete the teacher %(name)s and their runs?', name=t.name)|tojson }})">
+                    <button class="btn btn-ghost btn-sm btn-danger">{{ _('Delete') }}</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
 </main>
 <script>
   // times are stored in UTC; show them in the viewer's time zone
