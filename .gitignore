@@ -18,3 +18,6 @@ instance/
 deploy.env
 tunnel.env
 backups/
+
+# One machine's own compose settings (port, CPUs)
+compose.override.yaml

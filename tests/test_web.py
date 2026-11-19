@@ -229,3 +229,32 @@ def test_icons_for_safari_and_ios(client):
     for path in ['/favicon.ico', '/apple-touch-icon.png']:
         r = client.get(path)
         assert r.status_code == 200 and r.content_type == 'image/png', path
+
+
+def test_the_first_teacher_comes_from_admin_settings(tmp_path):
+    from app import create_app
+    from app.extensions import db
+    from app.models import User
+    cfg = {'TESTING': True, 'SQLALCHEMY_DATABASE_URI': f'sqlite:///{tmp_path}/a.db', 'SECRET_KEY': 'test',
+           'ADMIN_LOGIN_ID': 'boss', 'ADMIN_NAME': '관리자', 'ADMIN_PASSWORD': 'first-pw'}
+    app = create_app(cfg)
+    client = app.test_client()
+    r = client.post('/login', json={'login_id': 'boss', 'name': '관리자', 'password': 'first-pw'})
+    assert r.get_json() == {'user': 1, 'home': '/teacher/'}
+    app = create_app({**cfg, 'ADMIN_PASSWORD': 'other-pw'})      # a teacher exists: nothing changes
+    with app.app_context():
+        assert db.session.get(User, 1).check_password('first-pw')
+        assert db.session.scalar(db.select(db.func.count()).select_from(User)) == 1
+    app = create_app({**cfg, 'SQLALCHEMY_DATABASE_URI': f'sqlite:///{tmp_path}/b.db', 'ADMIN_PASSWORD': ''})
+    with app.app_context():                                         # incomplete settings: no account
+        assert db.session.scalar(db.select(db.func.count()).select_from(User)) == 0
+
+
+def test_credits_come_from_settings(client, app):
+    assert 'class="credits"' not in client.get('/').get_data(as_text=True)
+    app.config.update(CREDIT_NAME='2026 Example School', CREDIT_URL='https://example.com',
+                      GITHUB_URL='https://github.com/example', CONTACT_EMAIL='a@b.c')
+    page = client.get('/').get_data(as_text=True)
+    assert '<a href="https://example.com" target="_blank" rel="noopener">© 2026 Example School</a>' in page
+    assert 'href="https://github.com/example"' in page
+    assert 'a@b.c' not in page and '&#97;&#64;&#98;&#46;&#99;' in page

@@ -196,7 +196,7 @@ def step_budget_error(cfg, n_train):
 
 # Linear and neural network runs train in the student's browser (app/static/js/nn.js) to spare the server,
 # except when the browser would be much slower: plain JavaScript pays for every multiplication, while
-# torch pays for every update step. Estimated seconds, measured on the Mac mini (Chrome's V8 via Node).
+# torch pays for every update step. Estimated seconds, measured on a Mac mini (Chrome's V8 via Node).
 BROWSER_S_PER_MULTIPLY = 0.33e-9
 BROWSER_S_PER_UPDATE = 5e-9          # per weight, per step
 SERVER_S_PER_STEP = 20e-6

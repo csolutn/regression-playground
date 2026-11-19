@@ -32,7 +32,7 @@ learning loop, press **Train**, and watch the prediction change in the browser.
 ```bash
 uv sync
 cp .env.example .env                                       # then set SECRET_KEY
-uv run flask --app app create-teacher                      # asks for ID, name, password
+uv run flask --app app create-teacher                      # asks for ID, name, password (or ADMIN_* in .env)
 uv run flask --app app import-roster students.csv          # optional; the teacher page can do this too
 uv run flask run --debug                                   # http://127.0.0.1:15001
 ```
@@ -66,40 +66,61 @@ each start their own pool and oversubscribe the CPU.
 On a 12-core Mac, 30 students pressing Train at the same moment all finished within 5 s; with
 every fifth student running the largest allowed SGD run, the others still started within 7 s.
 
-## Deploy (Mac mini + Cloudflare Tunnel)
+## Deploy (Docker + Cloudflare Tunnel, any domain)
 
-The app runs in Docker inside a Colima VM with fixed CPU and memory, so a busy class cannot slow
-down the rest of the Mac. Students reach it at `https://yhat.solsam.app` through a Cloudflare Tunnel:
-the Mac opens no ports (only `127.0.0.1:18001` for the teacher on the Mac itself).
+The app runs in Docker with fixed CPU and memory limits, on any machine that can run Docker (a Linux
+server, or a Mac with [Colima](https://github.com/abiosoft/colima) or Docker Desktop). Students reach it at
+your own hostname, say `playground.example.com`, through a Cloudflare Tunnel: the machine opens no ports
+(only `127.0.0.1:8000` on the machine itself, for checks).
 
 ```bash
-brew install colima docker docker-compose
-colima start --cpu 8 --memory 8 --disk 40      # the VM's limits; 4 cores stay with macOS
-brew services start colima                      # start again after a reboot
-cp deploy.env.example deploy.env                # set SECRET_KEY
+cp deploy.env.example deploy.env                # set SECRET_KEY and ADMIN_LOGIN_ID / ADMIN_NAME / ADMIN_PASSWORD
 cp tunnel.env.example tunnel.env                # set TUNNEL_TOKEN (below)
 docker compose up -d --build
-docker compose exec web flask --app app create-teacher
 ```
 
-Cloudflare: the `solsam.app` zone must use Cloudflare's nameservers (bought at Cloudflare Registrar,
-so it already does; a domain moved from elsewhere needs every DNS record copied first, MX / SPF /
-DKIM included, or e-mail stops). Then Zero Trust → Networks →
+**The teacher account.** At its first start the app makes a teacher account from `ADMIN_LOGIN_ID`,
+`ADMIN_NAME` and `ADMIN_PASSWORD` in `deploy.env` (only while there is no teacher yet; nothing changes
+later, so the lines may be deleted afterwards). Log in with them from **Log in** in the top bar and open
+**Teacher** (`/teacher`) to import the class list. Another teacher, or a forgotten password:
+`docker compose exec web flask --app app create-teacher`.
+
+**Credits.** The line under the playground (`© …`, GitHub and e-mail icons) comes from `CREDIT_NAME`,
+`CREDIT_URL`, `GITHUB_URL` and `CONTACT_EMAIL` in `deploy.env`; empty ones are left out.
+
+**Cloudflare.** Your domain must be on Cloudflare (its nameservers; a domain moved from elsewhere needs
+every DNS record copied first, MX / SPF / DKIM included, or e-mail stops). Then Zero Trust → Networks →
 Tunnels → Create (cloudflared) → copy the token into `tunnel.env` → Public hostname
-`yhat.solsam.app` → service `http://web:8000`. Also: SSL/TLS → Always Use HTTPS; a rate-limiting rule
-for `POST /login` (300 requests / 10 s per IP, block 10 s: a whole school shares one IP, so it only
-catches floods, never a class logging in); optionally Cloudflare Access (e-mail one-time code) on `/teacher*`.
+`playground.example.com` → service `http://web:8000`. Also: SSL/TLS → Always Use HTTPS; a rate-limiting
+rule for `POST /login` (e.g. 300 requests / 10 s per IP, block 10 s: a whole school shares one IP, so it
+only catches floods, never a class logging in); optionally Cloudflare Access (e-mail one-time code) on `/teacher*`.
 
-In the container (8-CPU VM, 6 trainings at once) 30 students pressing Train together all finished within
-6 s; the largest SGD run (3 × 32 neurons) takes about 43 s while others train, so `deploy.env` sets
-`TRAINING_TIME_LIMIT_S=60` (measured before most runs moved to the browser; the browser uses the
-same limit). A server run streams 0.1–1.6 MB (2 inputs is the most); a browser run uploads a few kB.
+Without Cloudflare: remove the `tunnel` service, publish the web port, and put your own HTTPS reverse
+proxy (Caddy, nginx) in front. Keep `TRUST_PROXY=1` only behind a proxy that sets `X-Forwarded-Proto`.
 
-Mac: System Settings → Energy → prevent automatic sleep and start up after a power failure.
-Update with `git pull && docker compose up -d --build && docker image prune -f` (the last part deletes
-the untagged images left by earlier builds; tagged ones such as a rollback image stay). Static files are served at
-`/static/<hash of app/static>/…` and cached for a year, so after a deploy no browser mixes old JS with the new page. Back up with `scripts/backup.sh`
-(copies the database into `backups/`, or `BACKUP_DIR` if set, e.g. a synced cloud folder; keeps 30; run it daily, e.g. from launchd).
+**One machine's own settings** (another host port, more CPUs) go in `compose.override.yaml`, which is
+not in git and which `docker compose` reads on top of `compose.yaml`, for example
+
+```yaml
+services:
+  web:
+    ports: !override
+      - "127.0.0.1:18001:8000"
+    cpus: 3
+```
+
+`cpus` may not exceed the CPUs Docker has (on a Mac, the Colima VM's: `colima start --cpu 4 --memory 4`).
+In an 8-CPU VM with 6 trainings at once, 30 students pressing Train together all finished within 6 s; the
+largest SGD run (3 × 32 neurons) takes about 43 s while others train, so `deploy.env` sets
+`TRAINING_TIME_LIMIT_S=60` (measured before most runs moved to the browser; the browser uses the same
+limit). A server run streams 0.1–1.6 MB (2 inputs is the most); a browser run uploads a few kB.
+
+Let the machine start again after a power failure, and start Docker at boot (Colima on a Mac:
+`brew services start colima`). Update with `git pull && docker compose up -d --build && docker image prune -f`
+(the last part deletes the untagged images left by earlier builds; tagged ones such as a rollback image stay).
+Static files are served at `/static/<hash of app/static>/…` and cached for a year, so after a deploy no
+browser mixes old JS with the new page. Back up with `scripts/backup.sh` (copies the database into
+`backups/`, or `BACKUP_DIR` if set, e.g. a synced cloud folder; keeps 30; run it daily, e.g. from cron or launchd).
 
 ## Where to change things
 

@@ -1,7 +1,9 @@
-# The playground on the Mac mini, published only through a Cloudflare Tunnel (no open ports).
+# The playground, published only through a Cloudflare Tunnel to your own hostname (no open ports).
 #   docker compose up -d --build        start / update
 #   docker compose logs -f web          logs
-# Secrets live in deploy.env and tunnel.env (not in git; copy the *.example files).
+# Settings and secrets live in deploy.env and tunnel.env (not in git; copy the *.example files).
+# Changes for one machine (another host port, CPUs, memory) go in compose.override.yaml (not in git),
+# which docker compose reads on top of this file; see README.md.
 services:
   web:
     build: .
@@ -11,10 +13,10 @@ services:
     volumes:
       - data:/srv/instance              # playground.db
     ports:
-      - "127.0.0.1:18001:8000"          # this Mac only, for the teacher and checks; students use the tunnel
+      - "127.0.0.1:8000:8000"           # this computer only, for checks; everyone else uses the tunnel
     restart: unless-stopped
-    cpus: 3                             # Colima VM has 4 CPUs; leave room for cloudflared and Codelog
-    mem_limit: 3g                       # 30-student load test peaked at ~2.5 GB
+    cpus: 2                             # at most the machine's (or Docker VM's) CPUs; leave some for the rest
+    mem_limit: 3g                       # 30-student load test peaked at ~2.5 GB (before runs moved to the browser)
     pids_limit: 512
     read_only: true
     tmpfs: [/tmp]

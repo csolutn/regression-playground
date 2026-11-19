@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()   # before Config reads the environment
 
 from flask import Flask, request, send_from_directory  # noqa: E402
+from markupsafe import Markup  # noqa: E402
 
 from .config import Config  # noqa: E402
 from .extensions import babel, db  # noqa: E402
@@ -68,7 +69,13 @@ def create_app(config=None):
     def inject_i18n():
         return {'languages': LANGUAGES, 'current_language': select_locale(), 'js_catalog': js_catalog}
 
+    @app.template_filter('char_refs')
+    def char_refs(text):
+        """Every character as an HTML character reference (an e-mail address that scrapers skip)."""
+        return Markup(''.join(f'&#{ord(c)};' for c in text))
+
     with app.app_context():
         from . import models  # noqa: F401  (register tables)
         db.create_all()
+        cli.create_first_teacher(app)
     return app

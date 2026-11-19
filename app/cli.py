@@ -1,4 +1,4 @@
-"""Command-line setup:  uv run flask create-teacher  /  uv run flask import-roster roster.csv"""
+"""Setup: the first teacher from ADMIN_* at start-up, or  uv run flask create-teacher  /  uv run flask import-roster roster.csv"""
 import click
 from flask import Blueprint
 
@@ -23,6 +23,24 @@ def create_teacher(login_id, name, password):
     user.set_password(password)
     db.session.commit()
     click.echo(f'Teacher account ready: {login_id} ({name})')
+
+
+def create_first_teacher(app):
+    """At start-up: a teacher account from ADMIN_LOGIN_ID, ADMIN_NAME and ADMIN_PASSWORD (deploy.env) while
+    there is no teacher yet. Once there is one, they change nothing (a password changed later stays)."""
+    login_id, name, password = (app.config[k].strip() for k in ('ADMIN_LOGIN_ID', 'ADMIN_NAME', 'ADMIN_PASSWORD'))
+    if not (login_id and name and password):
+        return
+    if db.session.scalar(db.select(User.id).filter_by(role='teacher').limit(1)) is not None:
+        return
+    user = db.session.scalar(db.select(User).filter_by(login_id=login_id))
+    if user is None:
+        user = User(login_id=login_id)
+        db.session.add(user)
+    user.name, user.role = name, 'teacher'
+    user.set_password(password)
+    db.session.commit()
+    app.logger.warning('Teacher account created from ADMIN_LOGIN_ID: %s', login_id)
 
 
 @bp.cli.command('import-roster')
