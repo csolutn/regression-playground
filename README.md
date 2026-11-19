@@ -28,15 +28,24 @@ learning loop, press **Train**, and watch the prediction change in the browser.
   download all runs as CSV. The first teacher account is the system admin: it also adds, resets and deletes the other
   teachers (login ID and name; the first login sets the password).
 
+## Requirements
+
+- Running locally: [uv](https://docs.astral.sh/uv/) (it installs Python 3.12 and the packages).
+- Deploying: Docker with Docker Compose 2.24 or newer (`docker compose version`). The image is
+  about 2 GB (CPU-only torch); the running app uses about 1 GB of memory.
+- The browser tests: Node 20 or newer.
+
 ## Run locally
 
 ```bash
 uv sync
 cp .env.example .env                                       # then set SECRET_KEY
-uv run flask --app app create-teacher                      # asks for ID, name, password (or ADMIN_* in .env)
+uv run flask --app app create-teacher --login-id teacher --name Teacher --password change-me   # or ADMIN_* in .env
 uv run flask --app app import-roster students.csv          # optional; the teacher page can do this too
-uv run flask run --debug                                   # http://127.0.0.1:15001
+uv run flask run --debug                                   # http://127.0.0.1:15001 (port from .flaskenv)
 ```
+
+Without the three options, `create-teacher` asks for them.
 
 The class list is a CSV with `학번,이름` (or `student_id,name`) columns. The database is SQLite at
 `instance/playground.db`; set `DATABASE_URL` to use PostgreSQL or MySQL instead.
@@ -74,11 +83,20 @@ server, or a Mac with [Colima](https://github.com/abiosoft/colima) or Docker Des
 your own hostname, say `playground.example.com`, through a Cloudflare Tunnel: the machine opens no ports
 (only `127.0.0.1:8000` on the machine itself, for checks).
 
-```bash
-cp deploy.env.example deploy.env                # set SECRET_KEY and ADMIN_LOGIN_ID / ADMIN_NAME / ADMIN_PASSWORD
-cp tunnel.env.example tunnel.env                # set TUNNEL_TOKEN (below)
-docker compose up -d --build
-```
+**Checklist.** Steps marked *(you)* need a person (a dashboard, a decision); the rest are commands.
+
+1. *(you)* Pick the hostname, and decide: Cloudflare Tunnel (below, needs the domain on Cloudflare) or
+   your own HTTPS proxy, or plain http on a school network (no HTTPS; see "Without Cloudflare").
+2. `cp deploy.env.example deploy.env`, then set `SECRET_KEY` (the command is in the file),
+   `ADMIN_LOGIN_ID` / `ADMIN_NAME` / `ADMIN_PASSWORD`, and `TRUST_PROXY` (1 behind HTTPS, 0 for plain http).
+3. With the tunnel: *(you)* create it and copy its token (see **Cloudflare** below), then
+   `cp tunnel.env.example tunnel.env` and set `TUNNEL_TOKEN`.
+4. `docker compose up -d --build` (without a tunnel: `docker compose up -d --build web`).
+5. Check: `docker compose ps` shows the web service `(healthy)` after about 20 s, and
+   `curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/` prints `200`; with the tunnel, the
+   same for `https://<hostname>/`. Problems: `docker compose logs web` (or `tunnel`). A tunnel without a
+   valid token restarts over and over; the web service is not affected.
+6. *(you)* Open the site, **Log in** with the `ADMIN_*` values, go to **Teacher** and import the class list.
 
 **The teacher account.** At its first start the app makes a teacher account from `ADMIN_LOGIN_ID`,
 `ADMIN_NAME` and `ADMIN_PASSWORD` in `deploy.env` (only while there is no teacher yet; nothing changes
@@ -96,8 +114,11 @@ Tunnels → Create (cloudflared) → copy the token into `tunnel.env` → Public
 rule for `POST /login` (e.g. 300 requests / 10 s per IP, block 10 s: a whole school shares one IP, so it
 only catches floods, never a class logging in); optionally Cloudflare Access (e-mail one-time code) on `/teacher*`.
 
-Without Cloudflare: remove the `tunnel` service, publish the web port, and put your own HTTPS reverse
-proxy (Caddy, nginx) in front. Keep `TRUST_PROXY=1` only behind a proxy that sets `X-Forwarded-Proto`.
+**Without Cloudflare.** Start only the web service (`docker compose up -d --build web`; `tunnel.env` is
+not needed) and publish its port to the network in `compose.override.yaml` (below), e.g.
+`"0.0.0.0:8000:8000"`. Behind your own HTTPS reverse proxy (Caddy, nginx) that sets `X-Forwarded-Proto`,
+keep `TRUST_PROXY=1`. For plain `http://<this machine>:8000` on a school network set `TRUST_PROXY=0`:
+with 1 the browser keeps the login cookie for HTTPS only, so logging in and training fail.
 
 **One machine's own settings** (another host port, more CPUs) go in `compose.override.yaml`, which is
 not in git and which `docker compose` reads on top of `compose.yaml`, for example

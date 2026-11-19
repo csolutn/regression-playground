@@ -7,9 +7,7 @@
 services:
   web:
     build: .
-    env_file: deploy.env
-    environment:
-      TRUST_PROXY: "1"                  # behind cloudflared: trust X-Forwarded-Proto, send secure cookies
+    env_file: deploy.env                # TRUST_PROXY=1 there behind cloudflared or another HTTPS proxy
     volumes:
       - data:/srv/instance              # playground.db
     ports:
@@ -26,7 +24,9 @@ services:
   tunnel:
     image: cloudflare/cloudflared:latest
     command: tunnel --no-autoupdate run
-    env_file: tunnel.env                # TUNNEL_TOKEN from the Cloudflare dashboard
+    env_file:                           # TUNNEL_TOKEN from the Cloudflare dashboard
+      - path: tunnel.env
+        required: false                 # without it, start only the web: docker compose up -d --build web
     depends_on:
       web:
         condition: service_healthy
