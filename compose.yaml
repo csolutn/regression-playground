@@ -3,7 +3,7 @@
 #   docker compose logs -f web          logs
 # Settings and secrets live in deploy.env and tunnel.env (not in git; copy the *.example files).
 # Changes for one machine (another host port, CPUs, memory) go in compose.override.yaml (not in git),
-# which docker compose reads on top of this file; see README.md.
+# which docker compose reads on top of this file; see README.md (English: README.en.md).
 services:
   web:
     build: .

@@ -1,5 +1,5 @@
 # Production image: gunicorn (one process, many threads) + training worker processes.
-# Build and run with compose.yaml; see "Deploy" in README.md.
+# Build and run with compose.yaml; see "배포" in README.md (English: "Deploy" in README.en.md).
 FROM python:3.12-slim
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.19 /uv /bin/uv
