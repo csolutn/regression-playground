@@ -1,6 +1,6 @@
 """Teacher pages: class list, password reset, and every student's history.
-The first teacher (the oldest teacher account) also adds and deletes the other teachers; a new teacher, like a
-student, sets the password at the first login."""
+The system admin (the oldest teacher account) also adds, resets and deletes the other teachers; a new teacher,
+like a student, sets the password at the first login."""
 import csv
 import io
 from datetime import timezone
@@ -29,11 +29,11 @@ def all_students():
 
 
 def all_teachers():
-    """Oldest first: the first one is the first teacher."""
+    """Oldest first: the first one is the system admin."""
     return db.session.scalars(db.select(User).filter_by(role='teacher').order_by(User.id)).all()
 
 
-def first_teacher_required(view):
+def system_admin_required(view):
     @wraps(view)
     @teacher_required
     def wrapped(*args, **kwargs):
@@ -132,7 +132,7 @@ def delete_student(user_id):
 
 
 @bp.post('/teachers')
-@first_teacher_required
+@system_admin_required
 def add_teacher():
     login_id, name = request.form.get('login_id', '').strip(), request.form.get('name', '').strip()
     if not login_id or not name:
@@ -148,13 +148,13 @@ def add_teacher():
 
 def get_other_teacher(user_id):
     user = db.get_or_404(User, user_id)
-    if not user.is_teacher or user == g.user:          # the first teacher keeps its account and password
+    if not user.is_teacher or user == g.user:          # the system admin keeps its account and password
         abort(404)
     return user
 
 
 @bp.post('/teachers/<int:user_id>/reset-password')
-@first_teacher_required
+@system_admin_required
 def reset_teacher_password(user_id):
     user = get_other_teacher(user_id)
     user.password_hash = None
@@ -164,7 +164,7 @@ def reset_teacher_password(user_id):
 
 
 @bp.post('/teachers/<int:user_id>/delete')
-@first_teacher_required
+@system_admin_required
 def delete_teacher(user_id):
     user = get_other_teacher(user_id)
     db.session.delete(user)

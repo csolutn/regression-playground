@@ -68,7 +68,7 @@
   </section>
 
   {% if teachers %}
-  {# only the first teacher sees this: adds and deletes the other teachers #}
+  {# only the system admin (the first teacher account) sees this: adds, resets and deletes the other teachers #}
   <section class="card">
     <div class="admin-head">
       <h2>{{ _('Teacher accounts') }} <span class="muted">({{ teachers|length }})</span></h2>
@@ -95,7 +95,7 @@
               <td>{{ local_time(t.last_login_at) }}</td>
               <td class="actions">
                 {% if loop.first %}
-                  <span class="pill">{{ _('First teacher') }}</span>
+                  <span class="pill">{{ _('System admin') }}</span>
                 {% else %}
                   <form method="post" action="{{ url_for('admin.reset_teacher_password', user_id=t.id) }}" class="inline"
                         onsubmit="return confirm({{ _('Reset the password of the teacher %(name)s?', name=t.name)|tojson }})">

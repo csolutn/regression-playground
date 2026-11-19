@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-19 18:14+0900\n"
+"POT-Creation-Date: 2026-11-19 18:18+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -264,9 +264,6 @@ msgid "First login: type the same password again to register it."
 msgstr ""
 
 msgid "First row = column names. Numbers only. Up to 1 MB."
-msgstr ""
-
-msgid "First teacher"
 msgstr ""
 
 msgid "For registered users, the password is set to what you type at your first login."
@@ -737,6 +734,9 @@ msgid "Students"
 msgstr ""
 
 msgid "Study hours → exam score"
+msgstr ""
+
+msgid "System admin"
 msgstr ""
 
 msgid "Teacher"

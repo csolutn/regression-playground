@@ -260,10 +260,10 @@ def test_credits_come_from_settings(client, app):
     assert 'a@b.c' not in page and '&#97;&#64;&#98;&#46;&#99;' in page
 
 
-def test_the_first_teacher_adds_and_deletes_teachers(client):
+def test_the_system_admin_adds_and_deletes_teachers(client):
     login(client, 'teacher', '선생님', 'teachpw', confirm=False)
     page = client.get('/teacher/').get_data(as_text=True)
-    assert '최초 관리자' in page and 'action="/teacher/teachers"' in page
+    assert '시스템 관리자' in page and 'action="/teacher/teachers"' in page
     client.post('/teacher/teachers', data={'login_id': 'x', 'name': 'x'})
     assert json.dumps('관리자 x의 비밀번호를 초기화할까요?') in client.get('/teacher/').get_data(as_text=True)   # as tojson writes it
     client.post('/teacher/teachers/4/delete')                                    # x goes again
@@ -276,14 +276,14 @@ def test_the_first_teacher_adds_and_deletes_teachers(client):
     assert r.status_code == 400 and r.get_json()['first_login']
     assert login(client, 'second', '둘째', 'pw2nd').get_json()['home'] == '/teacher/'
     page = client.get('/teacher/').get_data(as_text=True)                        # another teacher: no accounts part
-    assert '최초 관리자' not in page and 'action="/teacher/teachers"' not in page
+    assert '시스템 관리자' not in page and 'action="/teacher/teachers"' not in page
     assert client.post('/teacher/teachers', data={'login_id': 'third', 'name': '셋째'}).status_code == 403
     assert client.post('/teacher/teachers/1/delete').status_code == 403
     assert client.post('/teacher/teachers/3/reset-password').status_code == 403
     client.post('/logout')
     login(client, 'teacher', '선생님', 'teachpw', confirm=False)
     teacher_id, second_id = 3, 4                                                 # after the two students
-    assert client.post(f'/teacher/teachers/{teacher_id}/delete').status_code == 404   # not the first teacher itself
+    assert client.post(f'/teacher/teachers/{teacher_id}/delete').status_code == 404   # not the system admin itself
     assert client.post('/teacher/teachers/1/delete').status_code == 404              # nor a student
     assert client.post(f'/teacher/teachers/{teacher_id}/reset-password').status_code == 404
     r = client.post(f'/teacher/teachers/{second_id}/reset-password', follow_redirects=True)

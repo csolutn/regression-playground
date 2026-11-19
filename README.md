@@ -25,8 +25,8 @@ learning loop, press **Train**, and watch the prediction change in the browser.
   login open it at `/?login=1`). Student number + name from the teacher's class list; the first login
   sets the password. The runs made as a guest are saved to the account.
 - Teacher page (`/teacher`): import the class list, reset passwords, see every student's history,
-  download all runs as CSV. The first teacher account also adds and deletes the other teachers (login ID
-  and name; the first login sets the password).
+  download all runs as CSV. The first teacher account is the system admin: it also adds, resets and deletes the other
+  teachers (login ID and name; the first login sets the password).
 
 ## Run locally
 
