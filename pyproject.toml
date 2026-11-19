@@ -1,6 +1,7 @@
 [project]
 name = "regression-playground"
 version = "0.1.0"
+license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
     "flask>=3.1.3",

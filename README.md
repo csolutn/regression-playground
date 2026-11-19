@@ -183,3 +183,9 @@ so that `pybabel extract` finds it.
 uv run pytest
 node --test tests/js          # the browser trainer (app/static/js/nn.js)
 ```
+
+## License
+
+MIT (see `LICENSE`). Bundled third-party files keep their own licenses: the Grandstander font
+(`app/static/fonts/`, SIL Open Font License 1.1, `OFL-Grandstander.txt`) and
+[mp4-muxer](https://github.com/Vanilagy/mp4-muxer) (`app/static/vendor/`, MIT).
