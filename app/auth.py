@@ -99,7 +99,7 @@ def login_json():
 def check_login(login_id, name, password, confirm):
     """(user, (None, None), first_login) when they may log in (a first login has set the password),
     else (None, (flash category, message), first_login). confirm is None until the second password is asked."""
-    user = db.session.scalar(db.select(User).filter_by(login_id=login_id))
+    user = find_user(login_id)
     if user is None or normalize_name(user.name) != normalize_name(name):
         return None, ('error', _('The student ID and name are not on the class list.')), False
     if user.has_password:
@@ -114,6 +114,14 @@ def check_login(login_id, name, password, confirm):
         return None, ('error', _('The two passwords are different.')), True
     user.set_password(password)
     return user, (None, None), True
+
+
+def find_user(login_id):
+    """By login ID; a school prefix is in small letters, so 'ABC21013' finds 'abc21013' too."""
+    user = db.session.scalar(db.select(User).filter_by(login_id=login_id))
+    if user is None and login_id != login_id.lower():
+        user = db.session.scalar(db.select(User).filter_by(login_id=login_id.lower()))
+    return user
 
 
 def start_session(user):

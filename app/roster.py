@@ -25,16 +25,33 @@ def parse_roster(text):
             if len(r) > max(id_col, name_col) and r[id_col].strip() and r[name_col].strip()]
 
 
-def import_roster(pairs):
-    """Adds new students and updates names of existing ones. Returns (added, updated)."""
+def login_id_for(number, prefix):
+    """The login ID of a student number on a list with this prefix: 'abc' + '21013'. A number typed with the
+    prefix already ('abc21013', 'ABC21013') gets it only once."""
+    number = number.strip()
+    if prefix and number.lower().startswith(prefix) and len(number) > len(prefix):
+        number = number[len(prefix):]
+    return prefix + number
+
+
+def import_roster(pairs, teacher=None):
+    """Adds new students and updates names of existing ones. Returns (added, updated).
+    With a teacher who has a prefix, the student numbers get it and the students go on that teacher's list."""
+    prefix = teacher.prefix if teacher else ''
     added = updated = 0
-    for login_id, name in pairs:
+    for number, name in pairs:
+        login_id = login_id_for(number, prefix)
         user = db.session.scalar(db.select(User).filter_by(login_id=login_id))
+        if user is not None and user.is_teacher:
+            continue                       # a teacher's login ID is not a student number
         if user is None:
-            db.session.add(User(login_id=login_id, name=name, role='student'))
+            user = User(login_id=login_id, name=name, role='student', prefix=prefix)
+            db.session.add(user)
             added += 1
-        elif user.name != name and not user.is_teacher:
+        elif user.name != name:
             user.name = name
             updated += 1
+        if prefix and teacher not in user.teachers:
+            user.teachers.append(teacher)
     db.session.commit()
     return added, updated

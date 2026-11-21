@@ -77,5 +77,6 @@ def create_app(config=None):
     with app.app_context():
         from . import models  # noqa: F401  (register tables)
         db.create_all()
+        models.add_missing_columns()
         cli.create_first_teacher(app)
     return app

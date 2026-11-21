@@ -160,14 +160,11 @@ def test_teacher_pages(client):
     rows = client.get('/api/runs?user=1').get_json()['runs']
     assert len(rows) == 1
     assert client.get('/teacher/students/1').status_code == 200
-    csv = client.get('/teacher/runs.csv').get_data(as_text=True)
-    assert '20101' in csv and 'created_at (UTC)' in csv
-    utc = csv.splitlines()[1].split(',')[3]
-    seoul = client.get('/teacher/runs.csv?tz=Asia/Seoul').get_data(as_text=True)
-    assert 'created_at (Asia/Seoul)' in seoul
-    from datetime import datetime, timedelta
-    assert datetime.fromisoformat(seoul.splitlines()[1].split(',')[3]) - datetime.fromisoformat(utc) == timedelta(hours=9)
-    assert 'created_at (UTC)' in client.get('/teacher/runs.csv?tz=../../etc/passwd').get_data(as_text=True)
+    assert client.get('/teacher/runs.csv').status_code == 404               # the HTML backup took its place
+    data = client.get('/teacher/report.json?student=1').get_json()
+    entry = data['students'][0]['runs'][0]                                  # a server run: drawn from its last frame
+    assert data['students'][0]['number'] == '20101' and entry['result']['frame']['step'] == entry['row']['steps']
+    assert data['metas'][entry['meta']]['n_inputs'] == 1 and 'model' not in data['metas'][entry['meta']]
     students = client.get('/teacher/students.csv').get_data(as_text=True)
     assert students.lstrip('\ufeff').splitlines() == ['학번,이름,실험 수', '20101,김하늘,1', '20102,이바다,0']
     roster = '학번,이름\n20103,박산\n20101,김하늘\n'.encode('cp949')
@@ -185,7 +182,8 @@ def test_history_tools_name_the_csv_after_the_student(client):
     assert 'data-login="20101"' in page and 'data-role="filter-pop"' in page and 'data-role="csv"' in page
     client.post('/logout')
     login(client, 'teacher', '선생님', 'teachpw', confirm=False)
-    assert 'data-login="20101"' in client.get('/teacher/students/1').get_data(as_text=True)
+    page = client.get('/teacher/students/1').get_data(as_text=True)          # report.js: results without the animation
+    assert 'data-student="1"' in page and 'report-live.js' in page and 'viewer.js' not in page
 
 
 def test_train_gives_up_when_every_worker_is_busy(app, client, monkeypatch):

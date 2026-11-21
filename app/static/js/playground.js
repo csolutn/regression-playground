@@ -17,6 +17,7 @@ const guest = root.dataset.guest === '1';        // no database: runs train in t
 const settingsKey = user => `mlp.settings.v3.${user}`;
 const settings = new Settings(form, OPTIONS.defaults, settingsKey(root.dataset.user),
   guest ? () => sessionStorage : () => localStorage);
+if (!OPTIONS.advanced && isTree(settings.values)) settings.set({ model: OPTIONS.defaults.model });   // trees are not offered
 
 // ---------- step cards ① → ④ ----------
 
@@ -54,7 +55,7 @@ function refresh() {
   renderStructure(structureSvg, structureCaption, cfg);
   renderActivation(activationSvg, cfg.activation);
   renderLossShape(lossSvg, cfg);
-  if (isTree(cfg)) modelAdvanced.open = true;
+  if (isTree(cfg) && modelAdvanced) modelAdvanced.open = true;
 }
 settings.addEventListener('change', refresh);
 

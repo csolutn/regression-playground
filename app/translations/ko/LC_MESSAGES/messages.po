@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-21 11:09+0900\n"
+"POT-Creation-Date: 2026-11-21 19:17+0900\n"
 "PO-Revision-Date: 2026-10-01 04:37+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -37,8 +37,14 @@ msgstr "신경망의 은닉층은 1~{max}개여야 합니다."
 msgid "A new teacher logs in with this login ID and name, and the first login sets the password."
 msgstr "새 관리자는 이 아이디와 이름으로 로그인하고, 처음 로그인할 때 비밀번호를 정합니다."
 
+msgid "A prefix is 2 to 10 English letters."
+msgstr "접두사는 영문자 2~10자로 입력하세요."
+
 msgid "A straight line (or flat plane): ŷ = w·x + b"
 msgstr "직선(또는 평면): ŷ = w·x + b"
+
+msgid "A teacher from another school gets a prefix: it goes in front of their students' numbers, they see only their own students, and advanced features stay off until you turn them on."
+msgstr "다른 학교 관리자에게는 접두사를 정해 주세요. 학생 학번 앞에 붙고, 그 관리자는 자기가 올린 학생만 보며, 고급 기능은 켜 주기 전까지 꺼져 있습니다."
 
 msgid "About logging in"
 msgstr "이용 안내"
@@ -67,6 +73,14 @@ msgstr "가중치마다 보폭을 따로 조절"
 msgid "Advanced"
 msgstr "고급 설정"
 
+#, python-format
+msgid "Advanced features are off for %(name)s and their students."
+msgstr "%(name)s 관리자와 학생들의 고급 기능을 껐습니다."
+
+#, python-format
+msgid "Advanced features are on for %(name)s and their students."
+msgstr "%(name)s 관리자와 학생들의 고급 기능을 켰습니다."
+
 msgid "Advanced · other models"
 msgstr "고급 설정 · 다른 예측 모델"
 
@@ -84,6 +98,12 @@ msgstr "게스트로 이용할 경우 이용 내역이 서버에 저장되지 �
 
 msgid "Averages many trees trained on random samples"
 msgstr "무작위 표본으로 만든 여러 트리의 평균"
+
+msgid "Back up the history (HTML)"
+msgstr "학습이력 백업 (HTML)"
+
+msgid "Backup (HTML)"
+msgstr "백업 (HTML)"
 
 msgid "Batch method"
 msgstr "배치 방식"
@@ -188,6 +208,9 @@ msgstr "삭제"
 msgid "Delete %(name)s and all their runs?"
 msgstr "%(name)s 학생과 모든 학습 이력을 삭제할까요?"
 
+msgid "Delete all students"
+msgstr "학생 전체 삭제"
+
 #, python-brace-format
 msgid "Delete run #{n}? This cannot be undone."
 msgstr "#{n} 실험을 삭제할까요? 되돌릴 수 없습니다."
@@ -195,6 +218,22 @@ msgstr "#{n} 실험을 삭제할까요? 되돌릴 수 없습니다."
 #, python-format
 msgid "Delete the teacher %(name)s and their runs?"
 msgstr "관리자 %(name)s 계정과 실험 기록을 모두 삭제할까요?"
+
+#, python-format
+msgid "Delete the teacher %(name)s, their %(n)d students and all their runs?"
+msgstr "관리자 %(name)s 계정과 담당 학생 %(n)d명, 실험 기록을 모두 삭제할까요?"
+
+#, python-format
+msgid "Deleted %(n)d students and their history."
+msgstr "학생 %(n)d명과 실험 기록을 삭제했습니다."
+
+#, python-format
+msgid "Deleted %(n)d students and their history; %(m)d others stay on another teacher's list."
+msgstr "학생 %(n)d명과 실험 기록을 삭제했습니다. %(m)d명은 다른 관리자의 명단에 있어 내 명단에서만 뺐습니다."
+
+#, python-format
+msgid "Deleted %(name)s and %(n)d students with their history."
+msgstr "%(name)s 계정과 학생 %(n)d명의 기록을 삭제했습니다."
 
 #, python-format
 msgid "Deleted %(name)s and their history."
@@ -211,9 +250,6 @@ msgstr "완료"
 
 msgid "Dot: where it was at this epoch. Open circles: start and end."
 msgstr "점: 이 에포크의 위치입니다. 빈 원은 처음과 끝입니다."
-
-msgid "Download all runs (CSV)"
-msgstr "전체 학습 이력 내려받기 (CSV)"
 
 msgid "Download the list (CSV)"
 msgstr "목록 내려받기 (CSV)"
@@ -234,6 +270,9 @@ msgstr "은닉층마다 뉴런은 1~{max}개여야 합니다."
 msgid "Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate."
 msgstr "곡면의 각 점은 직선 ŷ = w·x + b 하나의 학습 손실입니다. 드래그하면 돌려 볼 수 있습니다."
 
+msgid "Edit"
+msgstr "수정"
+
 msgid "Enter a login ID and a name."
 msgstr "아이디와 이름을 입력하세요."
 
@@ -251,6 +290,9 @@ msgstr "오류"
 
 msgid "Errors smaller than δ are squared; bigger ones count linearly."
 msgstr "δ보다 작은 오차는 제곱, 큰 오차는 그대로(선형) 셉니다."
+
+msgid "Example file (CSV)"
+msgstr "예시 파일 (CSV)"
 
 msgid "Fewer neurons"
 msgstr "뉴런 줄이기"
@@ -284,6 +326,13 @@ msgstr "함수"
 
 msgid "Function to learn"
 msgstr "학습할 함수"
+
+msgid "Gathering the runs on the server…"
+msgstr "서버에서 실험 기록을 모으는 중…"
+
+#, python-brace-format
+msgid "Getting the data… {got} / {total} MB"
+msgstr "데이터 받는 중… {got} / {total} MB"
 
 msgid "Gradient boosting"
 msgstr "그래디언트 부스팅"
@@ -448,6 +497,12 @@ msgstr "손실은 표준화한 y 기준으로 계산하므로 데이터가 달�
 msgid "Lowest validation loss for this data"
 msgstr "이 데이터에서 검증 손실이 가장 낮음"
 
+msgid "Make the backup"
+msgstr "백업 만들기"
+
+msgid "Making the file…"
+msgstr "파일 만드는 중…"
+
 msgid "Max depth"
 msgstr "최대 깊이"
 
@@ -456,6 +511,9 @@ msgstr "평균 절대 오차: 오차를 그대로 더해서 튀는 값의 영향
 
 msgid "Mean squared error: big mistakes cost a lot"
 msgstr "평균 제곱 오차: 크게 틀릴수록 벌점이 훨씬 큼"
+
+msgid "Memo"
+msgstr "메모"
 
 msgid "Mini-batch"
 msgstr "미니배치"
@@ -511,6 +569,9 @@ msgstr "저장되지 않음"
 
 msgid "Not trained yet"
 msgstr "학습 전"
+
+msgid "Nothing was deleted: the phrase did not match."
+msgstr "입력한 문구가 맞지 않아 삭제하지 않았습니다."
 
 msgid "Number of points"
 msgstr "데이터 개수"
@@ -569,6 +630,9 @@ msgstr "이번 학습이 지나온 길"
 msgid "Penalty for one error (ŷ − y). The chosen loss is highlighted."
 msgstr "오차(ŷ − y) 하나에 매기는 벌점. 선택한 손실이 강조됩니다."
 
+msgid "Pick a run: this computer trains it again from its settings to draw the result (a few seconds)."
+msgstr "실험을 누르면 이 컴퓨터가 설정대로 다시 학습해서 결과를 그립니다 (몇 초 걸립니다)."
+
 msgid "Play / pause (Space)"
 msgstr "재생 / 정지 (Space)"
 
@@ -586,6 +650,12 @@ msgstr "모델 예측 (곡면)"
 
 msgid "Predictor"
 msgstr "예측함수"
+
+msgid "Prefix"
+msgstr "접두사"
+
+msgid "Prefix (2–10 letters)"
+msgstr "접두사 (영문 2~10자)"
 
 msgid "Previous frame (←)"
 msgstr "이전 장면 (←)"
@@ -607,6 +677,10 @@ msgstr "학습 과정을 다시 만드는 중…"
 
 msgid "Remove layer"
 msgstr "층 삭제"
+
+#, python-format
+msgid "Removed %(name)s from your list (another teacher still has them)."
+msgstr "%(name)s 학생을 내 명단에서 뺐습니다 (다른 관리자의 명단에는 남아 있습니다)."
 
 msgid "Reset"
 msgstr "되돌리기"
@@ -652,6 +726,19 @@ msgstr "CSV 저장"
 msgid "Save MP4"
 msgstr "MP4 저장"
 
+msgid "Save the file"
+msgstr "파일 저장"
+
+msgid "Save the file and delete"
+msgstr "파일 저장하고 삭제"
+
+#, python-format
+msgid "Saved the details of %(name)s."
+msgstr "%(name)s 관리자 정보를 저장했습니다."
+
+msgid "Saving the file, then deleting…"
+msgstr "파일을 저장한 뒤 삭제합니다…"
+
 msgid "Saving the runs you made as a guest…"
 msgstr "게스트로 한 학습 기록을 저장하는 중…"
 
@@ -661,6 +748,9 @@ msgstr "시간(초)"
 #, python-brace-format
 msgid "Server error ({status})"
 msgstr "서버 오류 ({status})"
+
+msgid "Server training: tree models and runs too slow for the browser"
+msgstr "서버 학습: 트리 모델과 브라우저에서 너무 느린 실험"
 
 msgid "Set up the experiment on the left and press Train."
 msgstr "왼쪽에서 실험을 설정하고 학습 버튼을 누르세요."
@@ -780,8 +870,19 @@ msgstr "애니메이션은 트리 깊이를 한 단계씩 키웁니다."
 msgid "The connection closed before the run was saved."
 msgstr "실험이 저장되기 전에 연결이 끊겼습니다."
 
+msgid "The data of this run can not be made again."
+msgstr "이 실험의 데이터를 다시 만들 수 없습니다."
+
 msgid "The file could not be read. Save it as CSV (UTF-8)."
 msgstr "파일을 읽을 수 없습니다. CSV(UTF-8)로 저장해 주세요."
+
+#, python-brace-format
+msgid "The file is ready ({size} MB)."
+msgstr "파일이 준비되었습니다 ({size} MB)."
+
+#, python-brace-format
+msgid "The file is ready ({size} MB). Save it: the students are deleted right after."
+msgstr "파일이 준비되었습니다 ({size} MB). 저장하면 바로 학생들을 삭제합니다."
 
 msgid "The formula gives invalid values (for example division by zero or the log of a negative number)."
 msgstr "수식 값이 올바르지 않습니다 (예: 0으로 나누기, 음수의 log)."
@@ -824,6 +925,10 @@ msgstr "이 브라우저는 WebM만 녹화할 수 있어 WebM으로 저장했습
 msgid "This browser cannot record video. Try the latest Chrome, Edge or Safari."
 msgstr "이 브라우저는 영상을 만들 수 없습니다. 최신 Chrome, Edge, Safari를 사용하세요."
 
+#, python-format
+msgid "This deletes %(n)d students and all their runs. It cannot be undone."
+msgstr "학생 %(n)d명과 실험 기록을 모두 삭제합니다. 되돌릴 수 없습니다."
+
 msgid "This feature is not available to guests."
 msgstr "게스트로 이용할 수 없는 기능입니다."
 
@@ -835,6 +940,9 @@ msgstr "제목"
 
 msgid "To date"
 msgstr "끝 날짜"
+
+msgid "To go on, type one of these:"
+msgstr "계속하려면 아래 중 하나를 그대로 입력하세요."
 
 msgid "Today"
 msgstr "오늘"
@@ -858,8 +966,14 @@ msgstr "훈련 데이터"
 msgid "Training failed on the server. Try again."
 msgstr "서버에서 학습 중 문제가 생겼습니다. 다시 시도해 주세요."
 
+msgid "Training history"
+msgstr "학습이력"
+
 msgid "Training loss"
 msgstr "학습 손실"
+
+msgid "Training on the server is an advanced feature, which is off for your class."
+msgstr "서버 학습은 고급 기능이라 이 수업에서는 쓸 수 없습니다."
 
 msgid "Training…"
 msgstr "학습 중…"
@@ -878,6 +992,19 @@ msgstr "실제 함수"
 
 msgid "True function (grid)"
 msgstr "실제 함수 (격자)"
+
+msgid "Turn advanced features off"
+msgstr "고급 기능 끄기"
+
+msgid "Turn advanced features on"
+msgstr "고급 기능 켜기"
+
+msgid "Type the phrase"
+msgstr "문구 입력"
+
+#, python-format
+msgid "Type the student numbers only: %(prefix)s is put in front of them by itself. Students log in with it, e.g. %(example)s."
+msgstr "학번만 입력하세요. 접두사 %(prefix)s는 자동으로 붙습니다. 학생은 접두사를 붙여 로그인합니다 (예: %(example)s)."
 
 #, python-brace-format
 msgid "Unknown name in the formula: {name}. Use {vars}."
@@ -921,6 +1048,9 @@ msgstr "차례를 기다리는 중…"
 msgid "Weight {from} → {to}"
 msgstr "가중치 {from} → {to}"
 
+msgid "Who this is, how they asked, the term they use it"
+msgstr "누구인지, 어떻게 신청했는지, 사용 학기 등"
+
 msgid "Widths"
 msgstr "구조"
 
@@ -937,12 +1067,21 @@ msgstr "게스트로 이용 중입니다. %(log_in)s하여 학습 이력을 저�
 msgid "average"
 msgstr "평균"
 
+msgid "back up and delete"
+msgstr "백업 후 삭제"
+
 msgid "batch 1"
 msgstr "배치 1"
 
 #, python-brace-format
 msgid "batch {n}"
 msgstr "배치 {n}"
+
+msgid "delete"
+msgstr "삭제"
+
+msgid "deletes now"
+msgstr "바로 삭제"
 
 #, python-brace-format
 msgid "depth {d}"
@@ -970,8 +1109,14 @@ msgstr "노이즈"
 msgid "none (linear)"
 msgstr "없음 (선형)"
 
+msgid "none: this school"
+msgstr "없음: 우리 학교"
+
 msgid "not yet"
 msgstr "미등록"
+
+msgid "saves the history backup (HTML) of these students, then deletes"
+msgstr "이 학생들의 학습이력 백업(HTML)을 저장한 뒤 삭제"
 
 msgid "set"
 msgstr "등록됨"
@@ -1018,6 +1163,10 @@ msgid "{n} points"
 msgstr "데이터 {n}개"
 
 #, python-brace-format
+msgid "{n} students, {runs} runs"
+msgstr "학생 {n}명, 실험 {runs}개"
+
+#, python-brace-format
 msgid "{n} trees of depth {d}, added one by one. Each new tree corrects the error that is left."
 msgstr "깊이 {d}인 트리 {n}개를 하나씩 더합니다. 새 트리는 남은 오차를 보정합니다."
 
@@ -1050,13 +1199,4 @@ msgstr "■ 중지"
 
 msgid "▶ Train"
 msgstr "▶ 학습"
-
-#~ msgid "First teacher"
-#~ msgstr "최초 관리자"
-
-#~ msgid "Use as a guest"
-#~ msgstr "게스트로 이용하기"
-
-#~ msgid "e.g. %(example)s"
-#~ msgstr "예) %(example)s"
 

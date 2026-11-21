@@ -1,5 +1,5 @@
 // Right-hand output: result header, animation player, MP4 export and history table.
-// Used by the playground (students) and, read-only, by the teacher's student page.
+// Used by the playground (the teacher's student page shows results only: report.js).
 import { t } from './i18n.js';
 import { api } from './api.js';
 import { Player } from './player.js';
@@ -10,7 +10,7 @@ import { exportVideo, saveBlob } from './recorder.js';
 import { dataSummary, lossSummary, modelSummary, optimSummary, videoTitle } from './describe.js';
 
 export class OutputPanel {
-  constructor(root, { readonly = false, userId = null, guest = false, toast, onLoadSettings } = {}) {
+  constructor(root, { userId = null, guest = false, toast, onLoadSettings } = {}) {
     const $ = role => root.querySelector(`[data-role="${role}"]`);
     this.el = {
       title: $('result-title'), sub: $('result-sub'), status: $('result-status'),
@@ -26,7 +26,6 @@ export class OutputPanel {
     this.replaying = null;                    // the AbortController of the run being trained again (view)
     this.player = new Player(root);
     this.history = new History($('history'), {
-      readonly,
       popup: $('filter-pop'),
       onView: row => this.view(row),
       onLoad: async row => onLoadSettings?.(await this.fetchSettings(row)),

@@ -5,13 +5,17 @@
 <main class="admin">
   <header class="admin-head">
     <h1>{{ _('Teacher') }}</h1>
-    <a class="btn btn-ghost btn-sm" id="export-runs" href="{{ url_for('admin.export_runs') }}">{{ _('Download all runs (CSV)') }}</a>
+    <button type="button" class="btn btn-ghost btn-sm" data-backup="">{{ _('Back up the history (HTML)') }}</button>
   </header>
 
   <section class="card admin-forms">
     <form method="post" action="{{ url_for('admin.upload_roster') }}" enctype="multipart/form-data" class="admin-form">
       <h2>{{ _('Import class list') }}</h2>
-      <p class="muted">{{ _('CSV with columns student_id,name (or 학번,이름). Existing students keep their password and history.') }}</p>
+      <p class="muted">{{ _('CSV with columns student_id,name (or 학번,이름). Existing students keep their password and history.') }}
+        <a href="{{ url_for('admin.roster_example') }}">{{ _('Example file (CSV)') }}</a></p>
+      {% if g.user.prefix %}
+        <p class="note">{{ _('Type the student numbers only: %(prefix)s is put in front of them by itself. Students log in with it, e.g. %(example)s.', prefix=g.user.prefix, example=g.user.prefix ~ '21013') }}</p>
+      {% endif %}
       <div class="file-row">
         <input type="file" name="roster" accept=".csv,text/csv" required>
         <button class="btn btn-primary btn-sm">{{ _('Import') }}</button>
@@ -20,7 +24,13 @@
     <form method="post" action="{{ url_for('admin.add_student') }}" class="admin-form">
       <h2>{{ _('Add one student') }}</h2>
       <div class="field-row">
-        <label class="field"><span class="label">{{ _('Student ID') }}</span><input name="login_id" required></label>
+        <label class="field"><span class="label">{{ _('Student ID') }}</span>
+          {% if g.user.prefix %}
+            <span class="prefixed-input"><span class="id-prefix">{{ g.user.prefix }}</span><input name="login_id" required></span>
+          {% else %}
+            <input name="login_id" required>
+          {% endif %}
+        </label>
         <label class="field"><span class="label">{{ _('Name') }}</span><input name="name" required></label>
       </div>
       <button class="btn btn-primary btn-sm">{{ _('Add') }}</button>
@@ -30,7 +40,11 @@
   <section class="card">
     <div class="admin-head">
       <h2>{{ _('Students') }} <span class="muted">({{ students|length }})</span></h2>
-      <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.export_students') }}">{{ _('Download the list (CSV)') }}</a>
+      <div class="history-tools">
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.export_students') }}">{{ _('Download the list (CSV)') }}</a>
+        {# a prefixed teacher's own list, else the students without a prefix (another school goes with its teacher) #}
+        <button type="button" class="btn btn-ghost btn-sm btn-danger" data-open="delete-all-dialog" {{ 'disabled' if not own_class }}>{{ _('Delete all students') }}</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table class="history admin-table">
@@ -41,7 +55,7 @@
         <tbody>
           {% for s in students %}
             <tr>
-              <td>{{ s.login_id }}</td>
+              <td>{% if s.prefix %}<span class="id-prefix">{{ s.prefix }}</span>{% endif %}{{ s.number }}</td>
               <td><a href="{{ url_for('admin.student', user_id=s.id) }}">{{ s.name }}</a></td>
               <td>{% if s.has_password %}<span class="pill pill-ok">{{ _('set') }}</span>{% else %}<span class="pill">{{ _('not yet') }}</span>{% endif %}</td>
               <td class="num">{{ counts.get(s.id, 0) }}</td>
@@ -50,11 +64,11 @@
               <td class="actions">
                 <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.student', user_id=s.id) }}">{{ _('History') }}</a>
                 <form method="post" action="{{ url_for('admin.reset_password', user_id=s.id) }}" class="inline"
-                      onsubmit="return confirm({{ _('Reset the password of %(name)s?', name=s.name)|tojson }})">
+                      onsubmit='return confirm({{ _('Reset the password of %(name)s?', name=s.name)|tojson }})'>
                   <button class="btn btn-ghost btn-sm" {{ 'disabled' if not s.has_password }}>{{ _('Reset password') }}</button>
                 </form>
                 <form method="post" action="{{ url_for('admin.delete_student', user_id=s.id) }}" class="inline"
-                      onsubmit="return confirm({{ _('Delete %(name)s and all their runs?', name=s.name)|tojson }})">
+                      onsubmit='return confirm({{ _('Delete %(name)s and all their runs?', name=s.name)|tojson }})'>
                   <button class="btn btn-ghost btn-sm btn-danger">{{ _('Delete') }}</button>
                 </form>
               </td>
@@ -68,41 +82,54 @@
   </section>
 
   {% if teachers %}
-  {# only the system admin (the first teacher account) sees this: adds, resets and deletes the other teachers #}
+  {# only the system admin (the first teacher account) sees this: adds, edits, resets and deletes the other teachers #}
   <section class="card">
     <div class="admin-head">
       <h2>{{ _('Teacher accounts') }} <span class="muted">({{ teachers|length }})</span></h2>
+      <button type="button" class="btn btn-primary btn-sm" data-open="teacher-dialog">{{ _('Add teacher') }}</button>
     </div>
-    <form method="post" action="{{ url_for('admin.add_teacher') }}" class="admin-form teacher-form">
-      <p class="muted">{{ _('A new teacher logs in with this login ID and name, and the first login sets the password.') }}</p>
-      <div class="field-row">
-        <label class="field"><span class="label">{{ _('Login ID') }}</span><input name="login_id" required></label>
-        <label class="field"><span class="label">{{ _('Name') }}</span><input name="name" required></label>
-      </div>
-      <button class="btn btn-primary btn-sm">{{ _('Add teacher') }}</button>
-    </form>
     <div class="table-wrap">
       <table class="history admin-table">
         <thead><tr>
-          <th>{{ _('Login ID') }}</th><th>{{ _('Name') }}</th><th>{{ _('Password') }}</th><th>{{ _('Last login') }}</th><th></th>
+          <th>{{ _('Login ID') }}</th><th>{{ _('Name') }}</th><th>{{ _('Prefix') }}</th><th>{{ _('E-mail') }}</th>
+          <th class="num">{{ _('Students') }}</th><th>{{ _('Password') }}</th><th>{{ _('Last login') }}</th><th></th>
         </tr></thead>
         <tbody>
           {% for t in teachers %}
             <tr>
               <td>{{ t.login_id }}</td>
-              <td>{{ t.name }}</td>
+              <td>{{ t.name }}{% if t.memo %}<div class="memo">{{ t.memo }}</div>{% endif %}</td>
+              <td>{% if t.prefix %}<span class="id-prefix">{{ t.prefix }}</span>{% else %}—{% endif %}</td>
+              <td>{{ t.email or '—' }}</td>
+              <td class="num">{{ student_counts[t.id] if t.prefix else '' }}</td>
               <td>{% if t.has_password %}<span class="pill pill-ok">{{ _('set') }}</span>{% else %}<span class="pill">{{ _('not yet') }}</span>{% endif %}</td>
               <td>{{ local_time(t.last_login_at) }}</td>
               <td class="actions">
                 {% if loop.first %}
                   <span class="pill">{{ _('System admin') }}</span>
                 {% else %}
+                  {% if t.prefix %}
+                    <form method="post" action="{{ url_for('admin.toggle_advanced', user_id=t.id) }}" class="inline">
+                      <button class="btn btn-ghost btn-sm" title="{{ _('Server training: tree models and runs too slow for the browser') }}">
+                        {{ _('Turn advanced features off') if t.advanced else _('Turn advanced features on') }}</button>
+                    </form>
+                    <button type="button" class="btn btn-ghost btn-sm" data-backup="{{ t.id }}">{{ _('Backup (HTML)') }}</button>
+                  {% endif %}
+                  <details class="row-edit">
+                    <summary class="btn btn-ghost btn-sm">{{ _('Edit') }}</summary>
+                    <form method="post" action="{{ url_for('admin.edit_teacher', user_id=t.id) }}" class="row-edit-form">
+                      <label class="field"><span class="label">{{ _('E-mail') }}</span><input name="email" type="email" value="{{ t.email or '' }}"></label>
+                      <label class="field"><span class="label">{{ _('Memo') }}</span><textarea name="memo" rows="3">{{ t.memo or '' }}</textarea></label>
+                      <button class="btn btn-primary btn-sm">{{ _('Save') }}</button>
+                    </form>
+                  </details>
                   <form method="post" action="{{ url_for('admin.reset_teacher_password', user_id=t.id) }}" class="inline"
-                        onsubmit="return confirm({{ _('Reset the password of the teacher %(name)s?', name=t.name)|tojson }})">
+                        onsubmit='return confirm({{ _('Reset the password of the teacher %(name)s?', name=t.name)|tojson }})'>
                     <button class="btn btn-ghost btn-sm" {{ 'disabled' if not t.has_password }}>{{ _('Reset password') }}</button>
                   </form>
+                  {% set n = only_theirs[t.id] %}
                   <form method="post" action="{{ url_for('admin.delete_teacher', user_id=t.id) }}" class="inline"
-                        onsubmit="return confirm({{ _('Delete the teacher %(name)s and their runs?', name=t.name)|tojson }})">
+                        onsubmit='return confirm({{ (_('Delete the teacher %(name)s, their %(n)d students and all their runs?', name=t.name, n=n) if n else _('Delete the teacher %(name)s and their runs?', name=t.name))|tojson }})'>
                     <button class="btn btn-ghost btn-sm btn-danger">{{ _('Delete') }}</button>
                   </form>
                 {% endif %}
@@ -115,12 +142,72 @@
   </section>
   {% endif %}
 </main>
+
+{% if teachers %}
+<dialog class="dialog dialog-wide" id="teacher-dialog" aria-labelledby="teacher-dialog-title">
+  <h3 id="teacher-dialog-title">{{ _('Add teacher') }}</h3>
+  <form method="post" action="{{ url_for('admin.add_teacher') }}" class="admin-form">
+    <p class="muted">{{ _('A new teacher logs in with this login ID and name, and the first login sets the password.') }}
+      {{ _("A teacher from another school gets a prefix: it goes in front of their students' numbers, they see only their own students, and advanced features stay off until you turn them on.") }}</p>
+    <div class="field-row">
+      <label class="field"><span class="label">{{ _('Login ID') }}</span><input name="login_id" required></label>
+      <label class="field"><span class="label">{{ _('Name') }}</span><input name="name" required></label>
+    </div>
+    <div class="field-row">
+      <label class="field"><span class="label">{{ _('Prefix (2–10 letters)') }}</span>
+        <input name="prefix" pattern="[A-Za-z]{2,10}" placeholder="{{ _('none: this school') }}" autocapitalize="off"></label>
+      <label class="field"><span class="label">{{ _('E-mail') }}</span><input name="email" type="email"></label>
+    </div>
+    <label class="field"><span class="label">{{ _('Memo') }}</span>
+      <textarea name="memo" rows="2" placeholder="{{ _('Who this is, how they asked, the term they use it') }}"></textarea></label>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close>{{ _('Cancel') }}</button>
+      <button class="btn btn-primary">{{ _('Add teacher') }}</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
+{# "delete all students": the teacher types one of the phrases (admin.DELETE_WORDS / BACKUP_WORDS, checked again
+   by the server); "back up, then delete" first makes the backup of these students and deletes after "Save the file" #}
+<dialog class="dialog" id="delete-all-dialog" aria-labelledby="delete-all-title">
+  <form method="post" action="{{ url_for('admin.delete_all_students') }}" data-role="delete-all-form">
+    <h3 id="delete-all-title">{{ _('Delete all students') }}</h3>
+    <p>{{ _('This deletes %(n)d students and all their runs. It cannot be undone.', n=own_class) }}</p>
+    <p class="muted">{{ _('To go on, type one of these:') }}</p>
+    <ul class="phrases">
+      <li><b>{{ _('back up and delete') }}</b> — {{ _('saves the history backup (HTML) of these students, then deletes') }}</li>
+      <li><b>{{ _('delete') }}</b> — {{ _('deletes now') }}</li>
+    </ul>
+    <input name="confirm_text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="{{ _('Type the phrase') }}"
+           data-delete="{{ delete_words|tojson|forceescape }}" data-backup-words="{{ backup_words|tojson|forceescape }}">
+    <p class="muted" data-role="delete-all-text"></p>
+    <div class="progress" data-role="progress" hidden><div></div></div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close>{{ _('Cancel') }}</button>
+      <a class="btn btn-primary" data-role="delete-all-save" hidden>{{ _('Save the file and delete') }}</a>
+      <button class="btn btn-danger-solid" data-role="delete-all-ok" disabled>{{ _('Delete') }}</button>
+    </div>
+  </form>
+</dialog>
+
+{# the backup file is put together (browser runs are trained again when the file is opened, not now), then saved
+   with a click on "Save the file": Safari does not save a file the page starts by itself after waiting for the server #}
+<dialog class="dialog" id="backup-dialog" aria-labelledby="backup-title">
+  <h3 id="backup-title">{{ _('Back up the history (HTML)') }}</h3>
+  <p class="muted" data-role="backup-text"></p>
+  <div class="progress" data-role="progress" hidden><div></div></div>
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-ghost" data-role="backup-cancel">{{ _('Close') }}</button>
+    <a class="btn btn-primary" data-role="backup-save" hidden>{{ _('Save the file') }}</a>
+  </div>
+</dialog>
+<script>window.OPTIONS = {{ options|tojson }};</script>
+<script type="module" src="{{ url_for('static', filename='js/teacher.js') }}"></script>
 <script>
   // times are stored in UTC; show them in the viewer's time zone
   for (const el of document.querySelectorAll('time[data-utc]')) {
     el.textContent = new Date(el.dataset.utc).toLocaleString(document.documentElement.lang, { dateStyle: 'short', timeStyle: 'short' });
   }
-  const exportLink = document.getElementById('export-runs');
-  exportLink.search = new URLSearchParams({ tz: Intl.DateTimeFormat().resolvedOptions().timeZone });
 </script>
 {% endblock %}

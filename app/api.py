@@ -21,6 +21,7 @@ from flask import Blueprint, Response, abort, current_app, g, jsonify, request, 
 from flask_babel import gettext
 from sqlalchemy.orm import defer
 
+from .access import can_see
 from .auth import login_required, user_or_guest_required
 from .extensions import db
 from .ml import data as ml_data
@@ -93,7 +94,9 @@ def prepare():
         ds = trainer.check(cfg)
     except (ml_data.DataError, trainer.BudgetError) as exc:
         return error_response([(exc.msgid, exc.params)])
-    if not options.trains_in_browser(cfg, len(ds.X_train), len(ds.X_val)):
+    # without advanced features (a school with a prefix) everything trains in the browser, however slow
+    advanced = g.user is None or g.user.can_use_advanced
+    if advanced and not options.trains_in_browser(cfg, len(ds.X_train), len(ds.X_val)):
         return jsonify({'browser': False})
     return jsonify({'browser': True, 'meta': trainer.meta(cfg, ds),
                     'time_limit_s': current_app.config['TRAINING_TIME_LIMIT_S']})
@@ -102,6 +105,8 @@ def prepare():
 @bp.post('/train')
 @login_required
 def train():
+    if not g.user.can_use_advanced:
+        return jsonify({'errors': [gettext('Training on the server is an advanced feature, which is off for your class.')]}), 403
     cfg, errors = read_config()
     if errors:
         return error_response(errors)
@@ -216,10 +221,11 @@ def checked_end(e, epochs):
 
 
 def visible_user_id():
-    """Students see their own runs; teachers may pass ?user=<id>."""
+    """Students see their own runs; teachers may pass ?user=<id> of a student they may see (access.py)."""
     uid = request.args.get('user', type=int)
     if uid and uid != g.user.id:
-        if not g.user.is_teacher or db.session.get(User, uid) is None:
+        user = db.session.get(User, uid)
+        if user is None or not can_see(g.user, user):
             abort(403)
         return uid
     return g.user.id
@@ -227,7 +233,7 @@ def visible_user_id():
 
 def get_run(run_id):
     run = db.get_or_404(Run, run_id)
-    if run.user_id != g.user.id and not g.user.is_teacher:
+    if run.user_id != g.user.id and not can_see(g.user, run.user):
         abort(404)
     return run
 

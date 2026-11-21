@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-21 11:09+0900\n"
+"POT-Creation-Date: 2026-11-21 19:17+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,7 +36,13 @@ msgstr ""
 msgid "A new teacher logs in with this login ID and name, and the first login sets the password."
 msgstr ""
 
+msgid "A prefix is 2 to 10 English letters."
+msgstr ""
+
 msgid "A straight line (or flat plane): ŷ = w·x + b"
+msgstr ""
+
+msgid "A teacher from another school gets a prefix: it goes in front of their students' numbers, they see only their own students, and advanced features stay off until you turn them on."
 msgstr ""
 
 msgid "About logging in"
@@ -66,6 +72,14 @@ msgstr ""
 msgid "Advanced"
 msgstr ""
 
+#, python-format
+msgid "Advanced features are off for %(name)s and their students."
+msgstr ""
+
+#, python-format
+msgid "Advanced features are on for %(name)s and their students."
+msgstr ""
+
 msgid "Advanced · other models"
 msgstr ""
 
@@ -82,6 +96,12 @@ msgid "As a guest, your runs are not saved on the server and some features (tree
 msgstr ""
 
 msgid "Averages many trees trained on random samples"
+msgstr ""
+
+msgid "Back up the history (HTML)"
+msgstr ""
+
+msgid "Backup (HTML)"
 msgstr ""
 
 msgid "Batch method"
@@ -187,12 +207,31 @@ msgstr ""
 msgid "Delete %(name)s and all their runs?"
 msgstr ""
 
+msgid "Delete all students"
+msgstr ""
+
 #, python-brace-format
 msgid "Delete run #{n}? This cannot be undone."
 msgstr ""
 
 #, python-format
 msgid "Delete the teacher %(name)s and their runs?"
+msgstr ""
+
+#, python-format
+msgid "Delete the teacher %(name)s, their %(n)d students and all their runs?"
+msgstr ""
+
+#, python-format
+msgid "Deleted %(n)d students and their history."
+msgstr ""
+
+#, python-format
+msgid "Deleted %(n)d students and their history; %(m)d others stay on another teacher's list."
+msgstr ""
+
+#, python-format
+msgid "Deleted %(name)s and %(n)d students with their history."
 msgstr ""
 
 #, python-format
@@ -209,9 +248,6 @@ msgid "Done"
 msgstr ""
 
 msgid "Dot: where it was at this epoch. Open circles: start and end."
-msgstr ""
-
-msgid "Download all runs (CSV)"
 msgstr ""
 
 msgid "Download the list (CSV)"
@@ -233,6 +269,9 @@ msgstr ""
 msgid "Each point of the surface is the training loss of one line ŷ = w·x + b. Drag to rotate."
 msgstr ""
 
+msgid "Edit"
+msgstr ""
+
 msgid "Enter a login ID and a name."
 msgstr ""
 
@@ -249,6 +288,9 @@ msgid "Error"
 msgstr ""
 
 msgid "Errors smaller than δ are squared; bigger ones count linearly."
+msgstr ""
+
+msgid "Example file (CSV)"
 msgstr ""
 
 msgid "Fewer neurons"
@@ -282,6 +324,13 @@ msgid "Function"
 msgstr ""
 
 msgid "Function to learn"
+msgstr ""
+
+msgid "Gathering the runs on the server…"
+msgstr ""
+
+#, python-brace-format
+msgid "Getting the data… {got} / {total} MB"
 msgstr ""
 
 msgid "Gradient boosting"
@@ -447,6 +496,12 @@ msgstr ""
 msgid "Lowest validation loss for this data"
 msgstr ""
 
+msgid "Make the backup"
+msgstr ""
+
+msgid "Making the file…"
+msgstr ""
+
 msgid "Max depth"
 msgstr ""
 
@@ -454,6 +509,9 @@ msgid "Mean absolute error: every unit of error costs the same, so outliers matt
 msgstr ""
 
 msgid "Mean squared error: big mistakes cost a lot"
+msgstr ""
+
+msgid "Memo"
 msgstr ""
 
 msgid "Mini-batch"
@@ -509,6 +567,9 @@ msgid "Not saved"
 msgstr ""
 
 msgid "Not trained yet"
+msgstr ""
+
+msgid "Nothing was deleted: the phrase did not match."
 msgstr ""
 
 msgid "Number of points"
@@ -568,6 +629,9 @@ msgstr ""
 msgid "Penalty for one error (ŷ − y). The chosen loss is highlighted."
 msgstr ""
 
+msgid "Pick a run: this computer trains it again from its settings to draw the result (a few seconds)."
+msgstr ""
+
 msgid "Play / pause (Space)"
 msgstr ""
 
@@ -584,6 +648,12 @@ msgid "Prediction (surface)"
 msgstr ""
 
 msgid "Predictor"
+msgstr ""
+
+msgid "Prefix"
+msgstr ""
+
+msgid "Prefix (2–10 letters)"
 msgstr ""
 
 msgid "Previous frame (←)"
@@ -605,6 +675,10 @@ msgid "Rebuilding the training…"
 msgstr ""
 
 msgid "Remove layer"
+msgstr ""
+
+#, python-format
+msgid "Removed %(name)s from your list (another teacher still has them)."
 msgstr ""
 
 msgid "Reset"
@@ -651,6 +725,19 @@ msgstr ""
 msgid "Save MP4"
 msgstr ""
 
+msgid "Save the file"
+msgstr ""
+
+msgid "Save the file and delete"
+msgstr ""
+
+#, python-format
+msgid "Saved the details of %(name)s."
+msgstr ""
+
+msgid "Saving the file, then deleting…"
+msgstr ""
+
 msgid "Saving the runs you made as a guest…"
 msgstr ""
 
@@ -659,6 +746,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Server error ({status})"
+msgstr ""
+
+msgid "Server training: tree models and runs too slow for the browser"
 msgstr ""
 
 msgid "Set up the experiment on the left and press Train."
@@ -779,7 +869,18 @@ msgstr ""
 msgid "The connection closed before the run was saved."
 msgstr ""
 
+msgid "The data of this run can not be made again."
+msgstr ""
+
 msgid "The file could not be read. Save it as CSV (UTF-8)."
+msgstr ""
+
+#, python-brace-format
+msgid "The file is ready ({size} MB)."
+msgstr ""
+
+#, python-brace-format
+msgid "The file is ready ({size} MB). Save it: the students are deleted right after."
 msgstr ""
 
 msgid "The formula gives invalid values (for example division by zero or the log of a negative number)."
@@ -823,6 +924,10 @@ msgstr ""
 msgid "This browser cannot record video. Try the latest Chrome, Edge or Safari."
 msgstr ""
 
+#, python-format
+msgid "This deletes %(n)d students and all their runs. It cannot be undone."
+msgstr ""
+
 msgid "This feature is not available to guests."
 msgstr ""
 
@@ -833,6 +938,9 @@ msgid "Title"
 msgstr ""
 
 msgid "To date"
+msgstr ""
+
+msgid "To go on, type one of these:"
 msgstr ""
 
 msgid "Today"
@@ -857,7 +965,13 @@ msgstr ""
 msgid "Training failed on the server. Try again."
 msgstr ""
 
+msgid "Training history"
+msgstr ""
+
 msgid "Training loss"
+msgstr ""
+
+msgid "Training on the server is an advanced feature, which is off for your class."
 msgstr ""
 
 msgid "Training…"
@@ -876,6 +990,19 @@ msgid "True function"
 msgstr ""
 
 msgid "True function (grid)"
+msgstr ""
+
+msgid "Turn advanced features off"
+msgstr ""
+
+msgid "Turn advanced features on"
+msgstr ""
+
+msgid "Type the phrase"
+msgstr ""
+
+#, python-format
+msgid "Type the student numbers only: %(prefix)s is put in front of them by itself. Students log in with it, e.g. %(example)s."
 msgstr ""
 
 #, python-brace-format
@@ -920,6 +1047,9 @@ msgstr ""
 msgid "Weight {from} → {to}"
 msgstr ""
 
+msgid "Who this is, how they asked, the term they use it"
+msgstr ""
+
 msgid "Widths"
 msgstr ""
 
@@ -936,11 +1066,20 @@ msgstr ""
 msgid "average"
 msgstr ""
 
+msgid "back up and delete"
+msgstr ""
+
 msgid "batch 1"
 msgstr ""
 
 #, python-brace-format
 msgid "batch {n}"
+msgstr ""
+
+msgid "delete"
+msgstr ""
+
+msgid "deletes now"
 msgstr ""
 
 #, python-brace-format
@@ -969,7 +1108,13 @@ msgstr ""
 msgid "none (linear)"
 msgstr ""
 
+msgid "none: this school"
+msgstr ""
+
 msgid "not yet"
+msgstr ""
+
+msgid "saves the history backup (HTML) of these students, then deletes"
 msgstr ""
 
 msgid "set"
@@ -1014,6 +1159,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{n} points"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} students, {runs} runs"
 msgstr ""
 
 #, python-brace-format

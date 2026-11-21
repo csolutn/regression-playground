@@ -46,6 +46,7 @@
     <p id="structure-caption" class="muted"></p>
   </div>
 
+  {% if advanced %}
   <details class="advanced" id="model-advanced">
     <summary>{{ _('Advanced · other models') }}</summary>
     <p class="hint">{{ _('Tree models do not draw a smooth curve: they cut x into boxes and predict one value per box.') }}</p>
@@ -68,4 +69,5 @@
       </label>
     </div>
   </details>
+  {% endif %}
 </section>

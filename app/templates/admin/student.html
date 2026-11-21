@@ -3,12 +3,12 @@
 {% block content %}
 <main class="admin">
   <header class="admin-head">
-    <h1><a href="{{ url_for('admin.index') }}" class="muted">{{ _('Teacher') }}</a> / {{ student.login_id }} · {{ student.name }}</h1>
+    <h1><a href="{{ url_for('admin.index') }}" class="muted">{{ _('Teacher') }}</a> /
+      {% if student.prefix %}<span class="id-prefix">{{ student.prefix }}</span>{% endif %}{{ student.number }} · {{ student.name }}</h1>
   </header>
-  {% set output_user_id = student.id %}
-  {% set output_login_id = student.login_id %}
-  {% include 'partials/output.html' %}
+  {# filled by report.js: the run's result (its last frame and loss curve) and the history table #}
+  <div id="report" data-student="{{ student.id }}"></div>
 </main>
 <script>window.OPTIONS = {{ options|tojson }};</script>
-<script type="module" src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/report-live.js') }}"></script>
 {% endblock %}
