@@ -2,7 +2,7 @@
 // The server only sends numbers (frames); every image is drawn here.
 // While a run is training only its data is drawn (the output panel shows a progress bar over it):
 // frames arrive much faster than they are played back, which looks like instant convergence.
-import { DEFAULT_VIEW, drawLandscape, drawLoss, drawPrediction, drawSlices, fitCanvas, fmtLoss, screenTheme, slicesLayout } from './plot.js';
+import { DEFAULT_VIEW, ZOOM_RANGE, drawLandscape, drawLoss, drawPrediction, drawSlices, fitCanvas, fmtLoss, screenTheme, slicesLayout } from './plot.js';
 import { stepLabel } from './describe.js';
 import { hasLandscape, hasSlices, landscape, paramSlices, tryWeight } from './landscape.js';
 
@@ -57,6 +57,7 @@ export class Player {
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.render());
     PHONE.addEventListener('change', () => this.render());
     this.enableRotate(this.canvas, this.view, () => this.run?.meta?.n_inputs === 2);
+    this.enableZoom(this.canvas, this.view, () => this.run?.meta?.n_inputs === 2);
     this.enableRotate(this.land.canvas, this.landView, () => this.landKind === 'surface');
     this.sync();
   }
@@ -290,5 +291,22 @@ export class Player {
     const end = () => { start = null; };
     canvas.addEventListener('pointerup', end);
     canvas.addEventListener('pointercancel', end);
+  }
+
+  // the wheel (or a trackpad pinch) zooms the 2-input plot within ZOOM_RANGE; a double click goes back to 1
+  enableZoom(canvas, view, enabled) {
+    canvas.addEventListener('wheel', e => {
+      if (!enabled()) return;
+      e.preventDefault();                 // the page does not scroll while the pointer is on the plot
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);   // lines, pages → pixels
+      const [lo, hi] = ZOOM_RANGE;
+      view.zoom = Math.max(lo, Math.min(hi, (view.zoom || 1) * Math.exp(-dy * 0.002)));
+      this.render();
+    }, { passive: false });
+    canvas.addEventListener('dblclick', () => {
+      if (!enabled() || (view.zoom || 1) === 1) return;
+      view.zoom = 1;
+      this.render();
+    });
   }
 }

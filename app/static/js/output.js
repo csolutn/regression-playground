@@ -299,7 +299,7 @@ export class OutputPanel {
           title: f.video_title.value.trim() || videoTitle(run.config),
           speed: +f.video_speed.value || 1,
           log: f.video_log.checked,
-          view: this.player.view,
+          view: { ...this.player.view, zoom: 1 },   // the video shows the whole box, turned as on screen
           onProgress: p => { bar.style.width = `${Math.round(p * 100)}%`; },
         });
         saveBlob(blob, `ml-playground-run${run.row?.seq ?? ''}.${ext}`);

@@ -245,6 +245,7 @@ function drawPrediction1D(ctx, r, m, pred, th, s, withPred) {
 // ---------- 2 inputs: rotatable 3D surface ----------
 
 export const DEFAULT_VIEW = { az: -0.65, el: 0.5 };
+export const ZOOM_RANGE = [0.7, 2.5];       // the 2-input plot's wheel zoom (view.zoom), 1 = the whole box
 
 function coolwarm(u) {
   const stops = [[59, 76, 192], [124, 159, 249], [221, 221, 221], [245, 148, 114], [180, 4, 38]];
@@ -253,7 +254,7 @@ function coolwarm(u) {
   return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(',')})`;
 }
 
-function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false) {   // small: no axis names or legend
+function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false) {   // small: no axis names, legend or zoom
   const [ax1, ax2] = m.axes, n1 = ax1.length, n2 = ax2.length;
   const [zlo, zhi] = yRange(m);
   const P = { x: r.x + 4 * s, y: r.y + 4 * s, w: r.w - 8 * s, h: r.h - 8 * s };
@@ -263,20 +264,24 @@ function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false)
   const v_ = v => (v - ax2[0]) / (ax2[n2 - 1] - ax2[0] || 1) * 2 - 1;
   const w = z => Math.max(-1, Math.min(1, (z - zlo) / (zhi - zlo) * 2 - 1)) * 0.72;
   const ca = Math.cos(view.az), sa = Math.sin(view.az), ce = Math.cos(view.el), se = Math.sin(view.el);
-  const scale = Math.min(P.w / 3.4, P.h / 3.0);
+  const zoom = small ? 1 : view.zoom || 1;
+  const scale = Math.min(P.w / 3.4, P.h / 3.0) * zoom;
   const cx = P.x + P.w / 2, cy = P.y + P.h * 0.5;
   const project = (a, b, c) => {
     const xr = a * ca - b * sa, yr = a * sa + b * ca;
     return [cx + xr * scale, cy - (yr * se + c * ce) * scale, -yr * ce + c * se];
   };
 
-  // floor and back walls of the box
+  // floor and back walls of the box (zoomed in, the box and everything in it stay inside the panel)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
   ctx.strokeStyle = th.frame; ctx.lineWidth = 1.2 * s;
   const floor = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => project(a, b, -0.72));
   ctx.beginPath(); floor.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.stroke();
   const back = floor.reduce((best, p, i) => (p[2] < floor[best][2] ? i : best), 0);
   const [bx, by] = floor[back], [tx, ty] = project(...[[-1, -1], [1, -1], [1, 1], [-1, 1]][back], 0.72);
   ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
+  ctx.restore();
 
   const items = [];
   if (pred) {
@@ -325,11 +330,13 @@ function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false)
   ctx.restore();
 
   if (small) return P;
-  // axis names at the middle of the two front floor edges
+  // axis names at the middle of the two front floor edges (left out while zoomed in: they would leave the panel)
   ctx.fillStyle = th.muted; ctx.font = font(13 * s); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const lab = (a, b, text) => { const [x, y] = project(a, b, -0.72); ctx.fillText(text, x, y + 14 * s); };
-  lab(0, ca > 0 ? -1.12 : 1.12, m.feature_names[0]);
-  lab(sa > 0 ? 1.12 : -1.12, 0, m.feature_names[1]);
+  if (zoom <= 1) {
+    lab(0, ca > 0 ? -1.12 : 1.12, m.feature_names[0]);
+    lab(sa > 0 ? 1.12 : -1.12, 0, m.feature_names[1]);
+  }
 
   const note = [{ kind: 'dot', color: th.train, label: t('Training data') }];
   if (withPred) note.push({ color: coolwarm(0.8), width: 6, label: t('Prediction (surface)') });
