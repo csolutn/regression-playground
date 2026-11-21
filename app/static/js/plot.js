@@ -146,6 +146,8 @@ function legend(ctx, items, x, y, align, th, s, inside = true) {      // returns
   return { x: bx, y: by, w, h };
 }
 
+const RESET_VIEW_SIZE = 30;      // the two-input plot's reset-view button, a square (CSS px at s = 1)
+
 // A square button with a circular arrow (no text), in the legend's style; returns its box
 function resetViewButton(ctx, x, y, size, th, s) {
   const box = { x, y, w: size, h: size };
@@ -364,8 +366,10 @@ function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false,
   const note = [{ kind: 'dot', color: th.train, label: t('Training data') }];
   if (withPred) note.push({ color: coolwarm(0.8), width: 6, label: t('Prediction (surface)') });
   if (m.y_true) note.push({ color: th.muted, width: 1, label: t('True function (grid)') });
-  const L = legend(ctx, note, P.x + P.w - 10 * s, P.y + P.h - 10 * s, 'right', th, s);
-  if (resetView) P.resetView = resetViewButton(ctx, L.x - 6 * s - L.h, L.y, L.h, th, s);   // left of the legend, as tall
+  legend(ctx, note, P.x + P.w - 10 * s, P.y + P.h - 10 * s, 'right', th, s);
+  // bottom left, the same size before and after training (the legend's height changes with it)
+  const size = RESET_VIEW_SIZE * s;
+  if (resetView) P.resetView = resetViewButton(ctx, P.x + 10 * s, P.y + P.h - 10 * s - size, size, th, s);
   return P;
 }
 
