@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-19 18:18+0900\n"
+"POT-Creation-Date: 2026-11-21 11:09+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -707,6 +707,9 @@ msgid "Splitting (no gradient descent)"
 msgstr ""
 
 msgid "Squared for small errors, absolute for big ones"
+msgstr ""
+
+msgid "Standard view"
 msgstr ""
 
 msgid "Status"

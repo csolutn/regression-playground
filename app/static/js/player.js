@@ -4,6 +4,7 @@
 // frames arrive much faster than they are played back, which looks like instant convergence.
 import { DEFAULT_VIEW, ZOOM_RANGE, drawLandscape, drawLoss, drawPrediction, drawSlices, fitCanvas, fmtLoss, screenTheme, slicesLayout } from './plot.js';
 import { stepLabel } from './describe.js';
+import { t } from './i18n.js';
 import { hasLandscape, hasSlices, landscape, paramSlices, tryWeight } from './landscape.js';
 
 const PHONE = matchMedia('(max-width: 640px)');   // the slices two in a row instead of four
@@ -56,6 +57,8 @@ export class Player {
     for (const c of [this.canvas, this.loss.canvas, this.land.canvas]) new ResizeObserver(() => this.render()).observe(c);
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.render());
     PHONE.addEventListener('change', () => this.render());
+    this.predLayout = null;        // where drawPrediction put the reset-view button, for the pointer
+    this.enableResetView();        // before the rotation, so that a press on the button does not turn the plot
     this.enableRotate(this.canvas, this.view, () => this.run?.meta?.n_inputs === 2);
     this.enableZoom(this.canvas, this.view, () => this.run?.meta?.n_inputs === 2);
     this.enableRotate(this.land.canvas, this.landView, () => this.landKind === 'surface');
@@ -177,7 +180,8 @@ export class Player {
       if (!this.run?.meta) return;
       const s = Math.max(0.8, Math.min(1.25, w / 700));
       const preview = !!(this.run.preview || this.run.live);     // data before / while training: points only
-      drawPrediction(ctx, { x: 0, y: 0, w, h }, this.run, this.idx, th, s, { view: this.view, dataOnly: preview, badges: !preview });
+      this.predLayout = drawPrediction(ctx, { x: 0, y: 0, w, h }, this.run, this.idx, th, s,
+        { view: this.view, dataOnly: preview, badges: !preview, resetView: true });
       if (this.loss.dialog.open) this.renderLoss(th);
       if (this.land.dialog.open) this.renderLandscape(th);
     });
@@ -294,6 +298,27 @@ export class Player {
     const end = e => { down.delete(e.pointerId); start = null; };
     canvas.addEventListener('pointerup', end);
     canvas.addEventListener('pointercancel', end);
+  }
+
+  // the square button left of a 2-input plot's legend turns it back to the standard angle and zoom
+  enableResetView() {
+    const canvas = this.canvas;
+    const onButton = e => {
+      const b = this.predLayout?.resetView, r = canvas.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      return !!b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+    };
+    canvas.addEventListener('pointerdown', e => {
+      if (!onButton(e)) return;
+      e.stopImmediatePropagation();       // no rotation, no pinch
+      Object.assign(this.view, DEFAULT_VIEW, { zoom: 1 });
+      this.render();
+    });
+    canvas.addEventListener('pointermove', e => {
+      const on = onButton(e);
+      canvas.style.cursor = on ? 'pointer' : '';
+      canvas.title = on ? t('Standard view') : '';
+    });
   }
 
   // the wheel, a trackpad pinch or a two-finger pinch on a touch screen zooms the 2-input plot within

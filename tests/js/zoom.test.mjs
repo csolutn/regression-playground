@@ -53,3 +53,22 @@ test('two fingers pinch to zoom without turning the plot', () => {
   finger('pointermove', 3, 150, 100);
   assert.ok(view.az !== az);
 });
+
+test('the square button turns the plot back to the standard view, and pressing it does not turn the plot', () => {
+  const canvas = new EventTarget();
+  Object.assign(canvas, { setPointerCapture() {}, style: {}, getBoundingClientRect: () => ({ left: 0, top: 0 }) });
+  const view = { az: 1.2, el: 1.0, zoom: 2 };
+  const self = { canvas, view, render() {}, predLayout: { resetView: { x: 300, y: 200, w: 30, h: 30 } } };
+  Player.prototype.enableResetView.call(self);
+  Player.prototype.enableRotate.call(self, canvas, view, () => true);
+  const fire = (type, x, y) => canvas.dispatchEvent(Object.assign(new Event(type), { pointerId: 1, pointerType: 'mouse', clientX: x, clientY: y }));
+  fire('pointermove', 310, 210);
+  assert.equal(canvas.style.cursor, 'pointer');
+  fire('pointerdown', 310, 210);
+  fire('pointermove', 400, 260);                   // the drag that follows does not turn it
+  assert.deepEqual(view, { ...DEFAULT_VIEW, zoom: 1 });
+  fire('pointerup', 400, 260);
+  fire('pointerdown', 100, 100);                   // elsewhere a drag turns it as before
+  fire('pointermove', 150, 100);
+  assert.notEqual(view.az, DEFAULT_VIEW.az);
+});

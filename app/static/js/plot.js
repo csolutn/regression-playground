@@ -121,7 +121,7 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function legend(ctx, items, x, y, align, th, s, inside = true) {
+function legend(ctx, items, x, y, align, th, s, inside = true) {      // returns its box
   ctx.font = font(12 * s);
   const sw = 20 * s, gap = 6 * s, lh = 18 * s, pad = 7 * s;
   const w = Math.max(...items.map(i => ctx.measureText(i.label).width)) + sw + gap + 2 * pad;
@@ -143,6 +143,25 @@ function legend(ctx, items, x, y, align, th, s, inside = true) {
     ctx.fillStyle = th.text; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillText(it.label, bx + pad + sw + gap, cy);
   });
+  return { x: bx, y: by, w, h };
+}
+
+// A square button with a circular arrow (no text), in the legend's style; returns its box
+function resetViewButton(ctx, x, y, size, th, s) {
+  const box = { x, y, w: size, h: size };
+  ctx.fillStyle = th.badge; ctx.strokeStyle = th.frame; ctx.lineWidth = 1.2 * s;
+  roundRect(ctx, x, y, size, size, 5 * s); ctx.fill(); ctx.stroke();
+  const cx = x + size / 2, cy = y + size / 2, r = size * 0.24, a0 = -0.3 * Math.PI, a1 = a0 + 1.6 * Math.PI;
+  ctx.strokeStyle = ctx.fillStyle = th.text; ctx.lineWidth = 1.6 * s; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(cx, cy, r, a0, a1); ctx.stroke(); ctx.lineCap = 'butt';
+  const ex = cx + r * Math.cos(a1), ey = cy + r * Math.sin(a1);             // arrowhead along the turn at the end
+  const tx = -Math.sin(a1), ty = Math.cos(a1), nx = Math.cos(a1), ny = Math.sin(a1), k = 3.6 * s;
+  ctx.beginPath();
+  ctx.moveTo(ex + tx * k, ey + ty * k);
+  ctx.lineTo(ex - tx * k * 0.4 + nx * k, ey - ty * k * 0.4 + ny * k);
+  ctx.lineTo(ex - tx * k * 0.4 - nx * k, ey - ty * k * 0.4 - ny * k);
+  ctx.closePath(); ctx.fill();
+  return box;
 }
 
 // Legend laid out in one row, centered at x
@@ -178,18 +197,22 @@ function polyline(ctx, xs, ys, X, Y) {
 
 // Frame i of a run: the model's prediction plus Epoch and settings badges
 // opts.dataOnly: just the data points (before training), without the true function or a prediction
+// opts.resetView: a two-input plot gets the button that turns it back to DEFAULT_VIEW (the screen, not the video);
+// returns { resetView: its box or null }, for the pointer
 export function drawPrediction(ctx, r, run, idx, th, s = 1, opts = {}) {
   const frame = opts.dataOnly ? null : run.frames[idx];
   const m = opts.dataOnly ? { ...run.meta, y_true: null } : run.meta;
   const P = m.n_inputs === 1
     ? drawPrediction1D(ctx, r, m, frame?.pred, th, s, !opts.dataOnly)
-    : drawPrediction2D(ctx, r, m, frame?.pred, th, s, opts.view || DEFAULT_VIEW, !opts.dataOnly);
-  if (opts.badges === false) return;
+    : drawPrediction2D(ctx, r, m, frame?.pred, th, s, opts.view || DEFAULT_VIEW, !opts.dataOnly, false, opts.resetView);
+  const layout = { resetView: P.resetView || null };
+  if (opts.badges === false) return layout;
   const total = run.meta.total_steps;
   const step = frame ? frame.step : 0;
   badge(ctx, [`${stepLabel(run.meta.model)} ${step.toLocaleString()}/${total.toLocaleString()}`],
     P.x + 10 * s, P.y + 10 * s, 'left', th, s, FONT, 14);
   badge(ctx, configBadge(run.config), P.x + P.w - 10 * s, P.y + 10 * s, 'right', th, s, MONO, 11.5);
+  return layout;
 }
 
 function drawPrediction1D(ctx, r, m, pred, th, s, withPred) {
@@ -254,7 +277,7 @@ function coolwarm(u) {
   return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(',')})`;
 }
 
-function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false) {   // small: no axis names, legend or zoom
+function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false, resetView = false) {   // small: no axis names, legend or zoom
   const [ax1, ax2] = m.axes, n1 = ax1.length, n2 = ax2.length;
   const [zlo, zhi] = yRange(m);
   const P = { x: r.x + 4 * s, y: r.y + 4 * s, w: r.w - 8 * s, h: r.h - 8 * s };
@@ -341,7 +364,8 @@ function drawPrediction2D(ctx, r, m, pred, th, s, view, withPred, small = false)
   const note = [{ kind: 'dot', color: th.train, label: t('Training data') }];
   if (withPred) note.push({ color: coolwarm(0.8), width: 6, label: t('Prediction (surface)') });
   if (m.y_true) note.push({ color: th.muted, width: 1, label: t('True function (grid)') });
-  legend(ctx, note, P.x + P.w - 10 * s, P.y + P.h - 10 * s, 'right', th, s);
+  const L = legend(ctx, note, P.x + P.w - 10 * s, P.y + P.h - 10 * s, 'right', th, s);
+  if (resetView) P.resetView = resetViewButton(ctx, L.x - 6 * s - L.h, L.y, L.h, th, s);   // left of the legend, as tall
   return P;
 }
 
