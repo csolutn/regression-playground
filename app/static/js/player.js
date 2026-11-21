@@ -274,11 +274,14 @@ export class Player {
     canvas.addEventListener('pointercancel', end);
   }
 
-  // drag to rotate a 3D plot (the 2-input surface, the loss landscape)
+  // drag to rotate a 3D plot (the 2-input surface, the loss landscape); a second finger stops it (a pinch)
   enableRotate(canvas, view, enabled) {
     let start = null;
+    const down = new Set();
     canvas.addEventListener('pointerdown', e => {
+      down.add(e.pointerId);
       if (!enabled()) return;
+      if (down.size > 1) { start = null; return; }
       start = { x: e.clientX, y: e.clientY, ...view };
       canvas.setPointerCapture(e.pointerId);
     });
@@ -288,21 +291,38 @@ export class Player {
       view.el = Math.max(0.05, Math.min(1.45, start.el + (e.clientY - start.y) * 0.01));
       this.render();
     });
-    const end = () => { start = null; };
+    const end = e => { down.delete(e.pointerId); start = null; };
     canvas.addEventListener('pointerup', end);
     canvas.addEventListener('pointercancel', end);
   }
 
-  // the wheel (or a trackpad pinch) zooms the 2-input plot within ZOOM_RANGE; a double click goes back to 1
+  // the wheel, a trackpad pinch or a two-finger pinch on a touch screen zooms the 2-input plot within
+  // ZOOM_RANGE; a double click (or tap) goes back to 1
   enableZoom(canvas, view, enabled) {
+    const [lo, hi] = ZOOM_RANGE;
+    const zoomTo = z => { view.zoom = Math.max(lo, Math.min(hi, z)); this.render(); };
     canvas.addEventListener('wheel', e => {
       if (!enabled()) return;
       e.preventDefault();                 // the page does not scroll while the pointer is on the plot
       const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);   // lines, pages → pixels
-      const [lo, hi] = ZOOM_RANGE;
-      view.zoom = Math.max(lo, Math.min(hi, (view.zoom || 1) * Math.exp(-dy * 0.002)));
-      this.render();
+      zoomTo((view.zoom || 1) * Math.exp(-dy * 0.002));
     }, { passive: false });
+    const touches = new Map();            // pointerId → [x, y] of the fingers on the plot
+    let pinch = null;                     // { dist, zoom } when the second finger came down
+    const spread = () => { const [a, b] = [...touches.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; };
+    canvas.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'touch') return;
+      touches.set(e.pointerId, [e.clientX, e.clientY]);
+      if (touches.size === 2 && enabled()) pinch = { dist: spread(), zoom: view.zoom || 1 };
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!touches.has(e.pointerId)) return;
+      touches.set(e.pointerId, [e.clientX, e.clientY]);
+      if (pinch && touches.size === 2) zoomTo(pinch.zoom * spread() / pinch.dist);
+    });
+    const lift = e => { touches.delete(e.pointerId); if (touches.size < 2) pinch = null; };
+    canvas.addEventListener('pointerup', lift);
+    canvas.addEventListener('pointercancel', lift);
     canvas.addEventListener('dblclick', () => {
       if (!enabled() || (view.zoom || 1) === 1) return;
       view.zoom = 1;
